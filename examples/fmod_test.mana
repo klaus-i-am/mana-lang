@@ -1,0 +1,33 @@
+module fmod_test;
+
+fn main() -> i32 {
+    println("=== Float Modulus Test ===");
+    println();
+
+    // Integer modulus (should still work)
+    let a: i32 = 17 % 5;
+    print("17 % 5 = ");
+    println(a);
+
+    // Float modulus
+    let b: f64 = 7.5 % 2.5;
+    print("7.5 % 2.5 = ");
+    println(b);
+
+    let c: f64 = 10.0 % 3.0;
+    print("10.0 % 3.0 = ");
+    println(c);
+
+    let d: f64 = 5.5 % 1.1;
+    print("5.5 % 1.1 = ");
+    println(d);
+
+    // Negative float modulus
+    let e: f64 = -7.5 % 2.5;
+    print("-7.5 % 2.5 = ");
+    println(e);
+
+    println();
+    println("=== Float modulus tests passed! ===");
+    return 0;
+}

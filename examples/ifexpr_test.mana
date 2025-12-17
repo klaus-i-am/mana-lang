@@ -1,0 +1,33 @@
+module ifexpr_test;
+
+fn main() -> i32 {
+    println("=== If Expression Test ===");
+    println();
+
+    // Basic if expression
+    let x: i32 = 5;
+    let y: i32 = if x > 3 { 10 } else { 20 };
+    print("x=5, if x > 3 { 10 } else { 20 } = ");
+    println(y);
+
+    // Nested if expressions
+    let a: i32 = 7;
+    let b: i32 = if a > 10 { 100 } else { if a > 5 { 50 } else { 10 } };
+    print("a=7, nested if = ");
+    println(b);
+
+    // If expression with comparison
+    let max: i32 = if x > a { x } else { a };
+    print("max(5, 7) = ");
+    println(max);
+
+    // If expression with bool condition
+    let flag: bool = true;
+    let val: i32 = if flag { 1 } else { 0 };
+    print("if true { 1 } else { 0 } = ");
+    println(val);
+
+    println();
+    println("=== If expression tests passed! ===");
+    return 0;
+}

@@ -1,0 +1,70 @@
+module iflet;
+
+fn get_value(return_some: bool) -> Option<i32> {
+    if return_some {
+        return Some(42);
+    }
+    // Return an Option without a value using is_none check pattern
+    let empty: Option<i32> = Some(0);
+    // We'll just return Some(0) and check for that
+    return Some(0);
+}
+
+fn divide(a: i32, b: i32) -> Result<i32, string> {
+    if b == 0 {
+        return Err("division by zero");
+    }
+    return Ok(a / b);
+}
+
+fn main() -> i32 {
+    println("=== if-let Demo ===");
+    println();
+
+    // Option with Some
+    println("1. if let Some (value present):");
+    let opt: Option<i32> = Some(42);
+    if let Some(value) = opt {
+        print("Got value: ");
+        println(value);
+    } else {
+        println("Got None");
+    }
+    println();
+
+    // Result with Ok
+    println("2. if let Ok:");
+    let result: Result<i32, string> = divide(10, 2);
+    if let Ok(value) = result {
+        print("Result: ");
+        println(value);
+    } else {
+        println("Got error");
+    }
+    println();
+
+    // Result with Err
+    println("3. if let Err:");
+    let result2: Result<i32, string> = divide(10, 0);
+    if let Err(msg) = result2 {
+        print("Error: ");
+        println(msg);
+    } else {
+        println("Got Ok");
+    }
+    println();
+
+    // Chained if-let with else
+    println("4. Chained if-let:");
+    let ok_result: Result<i32, string> = Ok(100);
+    if let Ok(v) = ok_result {
+        print("Ok value: ");
+        println(v);
+    } else {
+        println("Was an error");
+    }
+    println();
+
+    println("=== All if-let tests passed! ===");
+    return 0;
+}

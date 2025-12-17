@@ -1,0 +1,24 @@
+// Test destructuring for-in loops
+module iter_destructure;
+
+fn main() -> i32 {
+    println("=== Destructuring For-In Test ===");
+    println();
+
+    // Test with HashMap - iterate with (key, value) destructuring
+    println("HashMap iteration with destructuring:");
+    let scores = HashMap::new();
+    scores.insert("Alice", 95);
+    scores.insert("Bob", 87);
+    scores.insert("Charlie", 92);
+
+    for (name, score) in scores {
+        print(name);
+        print(": ");
+        println(score);
+    }
+
+    println();
+    println("Done!");
+    return 0;
+}

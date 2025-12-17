@@ -1,0 +1,39 @@
+// Module system demonstration
+module modules;
+
+// Various forms of use statements
+use std::io;                         // Basic import
+use std::collections::*;             // Glob import
+use std::fs::{read_file, write_file}; // Selective import
+use std::math as m;                  // Import with alias
+
+// Public function (can be exported to other modules)
+pub fn greet(name: string) -> void {
+    println(f"Hello, {name}!");
+}
+
+// Public struct (can be used by other modules)
+pub struct Point {
+    x: i32;
+    y: i32;
+}
+
+// Private helper (not exported)
+fn helper() -> i32 {
+    return 42;
+}
+
+fn main() -> i32 {
+    // Call public function
+    greet("World");
+
+    // Use public struct
+    let p1 = Point { x: 1, y: 2 };
+    println(f"Point: ({p1.x}, {p1.y})");
+
+    // Use private helper
+    let val = helper();
+    println(f"Helper: {val}");
+
+    return 0;
+}

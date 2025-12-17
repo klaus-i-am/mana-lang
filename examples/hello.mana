@@ -1,0 +1,12 @@
+module main;
+
+fn main() -> i32 {
+    x: i32 = 10;
+    y: i32 = 20;
+    sum: i32 = x + y;
+
+    print("Sum: ");
+    println(sum);
+
+    return 0;
+}

@@ -1,0 +1,104 @@
+module memory_safety;
+
+struct Point {
+    x: i32;
+    y: i32;
+}
+
+// Function that takes an immutable reference
+fn print_point(p: &Point) -> void {
+    print("Point(");
+    print(p.x);
+    print(", ");
+    print(p.y);
+    println(")");
+}
+
+// Function that takes a mutable reference and modifies the point
+fn move_point(p: &mut Point, dx: i32, dy: i32) -> void {
+    p.x = p.x + dx;
+    p.y = p.y + dy;
+}
+
+// Function that doubles a value via mutable reference
+fn double_value(x: &mut i32) -> void {
+    x = x * 2;
+}
+
+fn main() -> i32 {
+    println("=== Memory Safety Demo ===");
+    println();
+
+    // Mutable binding - can be reassigned
+    println("1. Mutable bindings (let mut):");
+    let mut counter = 0;
+    println(counter);
+    counter = 1;
+    println(counter);
+    counter = counter + 1;
+    println(counter);
+    println();
+
+    // Immutable binding - cannot be reassigned
+    println("2. Immutable bindings (let):");
+    let value = 42;
+    println(value);
+    // value = 100;  // This would cause an error: cannot assign to immutable variable
+    println();
+
+    // Mutable references
+    println("3. Mutable references (&mut T):");
+    let mut p = Point{x: 10, y: 20};
+    print("Initial: ");
+    print_point(&p);
+
+    move_point(&mut p, 5, 10);
+    print("After move: ");
+    print_point(&p);
+    println();
+
+    // Mutable reference to primitive
+    println("4. Mutable reference to i32:");
+    let mut num = 5;
+    print("Before double: ");
+    println(num);
+    double_value(&mut num);
+    print("After double: ");
+    println(num);
+    println();
+
+    // Type inference with mutability
+    println("5. Type inference with mutability:");
+    let mut inferred_int = 100;
+    let mut inferred_float = 3.14;
+    let mut inferred_bool = true;
+    let mut inferred_string = "Hello";
+
+    print("int: ");
+    println(inferred_int);
+    print("float: ");
+    println(inferred_float);
+    print("bool: ");
+    println(inferred_bool);
+    print("string: ");
+    println(inferred_string);
+
+    // Reassign mutable variables
+    inferred_int = 200;
+    inferred_float = 6.28;
+    inferred_bool = false;
+    inferred_string = "World";
+
+    print("int: ");
+    println(inferred_int);
+    print("float: ");
+    println(inferred_float);
+    print("bool: ");
+    println(inferred_bool);
+    print("string: ");
+    println(inferred_string);
+    println();
+
+    println("=== All memory safety tests passed! ===");
+    return 0;
+}

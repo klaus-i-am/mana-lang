@@ -1,0 +1,55 @@
+module hashmap_test2;
+
+fn main() -> i32 {
+    // Create and populate HashMap
+    let mut scores: HashMap<string, i32> = HashMap::new();
+
+    scores.insert("Alice", 95);
+    scores.insert("Bob", 87);
+    scores.insert("Charlie", 92);
+    scores.insert("Diana", 88);
+
+    // Test get with Option
+    println("Testing get:");
+    let alice_score: Option<i32> = scores.get("Alice");
+    if alice_score.is_some() {
+        println("Alice: {}", alice_score.unwrap());
+    }
+
+    // Test non-existent key
+    let eve_score: Option<i32> = scores.get("Eve");
+    if eve_score.is_none() {
+        println("Eve not found");
+    }
+
+    // Test contains
+    println("Testing contains:");
+    let has_bob: bool = scores.contains("Bob");
+    if has_bob {
+        println("Bob exists");
+    }
+    let has_frank: bool = scores.contains("Frank");
+    if !has_frank {
+        println("Frank doesn't exist");
+    }
+
+    // Test len and is_empty
+    println("Size: {}", scores.len());
+
+    // Test remove
+    println("Testing remove:");
+    let removed: bool = scores.remove("Charlie");
+    if removed {
+        println("Charlie removed");
+    }
+    println("Size after remove: {}", scores.len());
+
+    // Test keys
+    println("All keys:");
+    let all_keys: Vec<string> = scores.keys();
+    for i in 0..all_keys.len() {
+        println("  {}", all_keys.at(i));
+    }
+
+    return 0;
+}

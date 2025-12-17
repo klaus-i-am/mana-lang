@@ -1,0 +1,58 @@
+module whilelet;
+
+fn main() -> i32 {
+    println("=== while-let Demo ===");
+    println();
+
+    // Test with Vec pop (returns Option<T>)
+    println("1. while let Some with Vec pop:");
+    let vec: Vec<i32> = Vec<i32>{};
+    vec.push(1);
+    vec.push(2);
+    vec.push(3);
+    vec.push(4);
+    vec.push(5);
+
+    print("Popping: ");
+    while let Some(value) = vec.pop() {
+        print(value);
+        print(" ");
+    }
+    println();
+    println();
+
+    // Test with multiple iterations
+    println("2. Counting down:");
+    let vec2: Vec<i32> = Vec<i32>{};
+    vec2.push(10);
+    vec2.push(20);
+    vec2.push(30);
+
+    while let Some(n) = vec2.pop() {
+        print("Got: ");
+        println(n);
+    }
+    println();
+
+    // Test early termination with break
+    println("3. Early break:");
+    let vec3: Vec<i32> = Vec<i32>{};
+    vec3.push(1);
+    vec3.push(2);
+    vec3.push(100);
+    vec3.push(3);
+    vec3.push(4);
+
+    while let Some(x) = vec3.pop() {
+        if x > 50 {
+            println("Found large value, stopping");
+            break;
+        }
+        print("Small value: ");
+        println(x);
+    }
+    println();
+
+    println("=== All while-let tests passed! ===");
+    return 0;
+}

@@ -1,0 +1,7 @@
+module const_error_test;
+
+fn main() -> i32 {
+    const x = 10;
+    x = 20;  // This should error: cannot assign to immutable variable
+    return 0;
+}

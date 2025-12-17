@@ -1,0 +1,26 @@
+module vec_method_test2;
+
+fn main() -> i32 {
+    // Create a vector
+    let numbers: Vec<i32> = [1, 2, 3, 4, 5];
+
+    // Test sum - simple method that doesn't need closure
+    let total: i32 = numbers.sum();
+    println("sum: {}", total);
+
+    // Test reverse
+    let reversed: Vec<i32> = numbers.reverse();
+    println("reversed:");
+    for i in 0..5 {
+        println("{}", reversed.at(i));
+    }
+
+    // Test take
+    let first_three: Vec<i32> = numbers.take(3);
+    println("first 3:");
+    for i in 0..3 {
+        println("{}", first_three.at(i));
+    }
+
+    return 0;
+}

@@ -1,0 +1,40 @@
+module exhaustive_test;
+
+enum Color {
+    Red,
+    Green,
+    Blue
+}
+
+fn test_non_exhaustive(c: Color) -> string {
+    // This should trigger a warning - missing Blue
+    return match c {
+        Color::Red => "red",
+        Color::Green => "green"
+    };
+}
+
+fn test_exhaustive(c: Color) -> string {
+    // This should NOT trigger a warning - all variants covered
+    return match c {
+        Color::Red => "red",
+        Color::Green => "green",
+        Color::Blue => "blue"
+    };
+}
+
+fn test_with_wildcard(c: Color) -> string {
+    // This should NOT trigger a warning - has wildcard
+    return match c {
+        Color::Red => "red",
+        _ => "other"
+    };
+}
+
+fn main() -> i32 {
+    let c = Color::Red;
+    println(test_non_exhaustive(c));
+    println(test_exhaustive(c));
+    println(test_with_wildcard(c));
+    return 0;
+}

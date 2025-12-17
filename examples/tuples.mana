@@ -1,0 +1,66 @@
+module tuples;
+
+// Function returning a tuple
+fn get_point() -> (i32, i32) {
+    return (10, 20);
+}
+
+fn get_person() -> (string, i32, bool) {
+    return ("Alice", 30, true);
+}
+
+fn main() -> i32 {
+    println("=== Tuple Demo ===");
+    println();
+
+    // Simple tuple
+    println("1. Simple tuple:");
+    let point = (100, 200);
+    print("x = ");
+    println(point.0);
+    print("y = ");
+    println(point.1);
+    println();
+
+    // Tuple destructuring
+    println("2. Tuple destructuring:");
+    let (x, y) = get_point();
+    print("x = ");
+    println(x);
+    print("y = ");
+    println(y);
+    println();
+
+    // Destructuring with more elements
+    println("3. Multi-element destructuring:");
+    let (name, age, active) = get_person();
+    print("name = ");
+    println(name);
+    print("age = ");
+    println(age);
+    print("active = ");
+    println(active);
+    println();
+
+    // Inline tuple destructuring
+    println("4. Inline destructuring:");
+    let (a, b, c) = (1, 2, 3);
+    print("a = ");
+    println(a);
+    print("b = ");
+    println(b);
+    print("c = ");
+    println(c);
+    println();
+
+    // Using destructured values in expressions
+    println("5. Destructured values in expressions:");
+    let (width, height) = (640, 480);
+    let area = width * height;
+    print("area = ");
+    println(area);
+    println();
+
+    println("=== All tuple tests passed! ===");
+    return 0;
+}

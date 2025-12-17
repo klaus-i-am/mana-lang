@@ -1,0 +1,9 @@
+module type_alias_simple;
+
+type Int = i32;
+
+fn main() -> i32 {
+    let x: Int = 42;
+    println(x);
+    return 0;
+}

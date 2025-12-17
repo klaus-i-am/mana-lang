@@ -1,0 +1,86 @@
+module pattern_test;
+
+// Test pattern destructuring in match expressions
+
+// ADT enum with different variant types
+enum Message {
+    Quit,                       // Unit variant
+    Move(i32, i32),             // Tuple variant
+    Write { text: string },     // Struct variant
+    ChangeColor(i32, i32, i32)  // Tuple variant with 3 fields
+}
+
+// Function to process messages using pattern destructuring
+fn process_message(msg: Message) -> string {
+    return match msg {
+        Message::Quit => f"Received quit signal",
+        Message::Move(x, y) => f"Moving to ({x}, {y})",
+        Message::Write { text: t } => f"Message: {t}",
+        Message::ChangeColor(r, g, b) => f"Color: rgb({r}, {g}, {b})",
+        _ => f"Unknown message"
+    };
+}
+
+// Calculate displacement from Move messages
+fn get_displacement(msg: Message) -> i32 {
+    return match msg {
+        Message::Move(x, y) => x + y,
+        _ => 0
+    };
+}
+
+// Test simple enum variant matching (no destructuring)
+enum Status {
+    Active,
+    Inactive,
+    Pending
+}
+
+fn status_to_string(s: Status) -> string {
+    return match s {
+        Status::Active => f"active",
+        Status::Inactive => f"inactive",
+        Status::Pending => f"pending",
+        _ => f"unknown"
+    };
+}
+
+fn main() -> i32 {
+    println("=== Pattern Destructuring Test ===");
+    println();
+
+    // Test tuple variant destructuring
+    println("1. Tuple variant destructuring:");
+    let move_msg = Message::Move(10, 20);
+    println(f"  {process_message(move_msg)}");
+
+    // Test struct variant destructuring
+    println("2. Struct variant destructuring:");
+    let write_msg = Message::Write("Hello, World!");
+    println(f"  {process_message(write_msg)}");
+
+    // Test unit variant
+    println("3. Unit variant:");
+    let quit_msg = Message::Quit();
+    println(f"  {process_message(quit_msg)}");
+
+    // Test triple tuple variant
+    println("4. Triple tuple variant:");
+    let color_msg = Message::ChangeColor(255, 128, 0);
+    println(f"  {process_message(color_msg)}");
+
+    // Test displacement calculation
+    println("5. Displacement calculation:");
+    let move2 = Message::Move(5, 15);
+    let disp = get_displacement(move2);
+    println(f"  Displacement: {disp}");
+
+    // Test simple enum matching
+    println("6. Simple enum matching:");
+    let status = Status::Active;
+    println(f"  Status: {status_to_string(status)}");
+
+    println();
+    println("=== All pattern tests passed! ===");
+    return 0;
+}

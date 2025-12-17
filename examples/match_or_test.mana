@@ -1,0 +1,12 @@
+module match_or_test;
+
+fn main() -> i32 {
+    let x: i32 = 2;
+    let result: string = match x {
+        1 | 2 | 3 => "small",
+        4 | 5 => "medium",
+        _ => "large"
+    };
+    println(result);
+    return 0;
+}

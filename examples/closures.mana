@@ -1,0 +1,28 @@
+module main;
+
+fn main() -> i32 {
+    // Simple closure with type annotation
+    double_fn: auto = |x: i32| x * 2;
+
+    // Closure capturing from environment
+    multiplier: i32 = 3;
+    triple: auto = |x: i32| x * multiplier;
+
+    // Test closures
+    result1: i32 = double_fn(5);      // 10
+    result2: i32 = triple(4);      // 12
+
+    println(result1);
+    println(result2);
+
+    // Closure with block body
+    compute: auto = |x: i32| -> i32 {
+        y: i32 = x + 1;
+        return y * 2;
+    };
+
+    result3: i32 = compute(5);     // 12
+    println(result3);
+
+    return result1 + result2;  // 22
+}

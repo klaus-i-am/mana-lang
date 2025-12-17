@@ -1,0 +1,31 @@
+module comment_test;
+
+/* This is a multi-line
+   comment that spans
+   multiple lines */
+
+fn main() -> i32 {
+    println("=== Comment Test ===");
+
+    // Single-line comment
+    let a: i32 = 1;
+
+    /* Block comment on one line */
+    let b: i32 = 2;
+
+    /*
+     * Multi-line comment
+     * with asterisk decoration
+     */
+    let c: i32 = 3;
+
+    print("a = ");
+    println(a);
+    print("b = ");
+    println(b);
+    print("c = ");
+    println(c);
+
+    println("=== Comment tests passed! ===");
+    return 0;
+}

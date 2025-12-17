@@ -1,0 +1,23 @@
+module range_match_test;
+
+fn main() -> i32 {
+    // Test exclusive range patterns
+    let x: i32 = 7;
+    let result: string = match x {
+        0..5 => "small",
+        5..10 => "medium",
+        _ => "large"
+    };
+    println("x={}, result: {}", x, result);
+
+    // Test inclusive range patterns
+    let y: i32 = 5;
+    let result2: string = match y {
+        0..=4 => "tiny",
+        5..=9 => "small",
+        _ => "other"
+    };
+    println("y={}, result2: {}", y, result2);
+
+    return 0;
+}

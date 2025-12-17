@@ -1,0 +1,10 @@
+// simple_lib.astra - Simple library
+module simple_lib;
+
+pub fn greet() -> void {
+    println("Hello from lib!");
+}
+
+fn secret() -> void {
+    println("This is secret");
+}

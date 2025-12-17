@@ -1,0 +1,40 @@
+module cast_test;
+
+fn main() -> i32 {
+    println("=== Type Casting Test ===");
+    println();
+
+    // Integer to float
+    let a: i32 = 42;
+    let b: f32 = a as f32;
+    print("42 as f32 = ");
+    println(b);
+
+    // Float to integer (truncates)
+    let c: f32 = 3.7;
+    let d: i32 = c as i32;
+    print("3.7 as i32 = ");
+    println(d);
+
+    // Widening integer
+    let e: i32 = 100;
+    let f: i64 = e as i64;
+    print("100 as i64 = ");
+    println(f);
+
+    // Narrowing integer
+    let g: i64 = 300;
+    let h: i8 = g as i8;
+    print("300 as i8 = ");
+    println(h);  // Overflow wraps
+
+    // Char to integer
+    let i: i8 = 'A';
+    let j: i32 = i as i32;
+    print("'A' as i32 = ");
+    println(j);
+
+    println();
+    println("=== Type casting tests passed! ===");
+    return 0;
+}

@@ -1,0 +1,33 @@
+module binding_test;
+
+fn main() -> i32 {
+    let x: i32 = 5;
+
+    // Test binding pattern with guard
+    let result: string = match x {
+        n if n > 10 => "large",
+        n if n > 0 => "positive",
+        n if n < 0 => "negative",
+        _ => "zero"
+    };
+    println("x={}, result: {}", x, result);
+
+    // Test binding with calculation
+    let y: i32 = 7;
+    let doubled: i32 = match y {
+        n if n > 5 => n * 2,
+        n => n
+    };
+    println("y={}, doubled: {}", y, doubled);
+
+    // Test binding with negative
+    let z: i32 = -3;
+    let sign: string = match z {
+        n if n > 0 => "positive",
+        n if n < 0 => "negative",
+        _ => "zero"
+    };
+    println("z={}, sign: {}", z, sign);
+
+    return 0;
+}

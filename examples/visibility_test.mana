@@ -1,0 +1,58 @@
+module main;
+
+// Public struct - accessible from other modules
+pub struct PublicPoint {
+    x: i32;
+    y: i32;
+}
+
+// Private struct - not accessible from other modules
+struct PrivatePoint {
+    x: i32;
+    y: i32;
+}
+
+// Public enum
+pub enum PublicColor {
+    Red,
+    Green,
+    Blue
+}
+
+// Private enum
+enum PrivateColor {
+    Black,
+    White
+}
+
+// Public function
+pub fn public_func() -> i32 {
+    return 42;
+}
+
+// Private function
+fn private_func() -> i32 {
+    return 0;
+}
+
+// Public trait
+pub trait Printable {
+    fn print(self) -> void;
+}
+
+fn main() -> i32 {
+    // All of these work because they're in the same module
+    let p1 = PublicPoint { x: 1, y: 2 };
+    let p2 = PrivatePoint { x: 3, y: 4 };
+
+    let c1 = PublicColor::Red;
+    let c2 = PrivateColor::Black;
+
+    let r1 = public_func();
+    let r2 = private_func();
+
+    println(p1.x);
+    println(p2.x);
+
+    return 0;
+}

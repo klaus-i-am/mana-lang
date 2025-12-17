@@ -1,0 +1,52 @@
+module main;
+
+// Test Result type and ? operator
+
+fn safe_divide(a: i32, b: i32) -> Result<i32, string> {
+    if b == 0 {
+        return Err("division by zero");
+    }
+    return Ok(a / b);
+}
+
+fn calculate(x: i32, y: i32) -> Result<i32, string> {
+    // Use ? to propagate errors
+    result: i32 = safe_divide(x, y)?;
+    return Ok(result * 2);
+}
+
+fn test_option() -> Option<i32> {
+    return Some(42);
+}
+
+fn use_option() -> i32 {
+    opt: Option<i32> = test_option();
+    if opt.is_some() {
+        return opt.unwrap();
+    }
+    return 0;
+}
+
+fn main() -> i32 {
+    // Test Result with successful division
+    r1: Result<i32, string> = safe_divide(10, 2);
+    if r1.is_ok() {
+        println(r1.unwrap());  // Should print 5
+    }
+
+    // Test Result with error
+    r2: Result<i32, string> = safe_divide(10, 0);
+    if r2.is_err() {
+        println("Got expected error");
+    }
+
+    // Test Option
+    val: i32 = use_option();
+    println(val);  // Should print 42
+
+    // Test Some/None
+    some_val: Option<i32> = Some(100);
+    println(some_val.unwrap());  // Should print 100
+
+    return 0;
+}

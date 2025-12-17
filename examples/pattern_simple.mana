@@ -1,0 +1,18 @@
+module pattern_simple;
+
+// Simple pattern destructuring test
+
+enum Message {
+    Move(i32, i32),
+    Quit
+}
+
+fn main() -> i32 {
+    let msg = Message::Move(10, 20);
+    let result = match msg {
+        Message::Move(x, y) => x + y,
+        _ => 0
+    };
+    print(f"Result: {result}");
+    return 0;
+}

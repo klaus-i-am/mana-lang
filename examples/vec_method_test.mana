@@ -1,0 +1,37 @@
+module vec_method_test;
+
+fn main() -> i32 {
+    println("=== Vec Method Test ===");
+    println();
+
+    let v: Vec<i32> = [1, 2, 3, 4, 5];
+
+    // .len() method
+    print("Initial length: ");
+    println(v.len());
+
+    // .push() method
+    v.push(6);
+    v.push(7);
+    print("After push 6, 7 length: ");
+    println(v.len());
+
+    // .at() method
+    print("Element at index 0: ");
+    println(v.at(0));
+    print("Element at index 6: ");
+    println(v.at(6));
+
+    // .is_empty() method
+    print("Is empty: ");
+    println(v.is_empty());
+
+    // .pop() method
+    v.pop();
+    print("After pop length: ");
+    println(v.len());
+
+    println();
+    println("=== Vec method tests passed! ===");
+    return 0;
+}

@@ -1,0 +1,25 @@
+module main;
+
+fn main() -> i32 {
+    // Test stdlib functions
+    println("Testing stdlib...");
+
+    // Test time
+    let now = time_now_ms();
+    println(now);
+
+    // Test random
+    let r = random_int(1, 100);
+    println(r);
+
+    // Test path
+    let p = path_join("foo", "bar.txt");
+    println(p);
+
+    // Test cwd
+    let dir = cwd();
+    println(dir);
+
+    println("All stdlib tests passed!");
+    return 0;
+}

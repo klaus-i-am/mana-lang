@@ -1,0 +1,73 @@
+module file_io;
+
+fn main() -> i32 {
+    println("=== File I/O Test ===");
+    println();
+
+    let test_file = "test_output.txt";
+
+    // Write to file
+    println("Writing to file...");
+    let write_result = write_file(test_file, "Hello, File!\nThis is line 2.\nLine 3 here.");
+    if write_result.is_err() {
+        println("Write failed!");
+        return 1;
+    }
+    println("Write successful!");
+
+    // Check if file exists
+    print("File exists: ");
+    println(file_exists(test_file));
+
+    // Read from file
+    println();
+    println("Reading entire file:");
+    let read_result = read_file(test_file);
+    if read_result.is_ok() {
+        println(read_result.unwrap());
+    }
+
+    // Read lines
+    println();
+    println("Reading lines:");
+    let lines_result = read_lines(test_file);
+    if lines_result.is_ok() {
+        let lines = lines_result.unwrap();
+        for i in 0..lines.len() {
+            print("  Line ");
+            print(i);
+            print(": ");
+            println(lines[i]);
+        }
+    }
+
+    // Append to file
+    println();
+    println("Appending to file...");
+    let append_result = append_file(test_file, "\nAppended line!");
+    if append_result.is_ok() {
+        println("Append successful!");
+    }
+
+    // Read again to verify append
+    let read_result2 = read_file(test_file);
+    if read_result2.is_ok() {
+        println("After append:");
+        println(read_result2.unwrap());
+    }
+
+    // Delete file
+    println();
+    println("Deleting file...");
+    let delete_result = delete_file(test_file);
+    if delete_result.is_ok() {
+        println("Delete successful!");
+    }
+
+    print("File exists after delete: ");
+    println(file_exists(test_file));
+
+    println();
+    println("Done!");
+    return 0;
+}

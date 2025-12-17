@@ -1,0 +1,36 @@
+module main;
+
+// Test generic type inference
+fn identity<T>(x: T) -> T {
+    return x;
+}
+
+fn add_one(x: i32) -> i32 {
+    return x + 1;
+}
+
+fn main() -> i32 {
+    // Test 1: Generic type inference from arguments
+    let a = identity(42);       // T should be inferred as i32
+    let b = identity("hello");  // T should be inferred as string
+    let c = identity(true);     // T should be inferred as bool
+
+    // Test 2: Closure type inference
+    let square = |x: i32| x * x;
+    let result = square(5);
+    println(result);  // Should print 25
+
+    // Test 3: Closure capturing variables
+    let multiplier: i32 = 10;
+    let times_ten = |n: i32| n * multiplier;
+    println(times_ten(7));  // Should print 70
+
+    // Test 4: Nested closure inference
+    let make_adder = |x: i32| |y: i32| x + y;
+
+    println(a);
+    println(b);
+    println(c);
+
+    return 0;
+}

@@ -1,0 +1,23 @@
+module iter_test;
+
+fn main() -> i32 {
+    // Test Vec iteration
+    println("Vec iteration:");
+    let numbers: Vec<i32> = [10, 20, 30, 40, 50];
+    for n in numbers {
+        println("{}", n);
+    }
+
+    // Test HashMap iteration (iterates over pairs)
+    println("\nHashMap iteration:");
+    let mut scores: HashMap<string, i32> = HashMap::new();
+    scores.insert("Alice", 95);
+    scores.insert("Bob", 87);
+    scores.insert("Charlie", 92);
+
+    for pair in scores {
+        println("Entry");
+    }
+
+    return 0;
+}

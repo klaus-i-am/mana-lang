@@ -1,0 +1,31 @@
+module impl_simple_test;
+
+enum Color {
+    Red,
+    Green,
+    Blue
+}
+
+impl Color {
+    fn is_red(self) -> bool {
+        return match self {
+            Color::Red => true,
+            _ => false
+        };
+    }
+}
+
+fn check_color(c: Color) -> i32 {
+    let result: bool = c.is_red();
+    if (result) {
+        return 1;
+    }
+    return 0;
+}
+
+fn main() -> i32 {
+    let c = Color::Red;
+    let r = check_color(c);
+    println("Done");
+    return r;
+}

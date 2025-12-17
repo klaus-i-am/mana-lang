@@ -1,0 +1,33 @@
+module main;
+
+// Test struct destructuring
+
+struct Point {
+    x: i32;
+    y: i32;
+}
+
+fn test_point() -> void {
+    // Create a point
+    p: Point = Point{x: 10, y: 20};
+
+    // Struct destructuring - field names must match
+    {x, y}: Point = p;
+    println(x);  // 10
+    println(y);  // 20
+}
+
+fn test_array() -> void {
+    // Array destructuring
+    arr: [3]i32 = [100, 200, 300];
+    [a, b, c]: [3]i32 = arr;
+    println(a);  // 100
+    println(b);  // 200
+    println(c);  // 300
+}
+
+fn main() -> i32 {
+    test_point();
+    test_array();
+    return 0;
+}

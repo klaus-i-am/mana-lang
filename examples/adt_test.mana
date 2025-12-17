@@ -1,0 +1,64 @@
+module adt_test;
+
+// Simple enum (no associated data)
+enum Color {
+    Red,
+    Green,
+    Blue
+}
+
+// Enum with tuple variants (algebraic data type)
+enum Message {
+    Quit,                       // Unit variant
+    Move(i32, i32),            // Tuple variant with two i32s
+    Write(str),                // Tuple variant with string
+    ChangeColor(i32, i32, i32) // Tuple variant with three i32s (RGB)
+}
+
+// Enum with struct variants
+enum Event {
+    Click { x: i32, y: i32 },
+    KeyPress { key: str, modifier: str },
+    Resize { width: i32, height: i32 }
+}
+
+fn main() -> i32 {
+    println("=== Algebraic Data Types Test ===");
+    println();
+
+    // Test simple enum
+    println("1. Simple enum:");
+    let color = Color::Red;
+    println("  Created Color::Red");
+    println();
+
+    // Test tuple variant enum
+    println("2. Tuple variant enum (Message):");
+    let quit_msg = Message::Quit();
+    println("  Created Message::Quit");
+
+    let move_msg = Message::Move(10, 20);
+    println("  Created Message::Move(10, 20)");
+
+    let write_msg = Message::Write("Hello, ADT!");
+    println("  Created Message::Write(\"Hello, ADT!\")");
+
+    let color_msg = Message::ChangeColor(255, 128, 64);
+    println("  Created Message::ChangeColor(255, 128, 64)");
+    println();
+
+    // Test struct variant enum
+    println("3. Struct variant enum (Event):");
+    let click = Event::Click(x: 100, y: 200);
+    println("  Created Event::Click { x: 100, y: 200 }");
+
+    let keypress = Event::KeyPress(key: "Enter", modifier: "Ctrl");
+    println("  Created Event::KeyPress { key: \"Enter\", modifier: \"Ctrl\" }");
+
+    let resize = Event::Resize(width: 800, height: 600);
+    println("  Created Event::Resize { width: 800, height: 600 }");
+    println();
+
+    println("=== All ADT tests passed! ===");
+    return 0;
+}

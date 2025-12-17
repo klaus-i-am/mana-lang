@@ -1,0 +1,9 @@
+// simple_multifile.astra - Simple multi-file test
+module simple_multifile;
+
+import "simple_lib";
+
+fn main() -> i32 {
+    greet();
+    return 0;
+}

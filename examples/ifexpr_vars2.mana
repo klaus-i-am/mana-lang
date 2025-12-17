@@ -1,0 +1,9 @@
+module ifexpr_vars2;
+
+fn main() -> i32 {
+    let x: i32 = 5;
+    let a: i32 = 7;
+    let max: i32 = if x > a { 100 } else { 200 };
+    println(max);
+    return 0;
+}

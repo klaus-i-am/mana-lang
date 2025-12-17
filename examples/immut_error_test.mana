@@ -1,0 +1,8 @@
+module immut_error_test;
+
+fn main() -> i32 {
+    // This should fail: trying to assign to an immutable variable
+    let x = 10;
+    x = 20;  // Error: cannot assign to immutable variable
+    return 0;
+}

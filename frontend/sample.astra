@@ -1,0 +1,63 @@
+module main;
+
+import math;
+
+struct Vec3 {
+    x: f32;
+    y: f32;
+    z: f32;
+}
+
+// Method on Vec3
+fn Vec3.length_squared() -> f32 {
+    return self.x * self.x + self.y * self.y + self.z * self.z;
+}
+
+fn Vec3.scale(factor: f32) -> Vec3 {
+    return Vec3{x: self.x * factor, y: self.y * factor, z: self.z * factor};
+}
+
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+
+enum Status {
+    Pending = 0,
+    Running = 1,
+    Complete = 100,
+}
+
+fn main() -> i32 {
+    // Struct literal with named fields
+    v1: Vec3 = Vec3{x: 1.0, y: 2.0, z: 3.0};
+
+    // Struct literal with positional fields
+    v2: Vec3 = Vec3{4.0, 5.0, 6.0};
+
+    // Empty struct literal (zero initialized)
+    v3: Vec3 = Vec3{};
+
+    // Access fields
+    sum: f32 = v1.x + v1.y + v1.z;
+
+    // Method calls
+    len: f32 = v1.length_squared();
+    scaled: Vec3 = v1.scale(2.0);
+
+    // Enum values
+    c: Color = Color::Red;
+    s: Status = Status::Complete;
+
+    // Array types
+    numbers: [5]i32 = [1, 2, 3, 4, 5];
+    first: i32 = numbers[0];
+
+    // Pointer types
+    x: i32 = 42;
+    ptr: *i32 = &x;
+    value: i32 = *ptr;
+
+    return 0;
+}

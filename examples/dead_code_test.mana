@@ -1,0 +1,16 @@
+module main;
+
+fn test_dead_code() -> i32 {
+    let x = 10;
+    return x;
+    // This should be eliminated as dead code
+    let y = 20;
+    println(y);
+    return y;
+}
+
+fn main() -> i32 {
+    let result = test_dead_code();
+    println(result);
+    return 0;
+}

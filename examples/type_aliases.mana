@@ -1,0 +1,80 @@
+module type_aliases;
+
+// Basic type aliases
+type UserId = i32;
+type Score = f64;
+type Name = string;
+
+// Generic type aliases
+type IntVec = Vec<i32>;
+type StringOption = Option<string>;
+
+// Struct using type aliases
+struct User {
+    id: UserId;
+    name: Name;
+    score: Score;
+}
+
+fn create_user(id: UserId, name: Name) -> User {
+    return User { id: id, name: name, score: 0.0 };
+}
+
+fn get_user_id(user: User) -> UserId {
+    return user.id;
+}
+
+fn get_optional_name(has_name: bool) -> StringOption {
+    if has_name {
+        return Some("Alice");
+    }
+    return None;
+}
+
+fn main() -> i32 {
+    println("=== Type Aliases Test ===");
+    println();
+
+    // 1. Basic type alias usage
+    println("1. Basic type aliases:");
+    let user_id: UserId = 42;
+    let score: Score = 95.5;
+    let name: Name = "Bob";
+    println(f"  UserId: {user_id}");
+    println(f"  Score: {score}");
+    println(f"  Name: {name}");
+    println();
+
+    // 2. Using type alias in struct
+    println("2. Struct with type aliases:");
+    let user: User = create_user(123, "Charlie");
+    println(f"  User ID: {user.id}");
+    println(f"  User Name: {user.name}");
+    println(f"  User Score: {user.score}");
+    println();
+
+    // 3. Function returning type alias
+    println("3. Function with type alias return:");
+    let id: UserId = get_user_id(user);
+    println(f"  Retrieved ID: {id}");
+    println();
+
+    // 4. Generic type alias (IntVec = Vec<i32>)
+    println("4. Generic type alias defined (IntVec = Vec<i32>)");
+    println();
+
+    // 5. Option type alias
+    println("5. Option type alias:");
+    let opt_name: StringOption = get_optional_name(true);
+    if opt_name.is_some() {
+        println(f"  Got name: {opt_name.unwrap()}");
+    }
+    let no_name: StringOption = get_optional_name(false);
+    if no_name.is_none() {
+        println("  No name (None)");
+    }
+    println();
+
+    println("=== All type alias tests passed! ===");
+    return 0;
+}

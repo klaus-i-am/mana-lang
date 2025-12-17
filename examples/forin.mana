@@ -1,0 +1,48 @@
+module forin;
+
+// Test for-in loops with ranges
+
+fn test_basic_range() -> void {
+    println("Exclusive range 0..5:");
+    for i in 0..5 {
+        print(i);
+        print(" ");
+    }
+    println();
+}
+
+fn test_inclusive_range() -> void {
+    println("Inclusive range 1..=5:");
+    for i in 1..=5 {
+        print(i);
+        print(" ");
+    }
+    println();
+}
+
+fn test_sum() -> void {
+    sum: i32 = 0;
+    for i in 1..=10 {
+        sum = sum + i;
+    }
+    print("Sum of 1 to 10: ");
+    println(sum);
+}
+
+fn test_array_iteration() -> void {
+    arr: [5]i32 = [10, 20, 30, 40, 50];
+    println("Array elements:");
+    for val in arr {
+        print(val);
+        print(" ");
+    }
+    println();
+}
+
+fn main() -> i32 {
+    test_basic_range();
+    test_inclusive_range();
+    test_sum();
+    test_array_iteration();
+    return 0;
+}

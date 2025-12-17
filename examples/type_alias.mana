@@ -1,0 +1,47 @@
+module type_alias;
+
+// Simple type aliases
+type Int = i32;
+type Float = f32;
+type Text = string;
+
+// Type alias for generic types
+type IntOption = Option<i32>;
+type IntVec = Vec<i32>;
+
+fn main() -> i32 {
+    println("=== Type Alias Test ===");
+    println();
+
+    // Use aliased types
+    let x: Int = 42;
+    let y: Float = 3.14;
+    let s: Text = "Hello, type aliases!";
+    
+    print("Int value: ");
+    println(x);
+    print("Float value: ");
+    println(y);
+    print("Text value: ");
+    println(s);
+    println();
+
+    // Use generic type aliases
+    let opt: IntOption = Some(100);
+    if let Some(v) = opt {
+        print("IntOption value: ");
+        println(v);
+    }
+    println();
+
+    let mut vec: IntVec = Vec<i32>{};
+    vec.push(1);
+    vec.push(2);
+    vec.push(3);
+    print("IntVec length: ");
+    println(vec.len());
+    println();
+
+    println("=== Type alias tests passed! ===");
+    return 0;
+}

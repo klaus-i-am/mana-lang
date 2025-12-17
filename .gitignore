@@ -1,0 +1,53 @@
+# Build directories
+build/
+out/
+x64/
+Debug/
+Release/
+
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.suo
+*.sdf
+*.opensdf
+*.cachefile
+*.VC.db
+*.VC.db-shm
+*.VC.db-wal
+*.VC.opendb
+*.ipch
+*.ilk
+*.pdb
+*.obj
+*.log
+*.tlog/
+*.idb
+*.vsidx
+
+# JetBrains IDEs
+.idea/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+!CMakeSettings.json
+
+# Compiled executables
+*.exe
+
+# Temporary files
+*.tmp
+*.temp
+nul
+
+# Python scripts (temporary fix scripts)
+*.py
+
+# Backup files
+*.bak
+*.backup

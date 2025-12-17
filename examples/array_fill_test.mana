@@ -1,0 +1,30 @@
+module array_fill_test;
+
+fn main() -> i32 {
+    println("=== Array Fill Syntax Test ===");
+    println();
+
+    // Create an array of 5 zeros
+    let zeros: Vec<i32> = [0; 5];
+    print("zeros len: ");
+    println(zeros.len());
+    print("zeros[0]: ");
+    println(zeros[0]);
+
+    // Create an array of 3 ones
+    let ones: Vec<i32> = [1; 3];
+    print("ones len: ");
+    println(ones.len());
+
+    // Iterate and print
+    print("ones: ");
+    for i in 0..ones.len() {
+        print(ones[i]);
+        print(" ");
+    }
+    println();
+
+    println();
+    println("=== Array fill tests passed! ===");
+    return 0;
+}

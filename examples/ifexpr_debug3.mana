@@ -1,0 +1,9 @@
+module ifexpr_debug3;
+
+fn main() -> i32 {
+    let x: i32 = 5;
+    let a: i32 = 3;
+    let y: i32 = if x > a { 10 } else { 20 };
+    println(y);
+    return 0;
+}

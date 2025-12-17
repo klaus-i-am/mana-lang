@@ -1,0 +1,76 @@
+module compound_test;
+
+fn main() -> i32 {
+    println("=== Compound Assignment Test ===");
+    println();
+
+    // += operator
+    let a: i32 = 10;
+    a += 5;
+    print("10 += 5 = ");
+    println(a);
+
+    // -= operator
+    let b: i32 = 20;
+    b -= 8;
+    print("20 -= 8 = ");
+    println(b);
+
+    // *= operator
+    let c: i32 = 4;
+    c *= 3;
+    print("4 *= 3 = ");
+    println(c);
+
+    // /= operator
+    let d: i32 = 15;
+    d /= 3;
+    print("15 /= 3 = ");
+    println(d);
+
+    // %= operator
+    let e: i32 = 17;
+    e %= 5;
+    print("17 %= 5 = ");
+    println(e);
+
+    // **= power-assign
+    let f: f64 = 2.0;
+    f **= 4.0;
+    print("2 **= 4 = ");
+    println(f);
+
+    // Bitwise &=
+    let g: i32 = 0b1111;
+    g &= 0b1010;
+    print("0b1111 &= 0b1010 = ");
+    println(g);
+
+    // Bitwise |=
+    let h: i32 = 0b1010;
+    h |= 0b0101;
+    print("0b1010 |= 0b0101 = ");
+    println(h);
+
+    // Bitwise ^=
+    let i: i32 = 0b1111;
+    i ^= 0b1010;
+    print("0b1111 ^= 0b1010 = ");
+    println(i);
+
+    // <<= shift left
+    let j: i32 = 1;
+    j <<= 4;
+    print("1 <<= 4 = ");
+    println(j);
+
+    // >>= shift right
+    let k: i32 = 32;
+    k >>= 2;
+    print("32 >>= 2 = ");
+    println(k);
+
+    println();
+    println("=== Compound assignment tests passed! ===");
+    return 0;
+}

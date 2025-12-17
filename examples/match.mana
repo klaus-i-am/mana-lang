@@ -1,0 +1,28 @@
+module main;
+
+fn main() -> i32 {
+    x: i32 = 2;
+
+    // Match on integer
+    result: i32 = match x {
+        1 => 10,
+        2 => 20,
+        3 => 30,
+        _ => 0
+    };
+
+    println(result);  // Should print 20
+
+    // Match with calculation
+    y: i32 = 5;
+    doubled: i32 = match y {
+        1 => 2,
+        2 => 4,
+        5 => 10,
+        _ => 0
+    };
+
+    println(doubled);  // Should print 10
+
+    return result;  // Exit code 20
+}

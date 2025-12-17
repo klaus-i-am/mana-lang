@@ -1,0 +1,27 @@
+module guard_test;
+
+fn main() -> i32 {
+    let x: i32 = 5;
+
+    // Test with or-patterns and guards (using matched value directly)
+    let result: string = match x {
+        1 | 2 | 3 if x < 5 => "small",
+        4 | 5 | 6 if x > 4 => "medium",
+        _ => "other"
+    };
+
+    println(result);
+
+    // Test guard with single pattern
+    let y: i32 = 15;
+    let result2: string = match y {
+        10 if y > 12 => "ten but y > 12",
+        10 => "just ten",
+        _ if y > 10 => "greater than 10",
+        _ => "small"
+    };
+
+    println(result2);
+
+    return 0;
+}

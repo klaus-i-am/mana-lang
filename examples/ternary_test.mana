@@ -1,0 +1,9 @@
+module ternary_test;
+
+fn main() -> i32 {
+    let x: i32 = 5;
+    let y: i32 = x > 3 ? 10 : 20;
+    print("x > 3 ? 10 : 20 = ");
+    println(y);
+    return 0;
+}

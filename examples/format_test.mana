@@ -1,0 +1,75 @@
+module format_test;
+
+fn main() -> i32 {
+    println("=== F-String Format Specifiers Test ===");
+    println();
+
+    // 1. Float precision
+    println("1. Float precision:");
+    let pi: float = 3.14159265359;
+    println(f"  pi = {pi}");
+    println(f"  pi with 2 decimals = {pi:.2f}");
+    println(f"  pi with 4 decimals = {pi:.4f}");
+    println(f"  pi with 0 decimals = {pi:.0f}");
+    println();
+
+    // 2. Integer padding
+    println("2. Integer padding:");
+    let num: i32 = 42;
+    println(f"  num = {num}");
+    println(f"  num with 5 width = {num:5d}");
+    println(f"  num zero-padded to 5 = {num:05d}");
+    let small: i32 = 7;
+    println(f"  small zero-padded to 3 = {small:03d}");
+    println();
+
+    // 3. Hexadecimal
+    println("3. Hexadecimal:");
+    let hex_val: i32 = 255;
+    println(f"  255 in hex lowercase = {hex_val:x}");
+    println(f"  255 in hex uppercase = {hex_val:X}");
+    println(f"  255 in hex, 4 digits = {hex_val:04x}");
+    let color: i32 = 16711680;
+    println(f"  red color in hex = {color:06X}");
+    println();
+
+    // 4. Binary
+    println("4. Binary:");
+    let bits: i32 = 42;
+    println(f"  42 in binary = {bits:b}");
+    println(f"  42 in binary, 8 bits = {bits:08b}");
+    println();
+
+    // 5. Octal
+    println("5. Octal:");
+    let oct_val: i32 = 64;
+    println(f"  64 in octal = {oct_val:o}");
+    println();
+
+    // 6. String padding
+    println("6. String padding:");
+    let name: string = "Alice";
+    println(f"  [{name:10}] (right-padded to 10)");
+    println(f"  [{name:-10}] (left-padded to 10)");
+    println();
+
+    // 7. Mixed formatting in one string
+    println("7. Mixed formatting:");
+    let x: i32 = 5;
+    let y: float = 3.14159;
+    println(f"  x={x:03d}, y={y:.2f}");
+    println();
+
+    // 8. Expressions with format specifiers
+    println("8. Expressions with format specifiers:");
+    let a: i32 = 10;
+    let b: i32 = 20;
+    println(f"  {a} + {b} = {a + b:04d}");
+    let price: float = 19.99;
+    let tax: float = 0.08;
+    println(f"  Total: ${price * (1.0 + tax):.2f}");
+    println();
+
+    println("=== All format specifier tests passed! ===");
+    return 0;
+}

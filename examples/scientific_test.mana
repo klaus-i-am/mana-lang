@@ -1,0 +1,25 @@
+module scientific_test;
+
+fn main() -> i32 {
+    println("=== Scientific Notation Test ===");
+    println();
+
+    // Basic scientific notation
+    let a: f64 = 1e10;
+    let b: f64 = 1.5e3;
+    let c: f64 = 2.5E-4;
+    let d: f64 = 3e+2;
+
+    print("1e10 = ");
+    println(a);
+    print("1.5e3 = ");
+    println(b);
+    print("2.5E-4 = ");
+    println(c);
+    print("3e+2 = ");
+    println(d);
+
+    println();
+    println("=== Scientific notation tests passed! ===");
+    return 0;
+}

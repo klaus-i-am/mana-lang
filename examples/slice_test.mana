@@ -1,0 +1,52 @@
+module slice_test;
+
+fn main() -> i32 {
+    println("=== Slice Test ===");
+    println();
+
+    // Test Vec
+    let numbers: Vec<i32> = [1, 2, 3, 4, 5];
+    print("Vec: ");
+    for i in 0..numbers.len() {
+        print(numbers[i]);
+        print(" ");
+    }
+    println();
+
+    // Test first/last
+    let first_num = first(numbers);
+    if first_num.is_some() {
+        print("First element: ");
+        println(first_num.unwrap());
+    }
+
+    let last_num = last(numbers);
+    if last_num.is_some() {
+        print("Last element: ");
+        println(last_num.unwrap());
+    }
+
+    // Test concat
+    let a: Vec<i32> = [1, 2, 3];
+    let b: Vec<i32> = [4, 5, 6];
+    let combined = concat(a, b);
+    print("concat([1,2,3], [4,5,6]): ");
+    for i in 0..combined.len() {
+        print(combined[i]);
+        print(" ");
+    }
+    println();
+
+    // Test repeat
+    print("repeat(42, 4): ");
+    let repeated = repeat(42, 4);
+    for i in 0..repeated.len() {
+        print(repeated[i]);
+        print(" ");
+    }
+    println();
+
+    println();
+    println("Done!");
+    return 0;
+}

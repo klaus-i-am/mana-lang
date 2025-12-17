@@ -1,0 +1,35 @@
+module hex_binary_test;
+
+fn main() -> i32 {
+    println("=== Binary and Hex Literal Test ===");
+    println();
+
+    // Binary literals
+    let b1: i32 = 0b1010;       // 10
+    let b2: i32 = 0b1111_0000;  // 240
+    let b3: i32 = 0B11111111;   // 255
+
+    print("0b1010 = ");
+    println(b1);
+    print("0b1111_0000 = ");
+    println(b2);
+    print("0B11111111 = ");
+    println(b3);
+    println();
+
+    // Hexadecimal literals
+    let h1: i32 = 0xFF;         // 255
+    let h2: i32 = 0x1A2B;       // 6699
+    let h3: i32 = 0xDEAD_BEEF;  // 3735928559
+
+    print("0xFF = ");
+    println(h1);
+    print("0x1A2B = ");
+    println(h2);
+    print("0xDEAD_BEEF = ");
+    println(h3);
+    println();
+
+    println("=== Binary and hex tests passed! ===");
+    return 0;
+}

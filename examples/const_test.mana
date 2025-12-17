@@ -1,0 +1,17 @@
+module const_test;
+
+fn main() -> i32 {
+    // Const with type inference
+    const PI = 3.14159;
+    println("PI = {}", PI);
+
+    // Const with explicit type
+    const MAX_SIZE: i32 = 100;
+    println("MAX_SIZE = {}", MAX_SIZE);
+
+    // Const string
+    const GREETING: string = "Hello, World!";
+    println(GREETING);
+
+    return 0;
+}

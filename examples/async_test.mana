@@ -1,0 +1,16 @@
+// Test async/await support
+module async_test;
+
+async fn compute_value(x: i32) -> i32 {
+    return x * 2;
+}
+
+fn main() -> void {
+    // Create async task
+    let task = compute_value(21);
+
+    // Await the result
+    let result = task.await;
+
+    println(f"Result: {result}");
+}

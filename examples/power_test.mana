@@ -1,0 +1,37 @@
+module power_test;
+
+fn main() -> i32 {
+    println("=== Power Operator Test ===");
+    println();
+
+    // Basic power operations
+    let a: f64 = 2.0 ** 3.0;
+    let b: f64 = 10.0 ** 2.0;
+    let c: f64 = 2.0 ** 10.0;
+
+    print("2 ** 3 = ");
+    println(a);
+    print("10 ** 2 = ");
+    println(b);
+    print("2 ** 10 = ");
+    println(c);
+
+    // Fractional exponents
+    let d: f64 = 9.0 ** 0.5;
+    print("9 ** 0.5 = ");
+    println(d);
+
+    // Negative exponents
+    let e: f64 = 2.0 ** -1.0;
+    print("2 ** -1 = ");
+    println(e);
+
+    // Right associativity: 2 ** 3 ** 2 = 2 ** (3 ** 2) = 2 ** 9 = 512
+    let f: f64 = 2.0 ** 3.0 ** 2.0;
+    print("2 ** 3 ** 2 = ");
+    println(f);
+
+    println();
+    println("=== Power operator tests passed! ===");
+    return 0;
+}

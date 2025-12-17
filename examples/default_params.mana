@@ -1,0 +1,40 @@
+module default_params;
+
+fn greet(name: String, greeting: String = "Hello") -> i32 {
+    print(greeting);
+    print(", ");
+    print(name);
+    println("!");
+    return 0;
+}
+
+fn add(a: i32, b: i32 = 10, c: i32 = 5) -> i32 {
+    return a + b + c;
+}
+
+fn main() -> i32 {
+    println("=== Default Parameters Test ===");
+    println();
+
+    // Using default greeting
+    greet("World");
+
+    // Overriding default
+    greet("Astra", "Welcome");
+
+    println();
+
+    // Test with numbers
+    print("add(1): ");
+    println(add(1));           // 1 + 10 + 5 = 16
+
+    print("add(1, 20): ");
+    println(add(1, 20));       // 1 + 20 + 5 = 26
+
+    print("add(1, 20, 30): ");
+    println(add(1, 20, 30));   // 1 + 20 + 30 = 51
+
+    println();
+    println("Done!");
+    return 0;
+}

@@ -1,0 +1,22 @@
+module assert_test;
+
+fn main() -> i32 {
+    // Test assert with true condition (should pass)
+    assert(1 + 1 == 2);
+    println("passed: 1 + 1 == 2");
+
+    // Test assert_eq (should pass)
+    assert_eq(5, 5);
+    println("passed: assert_eq(5, 5)");
+
+    // Test assert_ne (should pass)
+    assert_ne(5, 10);
+    println("passed: assert_ne(5, 10)");
+
+    // Test with strings
+    assert_eq("hello", "hello");
+    println("passed: assert_eq strings");
+
+    println("All assertions passed!");
+    return 0;
+}

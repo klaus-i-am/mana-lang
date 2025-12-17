@@ -1,0 +1,89 @@
+# Mana Language Style Guide
+
+## Keywords
+
+Core keywords (reserved):
+- module, import, export
+- struct, trivial, enum, variant
+- generic, where
+- fn, return
+- ref, ptr, borrow
+- scope, unsafe, defer
+- if, else, while
+- true, false
+
+## Naming Conventions
+
+- Types: `PascalCase` (e.g., `Vec3`, `PlayerState`).
+- Functions: `snake_case` (e.g., `load_texture`, `update_player`).
+- Variables: `snake_case`.
+- Modules: short, lowercase, no spaces (e.g., `math`, `graphics`, `ecs`).
+
+## Formatting
+
+- 4 spaces per indent.
+- Curly braces on same line:
+
+  ```mana
+  fn foo() -> i32 {
+      ...
+  }
+One space after keywords:
+
+mana
+Copy code
+if (cond) { ... }
+No tabs; spaces only.
+
+(This will drive your formatter later.)
+
+r
+Copy code
+
+---
+
+### 4.4 coding-conventions.md (for **compiler implementation**)
+
+Create: `C:\dev\mana-lang\docs\coding-conventions.md`
+
+Content:
+
+```markdown
+# Mana Compiler Coding Conventions
+
+## Language & Standard
+
+- Implementation language: C++
+- Standard: C++20 (or C++17 if needed; prefer C++20)
+
+## Naming
+
+- Types (classes, structs): `PascalCase` (e.g., `Token`, `Parser`, `AstNode`).
+- Functions: `snake_case` (e.g., `parse_expression`, `emit_cpp`).
+- Member variables: trailing underscore (e.g., `source_`, `position_`).
+- Namespaces: `lowercase` (e.g., `mana::frontend`).
+
+## Files & Folders
+
+- `frontend/`:
+  - Lexing, parsing, AST, semantic analysis.
+- `middle/`:
+  - IR, optimization passes (later).
+- `backend_cpp/`:
+  - C++ code generator.
+- `stdlib/`:
+  - Standard library written in Mana.
+- `tests/`:
+  - Unit and integration tests.
+
+Header/source naming:
+- `Token.h` / `Token.cpp`
+- `Lexer.h` / `Lexer.cpp`
+- `Parser.h` / `Parser.cpp`
+
+## General Rules
+
+- No `using namespace std;`.
+- Prefer `std::unique_ptr` and `std::shared_ptr` where appropriate.
+- Use `enum class` instead of plain `enum`.
+- Use `const` wherever possible.

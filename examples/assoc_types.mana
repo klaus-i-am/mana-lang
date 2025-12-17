@@ -1,0 +1,45 @@
+module assoc_types;
+
+// Test associated types in traits - simple version without generic constraints
+
+trait Container {
+    type Item;
+    fn size(self) -> i32;
+}
+
+struct IntBox {
+    value: i32;
+}
+
+struct StringBox {
+    text: string;
+}
+
+impl Container for IntBox {
+    type Item = i32;
+
+    fn size(self) -> i32 {
+        return 1;
+    }
+}
+
+impl Container for StringBox {
+    type Item = string;
+
+    fn size(self) -> i32 {
+        return 1;
+    }
+}
+
+fn main() -> i32 {
+    println("=== Associated Types Test ===");
+
+    let int_box = IntBox { value: 42 };
+    let str_box = StringBox { text: "hello" };
+
+    println("IntBox size: {}", int_box.size());
+    println("StringBox size: {}", str_box.size());
+
+    println("=== All tests passed! ===");
+    return 0;
+}

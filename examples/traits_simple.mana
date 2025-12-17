@@ -1,0 +1,22 @@
+module main;
+
+struct Counter {
+    value: i32;
+}
+
+impl Counter {
+    fn get(self) -> i32 {
+        return self.value;
+    }
+
+    fn inc(self) -> void {
+        self.value = self.value + 1;
+    }
+}
+
+fn main() -> i32 {
+    c: Counter = Counter{value: 10};
+    result: i32 = c.get();
+    println(result);
+    return result;
+}

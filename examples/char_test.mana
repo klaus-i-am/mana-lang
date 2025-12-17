@@ -1,0 +1,47 @@
+module char_test;
+
+fn main() -> i32 {
+    println("=== Character Literal Test ===");
+    println();
+
+    // Basic character literals
+    let a: i8 = 'A';
+    let b: i8 = 'B';
+    let space: i8 = ' ';
+
+    print("Character 'A' as i8: ");
+    println(a);
+    print("Character 'B' as i8: ");
+    println(b);
+    print("Character ' ' as i8: ");
+    println(space);
+    println();
+
+    // Escape sequences
+    let newline: i8 = '\n';
+    let tab: i8 = '\t';
+    let backslash: i8 = '\\';
+    let single_quote: i8 = '\'';
+
+    print("Newline as i8: ");
+    println(newline);
+    print("Tab as i8: ");
+    println(tab);
+    print("Backslash as i8: ");
+    println(backslash);
+    print("Single quote as i8: ");
+    println(single_quote);
+    println();
+
+    // Digits as characters
+    let zero: i8 = '0';
+    let nine: i8 = '9';
+    print("'0' as i8: ");
+    println(zero);
+    print("'9' as i8: ");
+    println(nine);
+
+    println();
+    println("=== Character literal tests passed! ===");
+    return 0;
+}

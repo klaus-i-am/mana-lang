@@ -1,0 +1,46 @@
+// lib.astra - A library module demonstrating public and private visibility
+module lib;
+
+// Public struct - can be used by importers
+pub struct Point {
+    x: f64;
+    y: f64;
+}
+
+// Private helper function - NOT exported (defined before users)
+fn sqrt_helper(x: f64) -> f64 {
+    if x <= 0.0 {
+        return 0.0;
+    }
+    let mut guess = x / 2.0;
+    let mut i = 0;
+    while i < 10 {
+        guess = (guess + x / guess) / 2.0;
+        i = i + 1;
+    }
+    return guess;
+}
+
+// Public function - can be called by importers
+pub fn create_point(x: f64, y: f64) -> Point {
+    return Point { x: x, y: y };
+}
+
+// Public function - can be called by importers
+pub fn distance(p1: Point, p2: Point) -> f64 {
+    let dx = p2.x - p1.x;
+    let dy = p2.y - p1.y;
+    return sqrt_helper(dx * dx + dy * dy);
+}
+
+// Public enum - can be used by importers
+pub enum Color {
+    Red,
+    Green,
+    Blue,
+}
+
+// Private struct - NOT exported
+struct InternalState {
+    counter: i32;
+}

@@ -1,0 +1,46 @@
+module main;
+
+struct Point {
+    x: i32;
+    y: i32;
+}
+
+trait Printable {
+    fn print(self) -> void;
+}
+
+impl Printable for Point {
+    fn print(self) -> void {
+        print("Point(");
+        print(self.x);
+        print(", ");
+        print(self.y);
+        println(")");
+    }
+}
+
+impl Point {
+    fn magnitude_squared(self) -> i32 {
+        return self.x * self.x + self.y * self.y;
+    }
+
+    fn plus(self, other: Point) -> Point {
+        return Point{x: self.x + other.x, y: self.y + other.y};
+    }
+}
+
+fn main() -> i32 {
+    p1: Point = Point{x: 3, y: 4};
+    p2: Point = Point{x: 1, y: 2};
+
+    // Call methods via impl block
+    p1.print();
+
+    mag: i32 = p1.magnitude_squared();
+    println(mag);  // 25 (3*3 + 4*4)
+
+    p3: Point = p1.plus(p2);
+    p3.print();  // Point(4, 6)
+
+    return mag;  // Exit code 25
+}

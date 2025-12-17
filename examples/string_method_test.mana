@@ -1,0 +1,25 @@
+module string_method_test;
+
+fn main() -> i32 {
+    println("=== String Method Test ===");
+    println();
+
+    let s: string = "Hello, World!";
+
+    // .len() method
+    let len: i64 = s.len();
+    print("String: \"Hello, World!\" len = ");
+    println(len);
+
+    // .is_empty() method
+    let empty: string = "";
+    print("Empty string is_empty = ");
+    println(empty.is_empty());
+
+    print("Non-empty string is_empty = ");
+    println(s.is_empty());
+
+    println();
+    println("=== String method tests passed! ===");
+    return 0;
+}

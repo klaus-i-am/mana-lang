@@ -1,0 +1,20 @@
+module math_lib;
+
+fn add(a: i32, b: i32) -> i32 {
+    return a + b;
+}
+
+fn multiply(a: i32, b: i32) -> i32 {
+    return a * b;
+}
+
+struct Vector2 {
+    x: i32;
+    y: i32;
+}
+
+impl Vector2 {
+    fn dot(self, other: Vector2) -> i32 {
+        return self.x * other.x + self.y * other.y;
+    }
+}

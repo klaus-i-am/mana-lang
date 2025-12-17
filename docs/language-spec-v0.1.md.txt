@@ -1,0 +1,98 @@
+# Mana Language Specification v0.1
+
+## 1. Overview
+
+Mana is a C++-inspired, game-engine-focused systems programming language.
+Goals:
+- Zero-cost abstractions.
+- Deterministic destruction (RAII).
+- Safer ownership (ref, ptr, borrow).
+- Cleaner generics (generic + where).
+- First-class interop with C++ and console platforms.
+
+This is a living document for v0.1.
+
+## 2. Core Concepts
+
+- Value semantics by default.
+- `ref<T>` / `ptr<T>` / `borrow<T>` for explicit reference semantics.
+- RAII and `scope` for lifetime management.
+- `unsafe` blocks for operations that may cause undefined behavior.
+- `generic<T>` functions and types with `where` constraints.
+- `trivial struct` for POD-like types with strict layout guarantees.
+
+## 3. Syntax Sketch
+
+(High-level summary; detailed grammar is in grammar.ebnf)
+
+- Module: `module main;`
+- Import: `import math;`
+- Function: `fn main() -> i32 { return 0; }`
+- Struct: `struct Player { hp: i32; }`
+- Trivial struct: `trivial struct Vec3 { x: f32; y: f32; z: f32; }`
+- Generics: `generic<T> fn max(a: T, b: T) -> T where T: Ord { ... }`
+- Borrow: `fn update(borrow<Entity> e) -> void { ... }`
+- Scope: 
+  ```mana
+  scope tex = load_texture("hero.png");
+  {
+      // use tex
+  }
+4. Type System
+(You’ll fill this in more during phase 0–1.)
+
+5. Memory Model
+...
+
+6. Interoperability with C++
+...
+
+makefile
+Copy code
+
+Don’t worry about filling all sections now. Phase 0 is about **creating the structure**, not finishing the whole spec.
+
+---
+
+### 4.2 grammar.ebnf
+
+Create file: `C:\dev\mana-lang\docs\grammar.ebnf`
+
+Paste the minimal grammar we drafted earlier (I’ll trim it to core here, feel free to paste the full one you already have):
+
+```ebnf
+program         = { top_level_decl } ;
+
+top_level_decl  =
+      module_decl
+    | import_decl
+    | type_decl
+    | func_decl
+    | export_decl ;
+
+module_decl     = "module" , identifier , ";" ;
+import_decl     = "import" , identifier , ";" ;
+
+type_decl       =
+      struct_decl
+    | trivial_struct_decl
+    | enum_decl
+    | variant_decl ;
+
+struct_decl     =
+    "struct" , identifier , "{" , { field_decl } , "}" , ";" ;
+
+trivial_struct_decl =
+    "trivial" , "struct" , identifier , "{" , { field_decl } , "}" , ";" ;
+
+field_decl      = identifier , ":" , type_ref , ";" ;
+
+func_decl =
+    [ "generic" , "<" , generic_param , { "," , generic_param } , ">" ] ,
+    "fn" , identifier ,
+    "(" , [ param_list ] , ")" ,
+    "->" , type_ref ,
+    [ where_clause ] ,
+    block ;
+
+(* ... continue with the rest of your grammar ... *)

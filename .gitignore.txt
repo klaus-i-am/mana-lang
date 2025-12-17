@@ -1,0 +1,14 @@
+# Visual Studio
+.vs/
+*.vcxproj.user
+*.suo
+
+# Build outputs
+Debug/
+Release/
+x64/
+ipch/
+
+# CMake (later maybe)
+CMakeFiles/
+CMakeCache.txt

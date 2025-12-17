@@ -1,0 +1,61 @@
+module main;
+
+// Define a trait for drawable shapes
+trait Drawable {
+    fn draw(self) -> void;
+    fn area(self) -> f32;
+}
+
+// Circle struct
+struct Circle {
+    radius: f32;
+}
+
+// Rectangle struct
+struct Rectangle {
+    width: f32;
+    height: f32;
+}
+
+// Implement Drawable for Circle
+impl Drawable for Circle {
+    fn draw(self) -> void {
+        println("Drawing a circle");
+    }
+
+    fn area(self) -> f32 {
+        return self.radius * self.radius * 3.14159;
+    }
+}
+
+// Implement Drawable for Rectangle
+impl Drawable for Rectangle {
+    fn draw(self) -> void {
+        println("Drawing a rectangle");
+    }
+
+    fn area(self) -> f32 {
+        return self.width * self.height;
+    }
+}
+
+// Function that takes a dynamic trait object
+fn draw_shape(shape: dyn Drawable) -> void {
+    shape.draw();
+}
+
+fn main() -> i32 {
+    // Create shapes
+    c: Circle = Circle{radius: 5.0};
+    r: Rectangle = Rectangle{width: 3.0, height: 4.0};
+
+    // Static dispatch via method calls
+    println("Static dispatch:");
+    c.draw();
+    r.draw();
+
+    println(c.area());
+    println(r.area());
+
+    return 0;
+}

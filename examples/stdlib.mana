@@ -1,0 +1,107 @@
+module stdlib;
+
+// Test standard library functionality
+
+fn test_vec() -> void {
+    println("=== Vec<i32> ===");
+
+    // Create a vector and push elements
+    v: Vec<i32> = Vec<i32>{};
+    v.push(10);
+    v.push(20);
+    v.push(30);
+
+    print("Length: ");
+    println(v.len());
+
+    println("Elements:");
+    for val in v {
+        print(val);
+        print(" ");
+    }
+    println();
+
+    // Pop an element
+    popped: Option<i32> = v.pop();
+    if popped.is_some() {
+        print("Popped: ");
+        println(popped.unwrap());
+    }
+}
+
+fn test_string_funcs() -> void {
+    println("=== String Functions ===");
+
+    s: string = "  Hello, World!  ";
+
+    print("Original: '");
+    print(s);
+    println("'");
+
+    print("Length: ");
+    println(len(s));
+
+    print("Trimmed: '");
+    print(trim(s));
+    println("'");
+
+    msg: string = "Hello, Astra!";
+
+    if starts_with(msg, "Hello") {
+        println("Starts with 'Hello'");
+    }
+
+    if ends_with(msg, "!") {
+        println("Ends with '!'");
+    }
+
+    if contains(msg, "Astra") {
+        println("Contains 'Astra'");
+    }
+}
+
+fn test_math() -> void {
+    println("=== Math Functions ===");
+
+    x: i32 = -42;
+    print("abs(-42) = ");
+    println(abs(x));
+
+    a: i32 = 10;
+    b: i32 = 25;
+    print("min(10, 25) = ");
+    println(min(a, b));
+
+    print("max(10, 25) = ");
+    println(max(a, b));
+
+    value: i32 = 50;
+    print("clamp(50, 0, 20) = ");
+    println(clamp(value, 0, 20));
+}
+
+fn test_to_string() -> void {
+    println("=== to_string ===");
+
+    num: i32 = 42;
+    print("to_string(42) = ");
+    println(to_string(num));
+
+    flag: bool = true;
+    print("to_string(true) = ");
+    println(to_string(flag));
+}
+
+fn main() -> i32 {
+    test_vec();
+    println();
+    test_string_funcs();
+    println();
+    test_math();
+    println();
+    test_to_string();
+
+    println();
+    println("All tests passed!");
+    return 0;
+}

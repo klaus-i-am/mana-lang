@@ -1,0 +1,10 @@
+// multifile.astra - Test multi-file compilation
+module multifile;
+
+import "lib";
+
+fn main() -> i32 {
+    let p1 = create_point(0.0, 0.0);
+    println(f"Point: ({p1.x}, {p1.y})");
+    return 0;
+}

@@ -1,0 +1,25 @@
+module octal_test;
+
+fn main() -> i32 {
+    println("=== Octal Literal Test ===");
+    println();
+
+    // Octal literals
+    let o1: i32 = 0o10;         // 8
+    let o2: i32 = 0o755;        // 493 (Unix permission)
+    let o3: i32 = 0O777;        // 511 (uppercase O)
+    let o4: i32 = 0o12_34;      // 668 (with underscore)
+
+    print("0o10 = ");
+    println(o1);
+    print("0o755 = ");
+    println(o2);
+    print("0O777 = ");
+    println(o3);
+    print("0o12_34 = ");
+    println(o4);
+    println();
+
+    println("=== Octal literal tests passed! ===");
+    return 0;
+}

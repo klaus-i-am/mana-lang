@@ -1,0 +1,23 @@
+module main;
+
+// Generic box struct
+struct Box<T> {
+    value: T;
+}
+
+// Generic identity function
+fn identity<T>(x: T) -> T {
+    return x;
+}
+
+fn main() -> i32 {
+    // Test generic function
+    x: i32 = identity(42);
+    println(x);
+
+    // Test generic struct (explicit type in literal)
+    b: Box<i32> = Box<i32>{value: 100};
+    println(b.value);
+
+    return 0;
+}

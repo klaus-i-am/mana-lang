@@ -1,0 +1,63 @@
+module null_coalesce;
+
+fn get_some() -> Option<i32> {
+    return Some(42);
+}
+
+fn get_none() -> Option<i32> {
+    return None;
+}
+
+fn get_some_string() -> Option<string> {
+    return Some("hello");
+}
+
+fn get_none_string() -> Option<string> {
+    return None;
+}
+
+fn main() -> i32 {
+    println("=== Null Coalescing (??) Test ===");
+    println();
+
+    // 1. Basic null coalescing with Some
+    println("1. Null coalescing with Some:");
+    let val1: i32 = get_some() ?? 0;
+    println(f"  get_some() ?? 0 = {val1}");  // Should be 42
+    println();
+
+    // 2. Null coalescing with None
+    println("2. Null coalescing with None:");
+    let val2: i32 = get_none() ?? 100;
+    println(f"  get_none() ?? 100 = {val2}");  // Should be 100
+    println();
+
+    // 3. String null coalescing with Some
+    println("3. String null coalescing with Some:");
+    let str1: string = get_some_string() ?? "default";
+    println(f"  get_some_string() ?? 'default' = {str1}");  // Should be "hello"
+    println();
+
+    // 4. String null coalescing with None
+    println("4. String null coalescing with None:");
+    let str2: string = get_none_string() ?? "fallback";
+    println(f"  get_none_string() ?? 'fallback' = {str2}");  // Should be "fallback"
+    println();
+
+    // 5. Nested option unwrapping
+    println("5. Direct inline usage:");
+    let val3: i32 = get_none() ?? 999;
+    println(f"  get_none() ?? 999 = {val3}");  // Should be 999
+    println();
+
+    // 6. Null coalescing with inline Option
+    println("6. Null coalescing with inline Option:");
+    let opt_some: Option<i32> = Some(77);
+    let opt_none: Option<i32> = None;
+    println(f"  Some(77) ?? 0 = {opt_some ?? 0}");  // Should be 77
+    println(f"  None ?? 123 = {opt_none ?? 123}");  // Should be 123
+    println();
+
+    println("=== All null coalescing tests passed! ===");
+    return 0;
+}

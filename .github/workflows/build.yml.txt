@@ -1,0 +1,17 @@
+name: Build Mana Compiler
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Build Solution
+        run: msbuild mana-lang.sln /p:Configuration=Debug

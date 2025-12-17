@@ -1,0 +1,8 @@
+module simple_comment;
+
+/* simple block comment */
+
+fn main() -> i32 {
+    println("Hello");
+    return 0;
+}

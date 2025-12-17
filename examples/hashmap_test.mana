@@ -1,0 +1,28 @@
+module hashmap_test;
+
+fn main() -> i32 {
+    // Create a HashMap using static constructor
+    let mut ages: HashMap<string, i32> = HashMap::new();
+
+    // Insert values
+    ages.insert("Alice", 30);
+    ages.insert("Bob", 25);
+    ages.insert("Charlie", 35);
+
+    // Get values
+    let alice_age: Option<i32> = ages.get("Alice");
+    if alice_age.is_some() {
+        println("Alice's age: {}", alice_age.unwrap());
+    }
+
+    // Check contains
+    let has_bob: bool = ages.contains("Bob");
+    if has_bob {
+        println("Bob is in the map");
+    }
+
+    // Get length
+    println("Map size: {}", ages.len());
+
+    return 0;
+}

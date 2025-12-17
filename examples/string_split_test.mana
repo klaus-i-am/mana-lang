@@ -1,0 +1,30 @@
+module string_split_test;
+
+fn main() -> i32 {
+    // Test split
+    let text: string = "apple,banana,cherry";
+    let parts: Vec<string> = text.split(",");
+
+    println("Split result:");
+    for i in 0..3 {
+        println(parts.at(i));
+    }
+
+    // Test join
+    let joined: string = parts.join(" - ");
+    println("Joined: {}", joined);
+
+    // Test to_upper and to_lower
+    let hello: string = "Hello World";
+    let upper: string = hello.to_upper();
+    let lower: string = hello.to_lower();
+    println("Upper: {}", upper);
+    println("Lower: {}", lower);
+
+    // Test repeat
+    let star: string = "*";
+    let stars: string = star.repeat(5);
+    println("Stars: {}", stars);
+
+    return 0;
+}

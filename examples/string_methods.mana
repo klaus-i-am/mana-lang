@@ -1,0 +1,57 @@
+module string_methods;
+
+fn main() -> i32 {
+    println("=== String Methods Test ===");
+    println();
+
+    let s = "Hello, World!";
+
+    // to_uppercase / to_lowercase
+    print("Original: ");
+    println(s);
+    print("Uppercase: ");
+    println(s.to_uppercase());
+    print("Lowercase: ");
+    println(s.to_lowercase());
+
+    println();
+
+    // replace
+    print("Replace 'World' with 'Astra': ");
+    println(s.replace("World", "Astra"));
+
+    println();
+
+    // find
+    let pos = s.find("World");
+    if pos.is_some() {
+        print("Found 'World' at position: ");
+        println(pos.unwrap());
+    }
+
+    println();
+
+    // split and join
+    let csv = "apple,banana,cherry";
+    print("CSV: ");
+    println(csv);
+    let parts = csv.split(",");
+    print("Split count: ");
+    println(parts.len());
+    print("Joined with ' - ': ");
+    println(parts.join(" - "));
+
+    println();
+
+    // repeat
+    print("'ab' repeated 5 times: ");
+    println("ab".repeat(5));
+
+    // reverse
+    print("'Hello' reversed: ");
+    println("Hello".reverse());
+
+    println();
+    println("Done!");
+    return 0;
+}

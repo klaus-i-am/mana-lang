@@ -1,0 +1,69 @@
+module string_methods2;
+
+fn main() -> i32 {
+    println("=== String Methods Test ===");
+    println();
+
+    // 1. replace
+    println("1. replace:");
+    let text = "hello world world";
+    let replaced = text.replace("world", "astra");
+    println(f"  Original: {text}");
+    println(f"  Replaced 'world' with 'astra': {replaced}");
+    println();
+
+    // 2. to_uppercase and to_lowercase
+    println("2. Case conversion:");
+    let mixed = "Hello World";
+    let upper = mixed.to_uppercase();
+    let lower = mixed.to_lowercase();
+    println(f"  Original: {mixed}");
+    println(f"  Uppercase: {upper}");
+    println(f"  Lowercase: {lower}");
+    println();
+
+    // 3. split
+    println("3. split:");
+    let csv = "apple,banana,cherry,date";
+    let parts = csv.split(",");
+    println(f"  Original: {csv}");
+    println(f"  Split by ',': {parts.len()} parts");
+    let i = 0;
+    while i < parts.len() {
+        println(f"    [{i}]: {parts[i]}");
+        i = i + 1;
+    }
+    println();
+
+    // 4. join (using split result)
+    println("4. join:");
+    let rejoined = parts.join(" | ");
+    println(f"  Rejoined with ' | ': {rejoined}");
+    println();
+
+    // 5. repeat
+    println("5. repeat:");
+    let star = "*";
+    let stars = star.repeat(10);
+    println(f"  '*' repeated 10 times: {stars}");
+    println();
+
+    // 6. reverse
+    println("6. reverse:");
+    let forward = "hello";
+    let backward = forward.reverse();
+    println(f"  Original: {forward}");
+    println(f"  Reversed: {backward}");
+    println();
+
+    // 7. Combined operations
+    println("7. Combined operations:");
+    let sentence = "  The Quick Brown Fox  ";
+    let processed = sentence.trim().to_lowercase().replace(" ", "_");
+    println(f"  Original: '{sentence}'");
+    println(f"  Trimmed, lowercased, spaces to underscores: '{processed}'");
+    println();
+
+    println("=== All string method tests passed! ===");
+    return 0;
+}

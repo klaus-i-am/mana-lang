@@ -1,0 +1,28 @@
+module math_utils;
+
+/// A 2D point in space
+pub struct Point {
+    /// X coordinate
+    x: f32,
+    /// Y coordinate  
+    y: f32,
+}
+
+/// Color variants
+pub enum Color {
+    Red,
+    Green,
+    Blue,
+    RGB(i32, i32, i32),
+}
+
+/// Calculate distance between two points
+pub fn distance(p1: Point, p2: Point) -> f32 {
+    let dx = p2.x - p1.x;
+    let dy = p2.y - p1.y;
+    return (dx * dx + dy * dy).sqrt();
+}
+
+fn main() -> i32 {
+    return 0;
+}

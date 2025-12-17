@@ -1,0 +1,27 @@
+module math_test;
+
+fn main() -> i32 {
+    // Test sqrt
+    let x: f64 = 16.0;
+    println("sqrt(16) = {}", sqrt(x));
+
+    // Test trig functions
+    let angle: f64 = 0.0;
+    println("sin(0) = {}", sin(angle));
+    println("cos(0) = {}", cos(angle));
+
+    // Test floor/ceil/round
+    let val: f64 = 3.7;
+    println("floor(3.7) = {}", floor(val));
+    println("ceil(3.7) = {}", ceil(val));
+    println("round(3.7) = {}", round(val));
+
+    // Test log/exp
+    println("log(2.718) = {}", log(2.718));
+    println("exp(1) = {}", exp(1.0));
+
+    // Test pow
+    println("pow(2, 10) = {}", pow(2.0, 10.0));
+
+    return 0;
+}

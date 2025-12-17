@@ -1,0 +1,28 @@
+module main;
+
+enum Color {
+    Red,
+    Green,
+    Blue
+}
+
+fn color_value(c: Color) -> i32 {
+    return match c {
+        Color::Red => 100,
+        Color::Green => 200,
+        Color::Blue => 300,
+        _ => 0
+    };
+}
+
+fn main() -> i32 {
+    r: Color = Color::Red;
+    g: Color = Color::Green;
+    b: Color = Color::Blue;
+
+    println(color_value(r));  // 100
+    println(color_value(g));  // 200
+    println(color_value(b));  // 300
+
+    return 0;
+}

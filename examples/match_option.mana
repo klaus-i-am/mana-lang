@@ -1,0 +1,69 @@
+module match_option;
+
+fn get_some() -> Option<i32> {
+    return Some(42);
+}
+
+fn get_none() -> Option<i32> {
+    return None;
+}
+
+fn get_ok() -> Result<i32, string> {
+    return Ok(100);
+}
+
+fn get_err() -> Result<i32, string> {
+    return Err("something went wrong");
+}
+
+fn main() -> i32 {
+    println("=== Option/Result Match Patterns Test ===");
+    println();
+
+    // Test matching on Option - Some case
+    println("1. Matching Option with Some:");
+    let opt1: Option<i32> = get_some();
+    let result1 = match opt1 {
+        Some(x) => x * 2,
+        None => 0,
+    };
+    print("  Result: ");
+    println(result1);  // Should print 84
+    println();
+
+    // Test matching on Option - None case
+    println("2. Matching Option with None:");
+    let opt2: Option<i32> = get_none();
+    let result2 = match opt2 {
+        Some(x) => x * 2,
+        None => -1,
+    };
+    print("  Result: ");
+    println(result2);  // Should print -1
+    println();
+
+    // Test matching on Result - Ok case
+    println("3. Matching Result with Ok:");
+    let res1: Result<i32, string> = get_ok();
+    let result3 = match res1 {
+        Ok(v) => v + 1,
+        Err(e) => 0,
+    };
+    print("  Result: ");
+    println(result3);  // Should print 101
+    println();
+
+    // Test matching on Result - Err case
+    println("4. Matching Result with Err:");
+    let res2: Result<i32, string> = get_err();
+    let result4 = match res2 {
+        Ok(v) => v,
+        Err(e) => -99,
+    };
+    print("  Result: ");
+    println(result4);  // Should print -99
+    println();
+
+    println("=== All match pattern tests passed! ===");
+    return 0;
+}

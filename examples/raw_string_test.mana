@@ -1,0 +1,30 @@
+module raw_string_test;
+
+fn main() -> i32 {
+    println("=== Raw String Test ===");
+    println();
+
+    // Regular string with escapes
+    let normal: string = "Hello\nWorld";
+    print("Normal string: ");
+    println(normal);
+
+    // Raw string - backslashes are literal
+    let raw: string = r"Hello\nWorld";
+    print("Raw string: ");
+    println(raw);
+
+    // Raw string with path
+    let path: string = r"C:\Users\name\Documents";
+    print("Windows path: ");
+    println(path);
+
+    // Raw string with regex pattern
+    let regex: string = r"\d+\.\d+";
+    print("Regex pattern: ");
+    println(regex);
+
+    println();
+    println("=== Raw string tests passed! ===");
+    return 0;
+}

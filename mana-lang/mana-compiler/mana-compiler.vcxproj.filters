@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="frontend">
+      <UniqueIdentifier>{d6c221ce-ca55-42b1-a274-6ae8734e6f71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="middle">
+      <UniqueIdentifier>{1c4ecbab-a71b-4f46-be01-51ddf05afb32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="backend_cpp">
+      <UniqueIdentifier>{1104ca8b-9005-4458-b2eb-eeed4892fda4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="core">
+      <UniqueIdentifier>{b0506025-2dca-4be0-9d50-8d9dcc7f236e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="stdlib">
+      <UniqueIdentifier>{a4fea2b1-d0d9-47c5-bdfa-54187a14c78f}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\core\main.cpp">
+      <Filter>core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\frontend\Token.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\frontend\Ast.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\frontend\Lexer.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\frontend\Parser.cpp">
+      <Filter>frontend</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\frontend\Token.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\frontend\Ast.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\frontend\Lexer.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\frontend\Parser.h">
+      <Filter>frontend</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

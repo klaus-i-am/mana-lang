@@ -1,0 +1,69 @@
+module exclusive_range_test;
+
+fn categorize_exclusive(n: i32) -> string {
+    // Using exclusive ranges (end not included)
+    return match n {
+        0..10 => "0-9",
+        10..20 => "10-19",
+        20..50 => "20-49",
+        _ => "50+"
+    };
+}
+
+fn categorize_inclusive(n: i32) -> string {
+    // Using inclusive ranges (end included)
+    return match n {
+        0..=9 => "0-9",
+        10..=19 => "10-19",
+        20..=49 => "20-49",
+        _ => "50+"
+    };
+}
+
+fn http_status(code: i32) -> string {
+    return match code {
+        100..200 => "Informational",
+        200..300 => "Success",
+        300..400 => "Redirect",
+        400..500 => "Client Error",
+        500..600 => "Server Error",
+        _ => "Unknown"
+    };
+}
+
+fn main() -> i32 {
+    println("=== Exclusive Range Patterns Test ===");
+    println();
+
+    // 1. Test exclusive ranges
+    println("1. Exclusive range patterns (..):");
+    println(f"  0 is in range {categorize_exclusive(0)}");
+    println(f"  9 is in range {categorize_exclusive(9)}");
+    println(f"  10 is in range {categorize_exclusive(10)}");
+    println(f"  19 is in range {categorize_exclusive(19)}");
+    println(f"  20 is in range {categorize_exclusive(20)}");
+    println(f"  49 is in range {categorize_exclusive(49)}");
+    println(f"  50 is in range {categorize_exclusive(50)}");
+    println();
+
+    // 2. Verify exclusive vs inclusive behavior
+    println("2. Boundary comparison (exclusive vs inclusive):");
+    println(f"  9 exclusive: {categorize_exclusive(9)}");
+    println(f"  9 inclusive: {categorize_inclusive(9)}");
+    println(f"  10 exclusive: {categorize_exclusive(10)}");
+    println(f"  10 inclusive: {categorize_inclusive(10)}");
+    println();
+
+    // 3. HTTP status codes (practical example)
+    println("3. HTTP status code classification:");
+    println(f"  100: {http_status(100)}");
+    println(f"  200: {http_status(200)}");
+    println(f"  301: {http_status(301)}");
+    println(f"  404: {http_status(404)}");
+    println(f"  500: {http_status(500)}");
+    println(f"  999: {http_status(999)}");
+    println();
+
+    println("=== All exclusive range tests passed! ===");
+    return 0;
+}

@@ -1,0 +1,70 @@
+module main;
+
+fn main() -> i32 {
+    // Test HashMap
+    println("Testing HashMap...");
+    let mut map = HashMap::<string, i32>::new();
+    map.insert("one", 1);
+    map.insert("two", 2);
+    map.insert("three", 3);
+    println(map.len());
+    println(map.contains("two"));
+
+    // Test HashSet
+    println("Testing HashSet...");
+    let mut set = HashSet::<i32>::new();
+    set.insert(1);
+    set.insert(2);
+    set.insert(3);
+    set.insert(2);  // Duplicate
+    println(set.len());  // Should be 3
+    println(set.contains(2));
+
+    // Test file operations
+    println("Testing File I/O...");
+    let content = "Hello from Astra!";
+    let _result = write_file("test_output.txt", content);
+
+    if file_exists("test_output.txt") {
+        println("File created successfully");
+        let read_result = read_file("test_output.txt");
+        if read_result.is_ok() {
+            println(read_result.unwrap());
+        }
+    }
+
+    // Test time
+    println("Testing Time...");
+    let now = time_now_ms();
+    println(now);
+
+    // Test random
+    println("Testing Random...");
+    let r = random_int(1, 100);
+    println(r);
+
+    // Test path utilities
+    println("Testing Paths...");
+    let p = path_join("foo", "bar.txt");
+    println(p);
+    println(path_filename(p));
+    println(path_extension(p));
+
+    // Test environment
+    println("Testing Environment...");
+    let home = env_get("PATH");
+    if home.is_some() {
+        println("PATH is set");
+    }
+
+    // Test Deque
+    println("Testing Deque...");
+    let mut dq = Deque::<i32>::new();
+    dq.push_back(1);
+    dq.push_back(2);
+    dq.push_front(0);
+    println(dq.len());  // Should be 3
+
+    println("All tests passed!");
+    return 0;
+}

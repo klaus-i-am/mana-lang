@@ -1,0 +1,15 @@
+module main;
+
+struct Counter {
+    value: i32;
+}
+
+impl Counter {
+    fn get(self) -> i32 {
+        return 42;
+    }
+}
+
+fn main() -> i32 {
+    return 0;
+}

@@ -1,0 +1,50 @@
+module none_test;
+
+fn get_some() -> Option<i32> {
+    return Some(42);
+}
+
+fn get_none() -> Option<i32> {
+    return None;
+}
+
+fn main() -> i32 {
+    println("=== None Keyword Test ===");
+    println();
+
+    // Test returning None
+    println("1. Function returning None:");
+    let opt: Option<i32> = get_none();
+    if let Some(v) = opt {
+        print("Got value: ");
+        println(v);
+    } else {
+        println("Got None (expected)");
+    }
+    println();
+
+    // Test returning Some
+    println("2. Function returning Some:");
+    let opt2: Option<i32> = get_some();
+    if let Some(v) = opt2 {
+        print("Got value: ");
+        println(v);
+    } else {
+        println("Got None");
+    }
+    println();
+
+    // Test direct assignment
+    println("3. Direct None assignment:");
+    let maybe: Option<i32> = None;
+    if let Some(v) = maybe {
+        print("Got: ");
+        println(v);
+    } else {
+        println("Value is None (expected)");
+    }
+    println();
+
+    println("=== All None tests passed! ===");
+    return 0;
+}

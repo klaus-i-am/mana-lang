@@ -1,0 +1,25 @@
+module destructure_test;
+
+fn get_point() -> (i32, i32) {
+    return (10, 20);
+}
+
+fn main() -> i32 {
+    // Tuple destructuring
+    let (x, y) = get_point();
+    println("x={}, y={}", x, y);
+
+    // Direct tuple destructuring
+    let (a, b, c) = (1, 2, 3);
+    println("a={}, b={}, c={}", a, b, c);
+
+    // Swap using tuples
+    let mut m: i32 = 5;
+    let mut n: i32 = 10;
+    let (tmp_m, tmp_n) = (n, m);
+    m = tmp_m;
+    n = tmp_n;
+    println("swapped: m={}, n={}", m, n);
+
+    return 0;
+}

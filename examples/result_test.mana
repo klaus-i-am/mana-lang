@@ -1,0 +1,37 @@
+module result_test;
+
+fn divide(a: i32, b: i32) -> Result<i32, String> {
+    if b == 0 {
+        return Err("division by zero");
+    }
+    return Ok(a / b);
+}
+
+fn calculate(x: i32, y: i32) -> Result<i32, String> {
+    let result: i32 = divide(x, y)?;
+    return Ok(result * 2);
+}
+
+fn main() -> i32 {
+    println("=== Result Type with Early Return Test ===");
+    println();
+
+    // Test ? with Ok
+    println("Testing calculate(10, 2):");
+    let r3 = calculate(10, 2);
+    if r3.is_ok() {
+        print("  Result: ");
+        println(r3.unwrap());
+    }
+
+    // Test ? with Err - should early return
+    println("Testing calculate(10, 0):");
+    let r4 = calculate(10, 0);
+    if r4.is_err() {
+        println("  Error propagated via early return!");
+    }
+
+    println();
+    println("Done!");
+    return 0;
+}

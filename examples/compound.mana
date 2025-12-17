@@ -1,0 +1,19 @@
+module main;
+
+fn main() -> i32 {
+    x: i32 = 10;
+
+    x += 5;
+    println(x);  // 15
+
+    x -= 3;
+    println(x);  // 12
+
+    x *= 2;
+    println(x);  // 24
+
+    x /= 4;
+    println(x);  // 6
+
+    return 0;
+}

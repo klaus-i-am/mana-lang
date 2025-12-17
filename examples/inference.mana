@@ -1,0 +1,42 @@
+module inference;
+
+struct Point {
+    x: i32;
+    y: i32;
+}
+
+fn main() -> i32 {
+    // Integer inference
+    x: auto = 42;
+    print("Integer: ");
+    println(x);
+
+    // Float inference
+    f: auto = 3.14;
+    print("Float: ");
+    println(f);
+
+    // String inference
+    s: auto = "Hello, Astra!";
+    print("String: ");
+    println(s);
+
+    // Boolean inference
+    b: auto = true;
+    print("Boolean: ");
+    println(b);
+
+    // Expression inference
+    sum: auto = 10 + 20;
+    print("10 + 20 = ");
+    println(sum);
+
+    // Comparison inference (bool)
+    cmp: auto = 5 < 10;
+    print("5 < 10 = ");
+    println(cmp);
+
+    println();
+    println("All type inference tests passed!");
+    return 0;
+}

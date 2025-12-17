@@ -1,0 +1,38 @@
+module loop_test;
+
+fn main() -> i32 {
+    println("=== Loop Test ===");
+    println();
+
+    // Basic loop with counter
+    let mut count: i32 = 0;
+    loop {
+        count = count + 1;
+        print("Count: ");
+        println(count);
+        if count >= 5 {
+            break;
+        }
+    }
+    println();
+
+    // Loop with early break
+    println("Loop with early break:");
+    let mut i: i32 = 0;
+    loop {
+        i = i + 1;
+        if i == 3 {
+            println("Skipping 3 with continue");
+            continue;
+        }
+        print("i = ");
+        println(i);
+        if i >= 5 {
+            break;
+        }
+    }
+    println();
+
+    println("=== Loop tests passed! ===");
+    return 0;
+}

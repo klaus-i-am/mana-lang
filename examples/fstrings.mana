@@ -1,0 +1,52 @@
+module fstrings;
+
+fn main() -> i32 {
+    println("=== F-String Demo ===");
+    println();
+
+    // Basic variable interpolation
+    println("1. Basic interpolation:");
+    let name: string = "Alice";
+    let greeting: string = f"Hello, {name}!";
+    println(greeting);
+    println();
+
+    // Number interpolation
+    println("2. Number interpolation:");
+    let age: i32 = 30;
+    let message: string = f"{name} is {age} years old.";
+    println(message);
+    println();
+
+    // Expression interpolation
+    println("3. Expression interpolation:");
+    let x: i32 = 5;
+    let y: i32 = 3;
+    let result: string = f"{x} + {y} = {x + y}";
+    println(result);
+    println();
+
+    // Multiple variables
+    println("4. Multiple variables:");
+    let first: string = "Hello";
+    let second: string = "World";
+    let combined: string = f"{first}, {second}!";
+    println(combined);
+    println();
+
+    // Boolean interpolation
+    println("5. Boolean interpolation:");
+    let flag: bool = true;
+    let status: string = f"Flag is {flag}";
+    println(status);
+    println();
+
+    // Direct f-string in function call
+    println("6. Direct f-string in println:");
+    let count: i32 = 42;
+    println(f"The answer is {count}");
+    println();
+
+    println("=== All f-string tests passed! ===");
+    return 0;
+}

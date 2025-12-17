@@ -1,0 +1,8 @@
+module assert_fail_test;
+
+fn main() -> i32 {
+    // This should fail
+    assert_eq(5, 10);
+    println("should not reach here");
+    return 0;
+}

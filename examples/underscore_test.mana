@@ -1,0 +1,29 @@
+module underscore_test;
+
+fn main() -> i32 {
+    println("=== Underscore Numeric Separator Test ===");
+    println();
+
+    // Integer literals with underscores
+    let million: i32 = 1_000_000;
+    let thousands: i32 = 123_456_789;
+
+    print("1_000_000 = ");
+    println(million);
+    print("123_456_789 = ");
+    println(thousands);
+    println();
+
+    // Float literals with underscores
+    let pi: f32 = 3.14_15_92;
+    let large_float: f64 = 1_000_000.123_456;
+
+    print("3.14_15_92 = ");
+    println(pi);
+    print("1_000_000.123_456 = ");
+    println(large_float);
+    println();
+
+    println("=== Underscore tests passed! ===");
+    return 0;
+}

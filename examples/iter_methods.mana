@@ -1,0 +1,185 @@
+module iter_methods;
+
+fn main() -> i32 {
+    println("=== Iterator Methods Test ===");
+    println();
+
+    let numbers: Vec<i32> = [1, 2, 3, 4, 5];
+
+    // Test map - square each number
+    println("Original: 1, 2, 3, 4, 5");
+    print("Squared (map): ");
+    let squared = numbers.map(|x: i32| x * x);
+    for i in 0..squared.len() {
+        print(squared[i]);
+        print(" ");
+    }
+    println();
+
+    // Test filter - keep even numbers
+    print("Even only (filter): ");
+    let evens = numbers.filter(|x: i32| x % 2 == 0);
+    for i in 0..evens.len() {
+        print(evens[i]);
+        print(" ");
+    }
+    println();
+
+    // Test fold - sum all numbers
+    let sum = numbers.fold(0, |acc: i32, x: i32| acc + x);
+    print("Sum (fold): ");
+    println(sum);
+
+    // Test any/all/none
+    let has_even = numbers.any(|x: i32| x % 2 == 0);
+    print("Has even? (any): ");
+    println(has_even);
+
+    let all_positive = numbers.all(|x: i32| x > 0);
+    print("All positive? (all): ");
+    println(all_positive);
+
+    let no_negatives = numbers.none(|x: i32| x < 0);
+    print("No negatives? (none): ");
+    println(no_negatives);
+
+    // Test count
+    let even_count = numbers.count(|x: i32| x % 2 == 0);
+    print("Count of evens: ");
+    println(even_count);
+
+    // Test find
+    let found = numbers.find(|x: i32| x > 3);
+    if found.is_some() {
+        print("First > 3 (find): ");
+        println(found.unwrap());
+    }
+
+    // Test find_index
+    let idx = numbers.find_index(|x: i32| x == 3);
+    if idx.is_some() {
+        print("Index of 3 (find_index): ");
+        println(idx.unwrap());
+    }
+
+    // Test take/skip
+    print("Take 3: ");
+    let first3 = numbers.take(3);
+    for i in 0..first3.len() {
+        print(first3[i]);
+        print(" ");
+    }
+    println();
+
+    print("Skip 2: ");
+    let after2 = numbers.skip(2);
+    for i in 0..after2.len() {
+        print(after2[i]);
+        print(" ");
+    }
+    println();
+
+    // Test first/last
+    let first_elem = numbers.first();
+    if first_elem.is_some() {
+        print("First: ");
+        println(first_elem.unwrap());
+    }
+
+    let last_elem = numbers.last();
+    if last_elem.is_some() {
+        print("Last: ");
+        println(last_elem.unwrap());
+    }
+
+    // Test rev
+    print("Reversed (rev): ");
+    let reversed = numbers.rev();
+    for i in 0..reversed.len() {
+        print(reversed[i]);
+        print(" ");
+    }
+    println();
+
+    // Test contains
+    print("Contains 3? ");
+    println(numbers.contains(3));
+    print("Contains 10? ");
+    println(numbers.contains(10));
+
+    // Test concat
+    let more: Vec<i32> = [6, 7, 8];
+    let combined = numbers.concat(more);
+    print("Concat with [6,7,8]: ");
+    for i in 0..combined.len() {
+        print(combined[i]);
+        print(" ");
+    }
+    println();
+
+    // Test slice
+    print("Slice(1,4): ");
+    let middle = numbers.slice(1, 4);
+    for i in 0..middle.len() {
+        print(middle[i]);
+        print(" ");
+    }
+    println();
+
+    // Test sum/product
+    print("Sum: ");
+    println(numbers.sum());
+
+    print("Product: ");
+    println(numbers.product());
+
+    // Test min_val/max_val
+    let min = numbers.min_val();
+    if min.is_some() {
+        print("Min: ");
+        println(min.unwrap());
+    }
+
+    let max = numbers.max_val();
+    if max.is_some() {
+        print("Max: ");
+        println(max.unwrap());
+    }
+
+    // Test sorted
+    let unsorted: Vec<i32> = [3, 1, 4, 1, 5, 9, 2, 6];
+    print("Unsorted: ");
+    for i in 0..unsorted.len() {
+        print(unsorted[i]);
+        print(" ");
+    }
+    println();
+
+    print("Sorted: ");
+    let sorted = unsorted.sorted();
+    for i in 0..sorted.len() {
+        print(sorted[i]);
+        print(" ");
+    }
+    println();
+
+    // Test dedup
+    print("Dedup (sorted): ");
+    let deduped = sorted.dedup();
+    for i in 0..deduped.len() {
+        print(deduped[i]);
+        print(" ");
+    }
+    println();
+
+    // Test chained operations
+    println();
+    println("Chained: filter(even).map(square).sum()");
+    let result = numbers.filter(|x: i32| x % 2 == 0).map(|x: i32| x * x).sum();
+    print("Result: ");
+    println(result);
+
+    println();
+    println("All iterator methods tested successfully!");
+    return 0;
+}

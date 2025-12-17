@@ -1,0 +1,82 @@
+module optional_chaining;
+
+struct Person {
+    name: string;
+    age: i32;
+}
+
+struct Container {
+    value: i32;
+}
+
+fn get_person(has_person: bool) -> Option<Person> {
+    if has_person {
+        return Some(Person { name: "Alice", age: 30 });
+    }
+    return None;
+}
+
+fn get_container(has_val: bool) -> Option<Container> {
+    if has_val {
+        return Some(Container { value: 42 });
+    }
+    return None;
+}
+
+fn print_opt_string(opt: Option<string>, label: string) -> void {
+    if opt.is_some() {
+        println(f"  {label} = {opt.unwrap()}");
+    } else {
+        println(f"  {label} = None");
+    }
+}
+
+fn print_opt_int(opt: Option<i32>, label: string) -> void {
+    if opt.is_some() {
+        println(f"  {label} = {opt.unwrap()}");
+    } else {
+        println(f"  {label} = None");
+    }
+}
+
+fn main() -> i32 {
+    println("=== Optional Chaining (?.) Test ===");
+    println();
+
+    // 1. Field access on Some
+    println("1. Field access on Some:");
+    let person_some: Option<Person> = get_person(true);
+    let name_opt: auto = person_some?.name;
+    print_opt_string(name_opt, "person?.name");
+    println();
+
+    // 2. Field access on None
+    println("2. Field access on None:");
+    let person_none: Option<Person> = get_person(false);
+    let name_none: auto = person_none?.name;
+    print_opt_string(name_none, "person_none?.name");
+    println();
+
+    // 3. Numeric field access on Some
+    println("3. Numeric field access on Some:");
+    let container_some: Option<Container> = get_container(true);
+    let val_opt: auto = container_some?.value;
+    print_opt_int(val_opt, "container?.value");
+    println();
+
+    // 4. Numeric field on None
+    println("4. Numeric field on None:");
+    let container_none: Option<Container> = get_container(false);
+    let val_none: auto = container_none?.value;
+    print_opt_int(val_none, "container_none?.value");
+    println();
+
+    // 5. Age field access
+    println("5. Age field access on Some:");
+    let age_opt: auto = person_some?.age;
+    print_opt_int(age_opt, "person?.age");
+    println();
+
+    println("=== All optional chaining tests passed! ===");
+    return 0;
+}
