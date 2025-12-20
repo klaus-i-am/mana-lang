@@ -1,0 +1,18 @@
+module main
+
+fn grade_message(score: int) -> str {
+    // 'when' with conditions (no value to match)
+    return when {
+        score >= 90 -> "Excellent!"
+        score >= 80 -> "Good job!"
+        score >= 70 -> "Keep practicing"
+        _ -> "Needs improvement"
+    }
+}
+
+fn main() {
+    println("Score 95: ", grade_message(95))
+    println("Score 82: ", grade_message(82))
+    println("Score 73: ", grade_message(73))
+    println("Score 55: ", grade_message(55))
+}

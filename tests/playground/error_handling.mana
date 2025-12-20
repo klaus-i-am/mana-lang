@@ -1,0 +1,29 @@
+module main
+
+fn divide(a: float, b: float) -> Result<float, str> {
+    if b == 0.0 {
+        return err("Division by zero")
+    }
+    return ok(a / b)
+}
+
+fn calculate() -> Result<float, str> {
+    // 'or' operator for clean error propagation
+    let x = divide(10.0, 2.0) or return err("First division failed")
+    let y = divide(x, 2.0) or return err("Second division failed")
+    return ok(y)
+}
+
+fn main() {
+    // 'when' for Result pattern matching
+    when calculate() {
+        ok(result) -> println("Result: ", result)
+        err(e) -> println("Error: ", e)
+    }
+
+    // Handle division by zero
+    when divide(10.0, 0.0) {
+        ok(val) -> println("Got: ", val)
+        err(e) -> println("Caught: ", e)
+    }
+}

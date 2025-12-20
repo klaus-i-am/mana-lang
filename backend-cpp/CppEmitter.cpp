@@ -204,6 +204,17 @@ void CppEmitter::emit_expr(const AstExpr* e, std::ostream& out) {
                         break;
                     }
                 }
+                // Check if this is an ADT enum variant constructor (e.g., Shape::Circle)
+                if (adt_enums_.count(type_name)) {
+                    // Emit as variant constructor: Shape::Circle(...)
+                    out << type_name << "::" << method << "(";
+                    for (size_t i = 0; i < call->args.size(); ++i) {
+                        if (i > 0) out << ", ";
+                        emit_expr(static_cast<const AstExpr*>(call->args[i].get()), out);
+                    }
+                    out << ")";
+                    break;
+                }
                 // Transform Type::method to Type_method for user-defined impl methods
                 fname = type_name + "_" + method;
             }

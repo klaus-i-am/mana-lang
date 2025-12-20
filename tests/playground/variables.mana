@@ -1,0 +1,18 @@
+module main
+
+fn main() {
+    // Immutable by default
+    let x = 42
+    let name = "Alice"
+
+    // Mutable variables use 'mut'
+    let mut counter = 0
+    counter = counter + 1
+
+    // Type annotations (int/float are aliases for i32/f32)
+    let pi: float = 3.14159
+    let flag: bool = true
+
+    println("x = ", x, ", counter = ", counter)
+    println("Hello, ", name, "!")
+}

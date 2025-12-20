@@ -1,0 +1,25 @@
+module main
+
+// 'variant' is a synonym for 'enum'
+variant Shape {
+    Circle(float),
+    Rectangle(float, float),
+    Point,
+}
+
+fn area(shape: Shape) -> float {
+    // 'when' uses -> arrows (cleaner than match/=>)
+    return when shape {
+        Shape::Circle(r) -> 3.14159 * r * r
+        Shape::Rectangle(w, h) -> w * h
+        Shape::Point -> 0.0
+    }
+}
+
+fn main() {
+    let circle = Shape::Circle(5.0)
+    let rect = Shape::Rectangle(10.0, 20.0)
+
+    println("Circle area: ", area(circle))
+    println("Rectangle area: ", area(rect))
+}
