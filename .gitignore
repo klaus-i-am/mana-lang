@@ -5,6 +5,9 @@ x64/
 Debug/
 Release/
 
+# Exception for tools/debug source files
+!tools/debug/
+
 # Visual Studio
 .vs/
 *.vcxproj.user
