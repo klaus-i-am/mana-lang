@@ -218,6 +218,12 @@ namespace mana::frontend {
         push_scope();
         register_builtins();
 
+        // First pass: register ALL function, struct, enum declarations
+        // This enables forward references (calling functions defined later in the file)
+        for (auto& d : module->decls)
+            register_declaration(d.get());
+
+        // Second pass: analyze all declaration bodies
         for (auto& d : module->decls)
             visit_decl(d.get());
 
@@ -228,6 +234,70 @@ namespace mana::frontend {
         check_unused_variables();
 
         pop_scope();
+    }
+
+    void SemanticAnalyzer::register_declaration(AstDecl* d) {
+        // Register function declarations (signature only, not body)
+        if (auto fn = dynamic_cast<AstFuncDecl*>(d)) {
+            Symbol sym;
+            sym.name = fn->name;
+            sym.type = parse_type_name(fn->return_type);
+            sym.is_mutable = false;
+            sym.is_public = fn->is_pub;
+            sym.source_module = fn->source_module;
+            sym.type_params = fn->type_params;
+
+            for (const auto& c : fn->constraints) {
+                sym.constraints.push_back({c.type_param, c.traits});
+            }
+
+            declare(fn->name, sym);
+            func_decls_[fn->name] = fn;
+
+            if (fn->is_test) {
+                test_functions_.push_back(fn);
+            }
+            return;
+        }
+
+        // Register struct declarations
+        if (auto s = dynamic_cast<AstStructDecl*>(d)) {
+            Symbol sym;
+            sym.name = s->name;
+            sym.type = Type::struct_(s->name);
+            sym.is_mutable = false;
+            sym.is_public = s->is_pub;
+            sym.source_module = s->source_module;
+            declare(s->name, sym);
+            struct_types_[s->name] = s;
+            return;
+        }
+
+        // Register enum declarations
+        if (auto e = dynamic_cast<AstEnumDecl*>(d)) {
+            Symbol sym;
+            sym.name = e->name;
+            sym.type = Type::enum_(e->name);
+            sym.is_mutable = false;
+            sym.is_public = e->is_pub;
+            sym.source_module = e->source_module;
+            declare(e->name, sym);
+            enum_types_[e->name] = e;
+            return;
+        }
+
+        // Register trait declarations
+        if (auto t = dynamic_cast<AstTraitDecl*>(d)) {
+            Symbol sym;
+            sym.name = t->name;
+            sym.type = Type::unknown();  // Traits don't have a concrete type
+            sym.is_mutable = false;
+            sym.is_public = t->is_pub;
+            sym.source_module = t->source_module;
+            declare(t->name, sym);
+            trait_types_[t->name] = t;
+            return;
+        }
     }
 
     void SemanticAnalyzer::push_scope() {
@@ -476,26 +546,8 @@ namespace mana::frontend {
         }
 
         if (auto fn = dynamic_cast<AstFuncDecl*>(d)) {
-            Symbol sym;
-            sym.name = fn->name;
-            sym.type = parse_type_name(fn->return_type);
-            sym.is_mutable = false;
-            sym.is_public = fn->is_pub;
-            sym.source_module = fn->source_module;
-            sym.type_params = fn->type_params;
-
-            // Store constraints
-            for (const auto& c : fn->constraints) {
-                sym.constraints.push_back({c.type_param, c.traits});
-            }
-
-            declare(fn->name, sym);
-            func_decls_[fn->name] = fn;  // Store for named argument validation
-            
-            // Track test functions
-            if (fn->is_test) {
-                test_functions_.push_back(fn);
-            }
+            // Declaration was already registered in register_declaration()
+            // Here we only analyze the function body
 
             // Validate where clause constraints
             for (const auto& constraint : fn->constraints) {
@@ -531,7 +583,7 @@ namespace mana::frontend {
                 declare(p.name, { p.name, parse_type_name(p.type_name), true });
             }
 
-            current_return_type_ = sym.type;
+            current_return_type_ = parse_type_name(fn->return_type);
             visit_stmt(fn->body.get());
             pop_scope();
             current_receiver_type_ = Type::unknown();
@@ -548,17 +600,8 @@ namespace mana::frontend {
         }
 
         if (auto s = dynamic_cast<AstStructDecl*>(d)) {
-            // Register the struct type
-            Symbol sym;
-            sym.name = s->name;
-            sym.type = Type::struct_(s->name);
-            sym.is_mutable = false;
-            sym.is_public = s->is_pub;
-            sym.source_module = s->source_module;
-            declare(s->name, sym);
-            struct_types_[s->name] = s;
-            
-            // Validate default values for fields
+            // Declaration was already registered in register_declaration()
+            // Here we only validate default values for fields
             for (auto& field : s->fields) {
                 if (field.default_value) {
                     Type expected = parse_type_name(field.type_name);
@@ -573,28 +616,14 @@ namespace mana::frontend {
         }
 
         if (auto e = dynamic_cast<AstEnumDecl*>(d)) {
-            // Register the enum type
-            Symbol sym;
-            sym.name = e->name;
-            sym.type = Type::enum_(e->name);
-            sym.is_mutable = false;
-            sym.is_public = e->is_pub;
-            sym.source_module = e->source_module;
-            declare(e->name, sym);
-            enum_types_[e->name] = e;
+            // Declaration was already registered in register_declaration()
+            // No additional analysis needed for enums
             return;
         }
 
         if (auto t = dynamic_cast<AstTraitDecl*>(d)) {
-            // Register the trait
-            Symbol sym;
-            sym.name = t->name;
-            sym.type = Type::unknown();  // Traits don't have a concrete type
-            sym.is_mutable = false;
-            sym.is_public = t->is_pub;
-            sym.source_module = t->source_module;
-            declare(t->name, sym);
-            trait_types_[t->name] = t;
+            // Declaration was already registered in register_declaration()
+            // No additional analysis needed for traits
             return;
         }
 

@@ -57,7 +57,8 @@ namespace mana::frontend {
         std::unordered_map<std::string, bool> builtin_functions_;
 
         // visitors
-        void visit_decl(AstDecl* d);
+        void register_declaration(AstDecl* d);  // First pass: register declarations
+        void visit_decl(AstDecl* d);            // Second pass: analyze bodies
         void visit_stmt(AstStmt* s);
         Type visit_expr(AstExpr* e);
 
