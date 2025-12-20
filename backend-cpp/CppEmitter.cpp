@@ -14,7 +14,8 @@ static int while_let_counter = 0;
 
 static std::string map_type(const std::string& mana_type) {
     if (mana_type.empty() || mana_type == "void") return "void";
-    if (mana_type == "i32" || mana_type == "int") return "int32_t";
+    if (mana_type == "i32") return "int32_t";
+    if (mana_type == "int") return "int64_t";  // int alias (vNext) -> i64
     if (mana_type == "i64") return "int64_t";
     if (mana_type == "i8") return "int8_t";
     if (mana_type == "i16") return "int16_t";
@@ -23,6 +24,7 @@ static std::string map_type(const std::string& mana_type) {
     if (mana_type == "u32") return "uint32_t";
     if (mana_type == "u64") return "uint64_t";
     if (mana_type == "f32") return "float";
+    if (mana_type == "float") return "double";  // float alias (vNext) -> f64
     if (mana_type == "f64") return "double";
     if (mana_type == "bool") return "bool";
     if (mana_type == "string" || mana_type == "String" || mana_type == "str") return "std::string";
@@ -1368,6 +1370,18 @@ void CppEmitter::emit(const AstModule* m, std::ostream& out, bool test_mode) {
                 if (fd->body) {
                     for (const auto& stmt : fd->body->statements) {
                         emit_stmt(stmt.get(), out, 1);
+                    }
+                }
+                // Insert implicit return 0 for main if no return statement at end
+                if (fd->name == "main" && !fd->is_method()) {
+                    bool has_return_at_end = false;
+                    if (fd->body && !fd->body->statements.empty()) {
+                        auto* last = fd->body->statements.back().get();
+                        has_return_at_end = (last->kind == NodeKind::ReturnStmt);
+                    }
+                    if (!has_return_at_end) {
+                        indent(out, 1);
+                        out << "return 0;\n";
                     }
                 }
             }

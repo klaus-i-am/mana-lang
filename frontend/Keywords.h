@@ -42,6 +42,7 @@ namespace mana::frontend {
         if (s == "await") { out = TokenKind::KwAwait; return true; }
         if (s == "where") { out = TokenKind::KwWhere; return true; }
         if (s == "static") { out = TokenKind::KwStatic; return true; }
+        if (s == "variant") { out = TokenKind::KwVariant; return true; }
         return false;
     }
 

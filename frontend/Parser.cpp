@@ -164,7 +164,12 @@ namespace mana::frontend {
             return decl;
         }
         if (match(TokenKind::KwEnum)) {
-            auto decl = parse_enum_decl(is_pub);
+            auto decl = parse_enum_decl(is_pub, false);
+            if (decl) decl->doc_comment = doc_comment;
+            return decl;
+        }
+        if (match(TokenKind::KwVariant)) {
+            auto decl = parse_enum_decl(is_pub, true);
             if (decl) decl->doc_comment = doc_comment;
             return decl;
         }
@@ -241,13 +246,14 @@ namespace mana::frontend {
         return s;
     }
 
-    std::unique_ptr<AstDecl> Parser::parse_enum_decl(bool is_pub) {
+    std::unique_ptr<AstDecl> Parser::parse_enum_decl(bool is_pub, bool declared_as_variant) {
         expect(TokenKind::Identifier, "expected enum name");
         Token name = previous();
 
         expect(TokenKind::LBrace, "expected '{' after enum name");
 
         auto e = std::make_unique<AstEnumDecl>(name.lexeme, name.line, name.column);
+        e->declared_as_variant = declared_as_variant;
         int next_value = 0;
 
         while (!check(TokenKind::RBrace) && !is_at_end()) {
@@ -724,8 +730,18 @@ namespace mana::frontend {
         }
 
         expect(TokenKind::RParen, "expected ')'");
-        expect(TokenKind::Arrow, "expected '->'");
-        std::string ret_type = parse_type_name();
+
+        // Return type: required for most functions, optional for main (defaults to i32)
+        std::string ret_type;
+        if (match(TokenKind::Arrow)) {
+            ret_type = parse_type_name();
+        } else if (fn_name_str == "main" && receiver_type.empty()) {
+            // main() without explicit return type defaults to i32
+            ret_type = "i32";
+        } else {
+            diag_.error("expected '->' and return type", peek().line, peek().column);
+            return nullptr;
+        }
 
         // Parse optional where clause: where T: Trait1 + Trait2, U: Trait3
         std::vector<TypeConstraint> constraints;

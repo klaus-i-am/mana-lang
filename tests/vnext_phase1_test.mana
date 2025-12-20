@@ -1,0 +1,25 @@
+// vNext Phase 1 Test File
+// Tests: variant, int/float aliases, optional main return
+
+module test;
+
+// Task 4: variant keyword (synonym for enum)
+variant Color {
+    Red,
+    Green,
+    Blue,
+}
+
+// Task 7: int/float type aliases
+fn test_type_aliases() -> void {
+    let x: int = 42;
+    let y: float = 3.14;
+    println(x);
+}
+
+// Task 8: fn main() without explicit return type
+fn main() {
+    test_type_aliases();
+    println("vNext Phase 1 test passed!");
+    // No explicit return needed - implicit return 0
+}

@@ -56,7 +56,7 @@ namespace mana::frontend {
         }
 
         if (auto e = dynamic_cast<const AstEnumDecl*>(d)) {
-            out << "Enum: " << e->name << "\n";
+            out << (e->declared_as_variant ? "Variant: " : "Enum: ") << e->name << "\n";
             for (auto& variant : e->variants) {
                 indent(out, ind + 1);
                 out << variant.name;

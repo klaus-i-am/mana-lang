@@ -422,7 +422,11 @@ namespace mana::frontend {
         if (type_aliases_.count(name)) {
             resolved = type_aliases_[name];
         }
-        
+
+        // Human-friendly type aliases (vNext)
+        if (resolved == "int") resolved = "i64";
+        if (resolved == "float") resolved = "f64";
+
         // All integer types map to I32 for type checking
         if (resolved == "i8" || resolved == "i16" || resolved == "i32" || resolved == "i64" ||
             resolved == "u8" || resolved == "u16" || resolved == "u32" || resolved == "u64")
@@ -499,6 +503,39 @@ namespace mana::frontend {
 
     bool SemanticAnalyzer::is_numeric(const Type& t) {
         return t.kind == TypeKind::I32 || t.kind == TypeKind::F32;
+    }
+
+    bool SemanticAnalyzer::always_returns(const AstStmt* stmt) {
+        if (!stmt) return false;
+
+        // Return statement always returns
+        if (stmt->kind == NodeKind::ReturnStmt) return true;
+
+        // Block: check if any statement in the block always returns
+        if (auto block = dynamic_cast<const AstBlockStmt*>(stmt)) {
+            for (const auto& s : block->statements) {
+                if (always_returns(s.get())) return true;
+            }
+            return false;
+        }
+
+        // If statement: returns if both branches always return
+        if (auto if_stmt = dynamic_cast<const AstIfStmt*>(stmt)) {
+            if (!if_stmt->else_block) return false;  // No else means might not return
+            return always_returns(if_stmt->then_block.get()) &&
+                   always_returns(if_stmt->else_block.get());
+        }
+
+        // Loop: infinite loop returns if body always returns (conservative)
+        if (auto loop = dynamic_cast<const AstLoopStmt*>(stmt)) {
+            // Infinite loop without break is considered to always "return" (never exits)
+            // But for simplicity, we'll be conservative
+            return false;
+        }
+
+        // Match expression (when used as statement): returns if all arms return
+        // For now, be conservative
+        return false;
     }
 
     std::string SemanticAnalyzer::infer_type_name(const Type& t) {
@@ -585,6 +622,16 @@ namespace mana::frontend {
 
             current_return_type_ = parse_type_name(fn->return_type);
             visit_stmt(fn->body.get());
+
+            // Check return coverage for non-void functions (except main which gets implicit return 0)
+            if (current_return_type_.kind != TypeKind::Void &&
+                !(fn->name == "main" && !fn->is_method())) {
+                if (!always_returns(fn->body.get())) {
+                    diag_.error("function '" + fn->name + "' does not return a value on all code paths",
+                               fn->line, fn->column);
+                }
+            }
+
             pop_scope();
             current_receiver_type_ = Type::unknown();
             return;

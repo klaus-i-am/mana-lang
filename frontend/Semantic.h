@@ -66,6 +66,7 @@ namespace mana::frontend {
         Type parse_type_name(const std::string& name);
         std::string infer_type_name(const Type& t);  // Convert Type back to string for AST
         bool is_numeric(const Type& t);
+        bool always_returns(const AstStmt* stmt);  // Check if statement always returns
 
         // "Did you mean?" suggestions
         static size_t levenshtein_distance(const std::string& a, const std::string& b);

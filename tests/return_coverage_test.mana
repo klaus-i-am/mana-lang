@@ -1,0 +1,14 @@
+// Test return coverage check (Task 2.1)
+module test;
+
+// This should produce an error - non-void function doesn't return on all paths
+fn missing_return(x: i32) -> i32 {
+    if x > 0 {
+        return x;
+    }
+    // Missing return for x <= 0 case
+}
+
+fn main() {
+    println("test");
+}

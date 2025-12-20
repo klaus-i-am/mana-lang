@@ -39,7 +39,7 @@ namespace mana::frontend {
         std::unique_ptr<AstDecl> parse_use_decl(bool is_pub = false);
         std::unique_ptr<AstDecl> parse_function_decl(bool is_pub = false, bool is_async = false, bool is_test = false);
         std::unique_ptr<AstDecl> parse_struct_decl(bool is_pub = false);
-        std::unique_ptr<AstDecl> parse_enum_decl(bool is_pub = false);
+        std::unique_ptr<AstDecl> parse_enum_decl(bool is_pub = false, bool declared_as_variant = false);
         std::unique_ptr<AstDecl> parse_global_var_decl();
         std::unique_ptr<AstDecl> parse_trait_decl(bool is_pub = false);
         std::unique_ptr<AstDecl> parse_impl_decl();

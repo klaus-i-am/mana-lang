@@ -152,6 +152,7 @@ namespace mana::frontend {
         std::string name;
         std::vector<AstEnumVariant> variants;
         bool is_pub = false;  // pub enum
+        bool declared_as_variant = false;  // true if declared with 'variant' keyword
 
         bool is_public() const override { return is_pub; }
 
