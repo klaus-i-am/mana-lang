@@ -88,32 +88,6 @@ namespace mana::frontend {
         add(TokenKind::StringLiteral, s, start_line, start_col);
     }
 
-    void Lexer::lex_fstring(int start_line, int start_col) {
-        std::string s;
-        while (!is_at_end() && peek_char() != '"') {
-            if (peek_char() == '\\') {
-                advance_char();
-                if (!is_at_end()) {
-                    char escaped = advance_char();
-                    switch (escaped) {
-                        case 'n': s.push_back('\n'); break;
-                        case 't': s.push_back('\t'); break;
-                        case 'r': s.push_back('\r'); break;
-                        case '\\': s.push_back('\\'); break;
-                        case '"': s.push_back('"'); break;
-                        case '{': s.push_back('{'); break;
-                        case '}': s.push_back('}'); break;
-                        default: s.push_back(escaped); break;
-                    }
-                }
-            } else {
-                s.push_back(advance_char());
-            }
-        }
-        if (!is_at_end()) advance_char();
-        add(TokenKind::FStringLiteral, s, start_line, start_col);
-    }
-
     void Lexer::lex_char(int start_line, int start_col) {
         char ch;
         if (is_at_end()) {
@@ -387,14 +361,6 @@ namespace mana::frontend {
                     lex_multiline_string(start_line, start_col);
                 } else {
                     lex_string(start_line, start_col);
-                }
-                break;
-            case 'f':
-                if (peek_char() == '"') {
-                    advance_char();
-                    lex_fstring(start_line, start_col);
-                } else {
-                    lex_identifier_or_keyword(start_line, start_col);
                 }
                 break;
 

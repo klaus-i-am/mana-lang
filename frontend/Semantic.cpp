@@ -1975,16 +1975,6 @@ namespace mana::frontend {
             return default_type;
         }
 
-        if (auto f = dynamic_cast<AstFStringExpr*>(e)) {
-            // Visit each expression part in the f-string
-            for (auto& part : f->parts) {
-                if (part.is_expr && part.expr) {
-                    visit_expr(part.expr.get());
-                }
-            }
-            return Type::string();
-        }
-
         if (auto o = dynamic_cast<AstOrExpr*>(e)) {
             // Or expression: expr or return/break/{ block }
             // LHS must be Result<T, E>, result is unwrapped T

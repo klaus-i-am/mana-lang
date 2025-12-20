@@ -654,24 +654,6 @@ void CppEmitter::emit_expr(const AstExpr* e, std::ostream& out) {
             out << "    }()";
             break;
         }
-        case NodeKind::FStringExpr: {
-            auto fs = static_cast<const AstFStringExpr*>(e);
-            out << "(";
-            bool first = true;
-            for (const auto& part : fs->parts) {
-                if (!first) out << " + ";
-                if (part.is_expr) {
-                    out << "mana::to_string(";
-                    emit_expr(part.expr.get(), out);
-                    out << ")";
-                } else {
-                    out << "std::string(\"" << part.literal << "\")";
-                }
-                first = false;
-            }
-            out << ")";
-            break;
-        }
         case NodeKind::NoneExpr: { out << "mana::None"; break; }
         case NodeKind::OptionPattern: {
             auto op = static_cast<const AstOptionPattern*>(e);

@@ -320,23 +320,6 @@ namespace mana::frontend {
         }
     };
 
-    // F-string part: either a literal string segment or an expression
-    struct AstFStringPart {
-        bool is_expr = false;
-        std::string literal;                 // For literal parts
-        std::unique_ptr<AstExpr> expr;       // For expression parts
-        std::string format_spec;             // Format specifier (e.g., ".2f", "04d")
-    };
-
-    // Interpolated string: f"Hello {name}, you are {age} years old!"
-    struct AstFStringExpr : AstExpr {
-        std::vector<AstFStringPart> parts;
-
-        AstFStringExpr(int line = 0, int column = 0)
-            : AstExpr(NodeKind::FStringExpr, line, column) {
-        }
-    };
-
     // None literal for Option types
     struct AstNoneExpr : AstExpr {
         AstNoneExpr(int line = 0, int column = 0)

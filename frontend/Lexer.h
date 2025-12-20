@@ -30,7 +30,6 @@ namespace mana::frontend {
         void lex_number(int start_line, int start_col);
         void lex_identifier_or_keyword(int start_line, int start_col);
         void lex_string(int start_line, int start_col);
-        void lex_fstring(int start_line, int start_col);
         void lex_char(int start_line, int start_col);
         void lex_raw_string(int start_line, int start_col);
         void lex_multiline_string(int start_line, int start_col);

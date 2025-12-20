@@ -1948,10 +1948,6 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
             return std::make_unique<AstLiteralExpr>(lit.lexeme, false, true, lit.line, lit.column);
         }
 
-        if (match(TokenKind::FStringLiteral)) {
-            return parse_fstring_expression();
-        }
-
         // If expression: if cond { expr } else { expr }
         if (match(TokenKind::KwIf)) {
             Token if_tok = previous();
@@ -2602,98 +2598,6 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         }
 
         return closure;
-    }
-
-    std::unique_ptr<AstExpr> Parser::parse_fstring_expression() {
-        // F-string token lexeme contains the raw content with {expr} placeholders
-        Token fstr = previous();
-        int l = fstr.line;
-        int c = fstr.column;
-
-        auto fstring = std::make_unique<AstFStringExpr>(l, c);
-        const std::string& content = fstr.lexeme;
-
-        size_t i = 0;
-        std::string literal;
-
-        while (i < content.size()) {
-            if (content[i] == '{') {
-                // Save any accumulated literal part
-                if (!literal.empty()) {
-                    AstFStringPart part;
-                    part.is_expr = false;
-                    part.literal = std::move(literal);
-                    fstring->parts.push_back(std::move(part));
-                    literal.clear();
-                }
-
-                // Extract expression text between { and }
-                i++;  // skip '{'
-                std::string expr_text;
-                int brace_depth = 1;
-                while (i < content.size() && brace_depth > 0) {
-                    if (content[i] == '{') brace_depth++;
-                    else if (content[i] == '}') {
-                        brace_depth--;
-                        if (brace_depth == 0) break;
-                    }
-                    expr_text.push_back(content[i]);
-                    i++;
-                }
-                i++;  // skip closing '}'
-
-                // Parse the expression text (may include format specifier after ':')
-                if (!expr_text.empty()) {
-                    std::string format_spec;
-                    
-                    // Find format specifier - look for ':' at the top level (not inside nested parens/brackets)
-                    size_t colon_pos = std::string::npos;
-                    int paren_depth = 0;
-                    int bracket_depth = 0;
-                    for (size_t j = 0; j < expr_text.size(); j++) {
-                        char ch = expr_text[j];
-                        if (ch == '(') paren_depth++;
-                        else if (ch == ')') paren_depth--;
-                        else if (ch == '[') bracket_depth++;
-                        else if (ch == ']') bracket_depth--;
-                        else if (ch == ':' && paren_depth == 0 && bracket_depth == 0) {
-                            colon_pos = j;
-                            break;  // Take the first colon at top level as format spec separator
-                        }
-                    }
-                    
-                    // Split off format specifier if found
-                    if (colon_pos != std::string::npos) {
-                        format_spec = expr_text.substr(colon_pos + 1);
-                        expr_text = expr_text.substr(0, colon_pos);
-                    }
-                    
-                    Lexer expr_lexer(expr_text);
-                    auto expr_tokens = expr_lexer.tokenize();
-                    Parser expr_parser(expr_tokens, diag_);
-                    auto expr = expr_parser.parse_expression();
-
-                    AstFStringPart part;
-                    part.is_expr = true;
-                    part.expr = std::move(expr);
-                    part.format_spec = std::move(format_spec);
-                    fstring->parts.push_back(std::move(part));
-                }
-            } else {
-                literal.push_back(content[i]);
-                i++;
-            }
-        }
-
-        // Save any remaining literal part
-        if (!literal.empty()) {
-            AstFStringPart part;
-            part.is_expr = false;
-            part.literal = std::move(literal);
-            fstring->parts.push_back(std::move(part));
-        }
-
-        return fstring;
     }
 
 } // namespace mana::frontend

@@ -10,7 +10,6 @@ namespace mana::frontend {
         IntLiteral,
         FloatLiteral,
         StringLiteral,
-        FStringLiteral,     // f"..." interpolated string
         CharLiteral,        // character literals
         RawStringLiteral,   // r"..." raw strings (no escape processing)
         MultiLineStringLiteral,  // """...""" multi-line strings

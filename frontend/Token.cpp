@@ -9,7 +9,6 @@ namespace mana::frontend {
         case TokenKind::IntLiteral: return "IntLiteral";
         case TokenKind::FloatLiteral: return "FloatLiteral";
         case TokenKind::StringLiteral: return "StringLiteral";
-        case TokenKind::FStringLiteral: return "FStringLiteral";
         case TokenKind::CharLiteral: return "CharLiteral";
         case TokenKind::RawStringLiteral: return "RawStringLiteral";
         case TokenKind::MultiLineStringLiteral: return "MultiLineStringLiteral";

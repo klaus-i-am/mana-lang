@@ -56,7 +56,6 @@ namespace mana::frontend {
         RangeExpr,  // start..end or start..=end
         TupleExpr,      // (expr1, expr2, ...)
         TupleIndexExpr, // tuple.0, tuple.1, etc.
-        FStringExpr,    // f"Hello {name}!" interpolated string
         NoneExpr,       // None literal for Option types
         OptionPattern,  // Some(x), None, Ok(x), Err(e) patterns in match
         EnumPattern,    // Enum::Variant(x, y) or Enum::Variant { field: x } destructuring

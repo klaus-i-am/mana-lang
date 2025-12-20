@@ -1,0 +1,22 @@
+// vNext Phase 4 Test File
+// Tests: Variadic println (f-strings removed)
+
+module test;
+
+fn main() {
+    let name: string = "World";
+    let age: i32 = 42;
+    let pi: f32 = 3.14;
+
+    // Single argument (still works)
+    println("Single arg test");
+
+    // Multiple arguments (variadic)
+    println("Hello, ", name, "!");
+    println("Age: ", age, ", Pi: ", pi);
+    println("Mixed: ", 1, " ", 2.5, " ", true);
+
+    // Print without newline, then println
+    print("No newline: ");
+    println(123);
+}

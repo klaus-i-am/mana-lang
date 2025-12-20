@@ -230,6 +230,20 @@ namespace mana {
     inline void println(const char* v) { std::printf("%s\n", v); }
     inline void println(const std::string& v) { std::printf("%s\n", v.c_str()); }
 
+    // Variadic print/println - uses fold expressions (C++17)
+    template <typename T, typename... Args>
+    void print(T&& first, Args&&... rest) {
+        print(std::forward<T>(first));
+        (print(std::forward<Args>(rest)), ...);
+    }
+
+    template <typename T, typename... Args>
+    void println(T&& first, Args&&... rest) {
+        print(std::forward<T>(first));
+        (print(std::forward<Args>(rest)), ...);
+        std::printf("\n");
+    }
+
     // Range type for iteration
     template <typename T>
     struct Range {
