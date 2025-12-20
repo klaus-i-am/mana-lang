@@ -1,0 +1,130 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g., 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows-x64
+            ext: zip
+          - os: ubuntu-latest
+            name: linux-x64
+            ext: tar.gz
+          - os: macos-latest
+            name: macos-x64
+            ext: tar.gz
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Create package directory
+        shell: bash
+        run: |
+          mkdir -p package/mana-${{ github.event.inputs.version }}/bin
+          mkdir -p package/mana-${{ github.event.inputs.version }}/include
+          mkdir -p package/mana-${{ github.event.inputs.version }}/examples
+
+      - name: Copy files (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          cp build/Release/mana_lang.exe package/mana-${{ github.event.inputs.version }}/bin/mana.exe
+          cp build/Release/mana-lsp.exe package/mana-${{ github.event.inputs.version }}/bin/
+          cp build/Release/mana-debug.exe package/mana-${{ github.event.inputs.version }}/bin/
+          cp include/*.h package/mana-${{ github.event.inputs.version }}/include/ 2>/dev/null || true
+          cp examples/*.mana package/mana-${{ github.event.inputs.version }}/examples/ 2>/dev/null || true
+
+      - name: Copy files (Unix)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cp build/mana_lang package/mana-${{ github.event.inputs.version }}/bin/mana
+          cp build/mana-lsp package/mana-${{ github.event.inputs.version }}/bin/
+          cp build/mana-debug package/mana-${{ github.event.inputs.version }}/bin/
+          chmod +x package/mana-${{ github.event.inputs.version }}/bin/*
+          cp include/*.h package/mana-${{ github.event.inputs.version }}/include/ 2>/dev/null || true
+          cp examples/*.mana package/mana-${{ github.event.inputs.version }}/examples/ 2>/dev/null || true
+
+      - name: Create README
+        shell: bash
+        run: |
+          cat > package/mana-${{ github.event.inputs.version }}/README.txt << 'EOF'
+          Mana Programming Language v${{ github.event.inputs.version }}
+          ================================
+
+          A modern systems programming language focused on clarity, performance,
+          and predictability.
+
+          Contents:
+          ---------
+            bin/
+              mana       - Mana compiler
+              mana-lsp   - Language Server Protocol server
+              mana-debug - Debug adapter
+
+            include/
+              mana_runtime.h - C++ runtime header
+
+            examples/
+              Sample Mana programs
+
+          Quick Start:
+          -----------
+            mana examples/hello.mana -o hello.cpp
+            g++ -std=c++17 -I include hello.cpp -o hello
+            ./hello
+
+          Documentation: https://www.mana-lang.org
+          Source Code:   https://github.com/klaus-i-am/mana-lang
+          License:       MIT License
+          EOF
+
+      - name: Create ZIP (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          cd package
+          Compress-Archive -Path "mana-${{ github.event.inputs.version }}" -DestinationPath "../mana-${{ github.event.inputs.version }}-${{ matrix.name }}.zip"
+
+      - name: Create TAR.GZ (Unix)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cd package
+          tar -czvf ../mana-${{ github.event.inputs.version }}-${{ matrix.name }}.tar.gz mana-${{ github.event.inputs.version }}
+
+      - name: Generate SHA256
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            sha256sum mana-${{ github.event.inputs.version }}-${{ matrix.name }}.zip > mana-${{ github.event.inputs.version }}-${{ matrix.name }}.zip.sha256
+          else
+            sha256sum mana-${{ github.event.inputs.version }}-${{ matrix.name }}.tar.gz > mana-${{ github.event.inputs.version }}-${{ matrix.name }}.tar.gz.sha256
+          fi
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          files: |
+            mana-${{ github.event.inputs.version }}-${{ matrix.name }}.${{ matrix.ext }}
+            mana-${{ github.event.inputs.version }}-${{ matrix.name }}.${{ matrix.ext }}.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
