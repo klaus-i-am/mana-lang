@@ -1,0 +1,50 @@
+// Loop statement test
+module test_loop;
+
+fn main() -> i32 {
+    // Infinite loop with break
+    let mut count: i32 = 0;
+    loop {
+        count = count + 1;
+        if count >= 5 {
+            break;
+        }
+    }
+    println(count);
+    // expect: 5
+
+    // Loop with early exit
+    let mut sum: i32 = 0;
+    let mut i: i32 = 0;
+    loop {
+        i = i + 1;
+        sum = sum + i;
+        if sum > 10 {
+            break;
+        }
+    }
+    println(sum);
+    // expect: 15
+
+    // Nested loops with break
+    let mut outer: i32 = 0;
+    let mut inner_total: i32 = 0;
+    loop {
+        outer = outer + 1;
+        let mut inner: i32 = 0;
+        loop {
+            inner = inner + 1;
+            inner_total = inner_total + 1;
+            if inner >= 3 {
+                break;
+            }
+        }
+        if outer >= 2 {
+            break;
+        }
+    }
+    println(inner_total);
+    // expect: 6
+
+    return 0;
+}

@@ -1,9 +1,9 @@
 {
   "name": "mana-lang",
-  "displayName": "Mana",
+  "displayName": "Mana Language",
   "description": "Mana programming language support - syntax highlighting, LSP, and debugging",
   "version": "1.0.2",
-  "publisher": "mana-lang",
+  "publisher": "ManaLanguage",
   "license": "MIT",
   "repository": {
     "type": "git",

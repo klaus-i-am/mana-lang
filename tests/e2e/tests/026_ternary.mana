@@ -1,0 +1,40 @@
+// Ternary/conditional expressions test
+module test_ternary;
+
+fn main() -> i32 {
+    // Basic ternary
+    let x: i32 = 10;
+    let result: string = if x > 5 { "big" } else { "small" };
+    println(result);
+    // expect: big
+
+    // Ternary with numbers
+    let a: i32 = 3;
+    let b: i32 = 7;
+    let max: i32 = if a > b { a } else { b };
+    println(max);
+    // expect: 7
+
+    // Nested ternary
+    let score: i32 = 85;
+    let grade: string = if score >= 90 { "A" } else if score >= 80 { "B" } else if score >= 70 { "C" } else { "F" };
+    println(grade);
+    // expect: B
+
+    // Ternary in expression
+    let val: i32 = 5;
+    let doubled: i32 = (if val > 0 { val } else { 0 }) * 2;
+    println(doubled);
+    // expect: 10
+
+    // Ternary with function calls
+    fn get_positive(n: i32) -> i32 {
+        return if n > 0 { n } else { -n };
+    }
+    println(get_positive(-15));
+    // expect: 15
+    println(get_positive(20));
+    // expect: 20
+
+    return 0;
+}

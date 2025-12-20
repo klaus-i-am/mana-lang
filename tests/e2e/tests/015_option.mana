@@ -1,0 +1,55 @@
+// Option type test
+module test_option;
+
+fn find_positive(x: i32) -> Option<i32> {
+    if x > 0 {
+        return Some(x);
+    }
+    return None;
+}
+
+fn main() -> i32 {
+    // Some value
+    let opt1: Option<i32> = Some(42);
+    println(opt1.is_some());
+    // expect: true
+    println(opt1.unwrap());
+    // expect: 42
+
+    // None value
+    let opt2: Option<i32> = None;
+    println(opt2.is_none());
+    // expect: true
+
+    // unwrap_or
+    println(opt2.unwrap_or(0));
+    // expect: 0
+
+    // Function returning Option
+    let result1 = find_positive(10);
+    println(result1.is_some());
+    // expect: true
+    println(result1.unwrap());
+    // expect: 10
+
+    let result2 = find_positive(-5);
+    println(result2.is_none());
+    // expect: true
+
+    // Match on Option
+    let val: Option<i32> = Some(100);
+    let msg: string = match val {
+        Some(x) => f"Got value: {x}",
+        None => "No value",
+    };
+    println(msg);
+    // expect: Got value: 100
+
+    // if let
+    if let Some(v) = opt1 {
+        println(f"Value is {v}");
+    }
+    // expect: Value is 42
+
+    return 0;
+}

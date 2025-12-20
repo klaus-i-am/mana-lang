@@ -1,0 +1,229 @@
+// Audio Playback Demo
+// Demonstrates sound effects, music, and 3D audio
+
+fn main() {
+    // Initialize audio system
+    if audio_init() == 0 {
+        println("Failed to initialize audio system");
+        return;
+    }
+
+    println("=== Mana Audio Demo ===");
+    println("");
+    println("Audio system initialized!");
+    println("");
+
+    // Generate procedural sounds (no external files needed)
+    println("Generating procedural sounds...");
+
+    // Generate a beep sound (440 Hz = A4 note)
+    let beep = audio_generate_tone(440.0, 0.2, 0.5);
+    println("  - Created beep (440 Hz, 0.2s)");
+
+    // Generate a lower tone (220 Hz = A3 note)
+    let low_beep = audio_generate_tone(220.0, 0.3, 0.5);
+    println("  - Created low beep (220 Hz, 0.3s)");
+
+    // Generate a high tone (880 Hz = A5 note)
+    let high_beep = audio_generate_tone(880.0, 0.15, 0.4);
+    println("  - Created high beep (880 Hz, 0.15s)");
+
+    // Generate white noise (for explosion/static effects)
+    let noise = audio_generate_noise(0.3, 0.3);
+    println("  - Created noise burst (0.3s)");
+
+    // Generate a longer tone for music-like playback
+    let melody_note = audio_generate_tone(523.25, 2.0, 0.4);  // C5
+    println("  - Created melody note (C5, 2.0s)");
+
+    println("");
+    println("Controls:");
+    println("  1 - Play beep");
+    println("  2 - Play low beep");
+    println("  3 - Play high beep");
+    println("  4 - Play noise");
+    println("  5 - Play melody (with loop toggle)");
+    println("  6 - Pan sound left");
+    println("  7 - Pan sound center");
+    println("  8 - Pan sound right");
+    println("  + - Increase volume");
+    println("  - - Decrease volume");
+    println("  M - Toggle mute");
+    println("  Q - Quit");
+    println("");
+
+    let master_volume = 1.0;
+    let muted = false;
+    let pan = 0.0;
+    let melody_looping = false;
+
+    // Track key states for edge detection
+    let key1_was_pressed = false;
+    let key2_was_pressed = false;
+    let key3_was_pressed = false;
+    let key4_was_pressed = false;
+    let key5_was_pressed = false;
+    let key6_was_pressed = false;
+    let key7_was_pressed = false;
+    let key8_was_pressed = false;
+    let key_plus_was_pressed = false;
+    let key_minus_was_pressed = false;
+    let key_m_was_pressed = false;
+
+    let running = true;
+
+    while running {
+        // Simple console input simulation
+        // In a real game, you'd use gl_get_key() with a window
+
+        // For demo purposes, let's just play sounds automatically
+        // and demonstrate the API
+
+        // Play a sequence of tones to demonstrate the system
+        println("Playing demo sequence...");
+
+        // Play beep
+        println("  Playing beep...");
+        audio_play_sound(beep);
+        sleep(300);
+
+        // Play low beep
+        println("  Playing low beep...");
+        audio_play_sound(low_beep);
+        sleep(400);
+
+        // Play high beep
+        println("  Playing high beep...");
+        audio_play_sound(high_beep);
+        sleep(250);
+
+        // Play noise
+        println("  Playing noise...");
+        audio_play_sound(noise);
+        sleep(400);
+
+        // Demonstrate panning
+        println("");
+        println("Demonstrating stereo panning...");
+
+        audio_set_sound_pan(beep, -1.0);  // Full left
+        println("  Playing beep (left)...");
+        audio_play_sound(beep);
+        sleep(300);
+
+        audio_set_sound_pan(beep, 0.0);   // Center
+        println("  Playing beep (center)...");
+        audio_play_sound(beep);
+        sleep(300);
+
+        audio_set_sound_pan(beep, 1.0);   // Full right
+        println("  Playing beep (right)...");
+        audio_play_sound(beep);
+        sleep(300);
+
+        audio_set_sound_pan(beep, 0.0);   // Reset to center
+
+        // Demonstrate volume control
+        println("");
+        println("Demonstrating volume control...");
+
+        audio_set_sound_volume_h(beep, 1.0);
+        println("  Playing beep (100% volume)...");
+        audio_play_sound(beep);
+        sleep(300);
+
+        audio_set_sound_volume_h(beep, 0.5);
+        println("  Playing beep (50% volume)...");
+        audio_play_sound(beep);
+        sleep(300);
+
+        audio_set_sound_volume_h(beep, 0.25);
+        println("  Playing beep (25% volume)...");
+        audio_play_sound(beep);
+        sleep(300);
+
+        audio_set_sound_volume_h(beep, 1.0);  // Reset
+
+        // Demonstrate looping
+        println("");
+        println("Demonstrating looping...");
+        audio_set_sound_looping(beep, true);
+        println("  Playing looping beep (will stop after 1 second)...");
+        audio_play_sound(beep);
+        sleep(1000);
+        audio_stop_sound(beep);
+        audio_set_sound_looping(beep, false);
+        println("  Stopped looping.");
+
+        // Demonstrate master volume
+        println("");
+        println("Demonstrating master volume...");
+
+        audio_set_master_volume(0.3);
+        println("  Master volume set to 30%");
+        audio_play_sound(beep);
+        sleep(300);
+        audio_play_sound(low_beep);
+        sleep(400);
+
+        audio_set_master_volume(1.0);
+        println("  Master volume restored to 100%");
+
+        // Play a little melody
+        println("");
+        println("Playing a simple melody...");
+
+        // C major scale notes
+        let c4 = audio_generate_tone(261.63, 0.3, 0.5);
+        let d4 = audio_generate_tone(293.66, 0.3, 0.5);
+        let e4 = audio_generate_tone(329.63, 0.3, 0.5);
+        let f4 = audio_generate_tone(349.23, 0.3, 0.5);
+        let g4 = audio_generate_tone(392.00, 0.3, 0.5);
+        let a4 = audio_generate_tone(440.00, 0.3, 0.5);
+        let b4 = audio_generate_tone(493.88, 0.3, 0.5);
+        let c5 = audio_generate_tone(523.25, 0.5, 0.5);
+
+        audio_play_sound(c4); sleep(350);
+        audio_play_sound(d4); sleep(350);
+        audio_play_sound(e4); sleep(350);
+        audio_play_sound(f4); sleep(350);
+        audio_play_sound(g4); sleep(350);
+        audio_play_sound(a4); sleep(350);
+        audio_play_sound(b4); sleep(350);
+        audio_play_sound(c5); sleep(600);
+
+        // Cleanup scale notes
+        audio_free_sound(c4);
+        audio_free_sound(d4);
+        audio_free_sound(e4);
+        audio_free_sound(f4);
+        audio_free_sound(g4);
+        audio_free_sound(a4);
+        audio_free_sound(b4);
+        audio_free_sound(c5);
+
+        println("");
+        println("Demo complete!");
+        running = false;
+    }
+
+    // Cleanup
+    println("");
+    println("Cleaning up...");
+    audio_free_sound(beep);
+    audio_free_sound(low_beep);
+    audio_free_sound(high_beep);
+    audio_free_sound(noise);
+    audio_free_sound(melody_note);
+
+    audio_shutdown();
+    println("Audio system shut down.");
+    println("Goodbye!");
+}
+
+// Simple sleep function (in milliseconds)
+fn sleep(ms: i32) {
+    // This would use the actual runtime sleep function
+    // For now, it's a placeholder that the runtime should provide
+    thread::sleep_ms(ms);
+}

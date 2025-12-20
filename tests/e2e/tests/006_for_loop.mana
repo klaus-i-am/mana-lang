@@ -1,0 +1,44 @@
+// For loop test
+module test_for;
+
+fn main() -> i32 {
+    // C-style for loop
+    for i: i32 = 0; i < 5; i = i + 1 {
+        println(i);
+    }
+    // expect: 0
+    // expect: 1
+    // expect: 2
+    // expect: 3
+    // expect: 4
+
+    // For-in with range (exclusive)
+    for x in 0..3 {
+        println(x);
+    }
+    // expect: 0
+    // expect: 1
+    // expect: 2
+
+    // For-in with inclusive range
+    for y in 1..=4 {
+        println(y);
+    }
+    // expect: 1
+    // expect: 2
+    // expect: 3
+    // expect: 4
+
+    // Nested loops
+    for i in 0..2 {
+        for j in 0..2 {
+            println(i * 10 + j);
+        }
+    }
+    // expect: 0
+    // expect: 1
+    // expect: 10
+    // expect: 11
+
+    return 0;
+}

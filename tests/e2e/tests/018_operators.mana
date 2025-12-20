@@ -1,0 +1,66 @@
+// Operators test
+module test_operators;
+
+fn main() -> i32 {
+    // Comparison operators
+    println(5 == 5);
+    // expect: true
+    println(5 != 3);
+    // expect: true
+    println(5 < 10);
+    // expect: true
+    println(5 <= 5);
+    // expect: true
+    println(10 > 5);
+    // expect: true
+    println(10 >= 10);
+    // expect: true
+
+    // Logical operators
+    println(true && true);
+    // expect: true
+    println(true && false);
+    // expect: false
+    println(true || false);
+    // expect: true
+    println(false || false);
+    // expect: false
+    println(!false);
+    // expect: true
+    println(!true);
+    // expect: false
+
+    // Bitwise operators
+    println(5 & 3);
+    // expect: 1
+    println(5 | 3);
+    // expect: 7
+    println(5 ^ 3);
+    // expect: 6
+    println(8 >> 2);
+    // expect: 2
+    println(2 << 3);
+    // expect: 16
+
+    // Compound assignment
+    let mut x: i32 = 10;
+    x += 5;
+    println(x);
+    // expect: 15
+    x -= 3;
+    println(x);
+    // expect: 12
+    x *= 2;
+    println(x);
+    // expect: 24
+    x /= 4;
+    println(x);
+    // expect: 6
+
+    // Power operator
+    let p: i32 = 2 ** 10;
+    println(p);
+    // expect: 1024
+
+    return 0;
+}

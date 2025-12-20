@@ -1,0 +1,27 @@
+Windows Registry Editor Version 5.00
+
+; Associate .mana extension
+[HKEY_CLASSES_ROOT\.mana]
+@="ManaSourceFile"
+
+; Define the file type
+[HKEY_CLASSES_ROOT\ManaSourceFile]
+@="Mana Source File"
+
+; Set the icon
+[HKEY_CLASSES_ROOT\ManaSourceFile\DefaultIcon]
+@="C:\\dev\\mana-lang\\assets\\mana.ico"
+
+; Open with VS Code
+[HKEY_CLASSES_ROOT\ManaSourceFile\shell]
+@="open"
+
+[HKEY_CLASSES_ROOT\ManaSourceFile\shell\open]
+@="Open with VS Code"
+
+[HKEY_CLASSES_ROOT\ManaSourceFile\shell\open\command]
+@="\"C:\\Users\\kerwin\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe\" \"%1\""
+
+; Associate .rune extension too
+[HKEY_CLASSES_ROOT\.rune]
+@="ManaSourceFile"

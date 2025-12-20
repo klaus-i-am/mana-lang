@@ -1,0 +1,55 @@
+// If/else control flow test
+module test_if_else;
+
+fn main() -> i32 {
+    // Simple if
+    let x: i32 = 10;
+    if x > 5 {
+        println("greater");
+    }
+    // expect: greater
+
+    // If-else
+    let y: i32 = 3;
+    if y > 5 {
+        println("big");
+    } else {
+        println("small");
+    }
+    // expect: small
+
+    // If-else if-else chain
+    let z: i32 = 50;
+    if z < 10 {
+        println("tiny");
+    } else if z < 30 {
+        println("small");
+    } else if z < 70 {
+        println("medium");
+    } else {
+        println("large");
+    }
+    // expect: medium
+
+    // Boolean conditions
+    let flag: bool = true;
+    if flag {
+        println("flag is true");
+    }
+    // expect: flag is true
+
+    // Compound conditions
+    let a: i32 = 5;
+    let b: i32 = 10;
+    if a < 10 && b > 5 {
+        println("both conditions met");
+    }
+    // expect: both conditions met
+
+    if a > 10 || b > 5 {
+        println("at least one met");
+    }
+    // expect: at least one met
+
+    return 0;
+}

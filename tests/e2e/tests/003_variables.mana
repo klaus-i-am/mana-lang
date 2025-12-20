@@ -1,0 +1,42 @@
+// Variable declarations test
+module test_variables;
+
+fn main() -> i32 {
+    // Immutable variable
+    let x: i32 = 10;
+    println(x);
+    // expect: 10
+
+    // Mutable variable
+    let mut y: i32 = 5;
+    println(y);
+    // expect: 5
+    y = 15;
+    println(y);
+    // expect: 15
+
+    // Type inference
+    let z = 42;
+    println(z);
+    // expect: 42
+
+    // Multiple types
+    let i: i64 = 1000000000000;
+    let f: f32 = 3.14;
+    let b: bool = true;
+    let s: string = "hello";
+    let c: char = 'A';
+
+    println(i);
+    // expect: 1000000000000
+    println(f);
+    // expect: 3.14
+    println(b);
+    // expect: true
+    println(s);
+    // expect: hello
+    println(c);
+    // expect: A
+
+    return 0;
+}

@@ -1,0 +1,39 @@
+// F-strings (string interpolation) test
+module test_fstrings;
+
+fn main() -> i32 {
+    // Basic interpolation
+    let name: string = "Alice";
+    println(f"Hello, {name}!");
+    // expect: Hello, Alice!
+
+    // Number interpolation
+    let age: i32 = 25;
+    println(f"{name} is {age} years old");
+    // expect: Alice is 25 years old
+
+    // Expression in f-string
+    let x: i32 = 10;
+    let y: i32 = 20;
+    println(f"{x} + {y} = {x + y}");
+    // expect: 10 + 20 = 30
+
+    // Multiple interpolations
+    let a: i32 = 1;
+    let b: i32 = 2;
+    let c: i32 = 3;
+    println(f"a={a}, b={b}, c={c}");
+    // expect: a=1, b=2, c=3
+
+    // Boolean interpolation
+    let flag: bool = true;
+    println(f"Flag is {flag}");
+    // expect: Flag is true
+
+    // Float interpolation
+    let pi: f64 = 3.14159;
+    println(f"Pi is approximately {pi}");
+    // expect: Pi is approximately 3.14159
+
+    return 0;
+}

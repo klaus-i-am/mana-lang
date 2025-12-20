@@ -1,0 +1,54 @@
+// Structs test
+module test_structs;
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+struct Rectangle {
+    width: i32,
+    height: i32,
+}
+
+fn area(r: Rectangle) -> i32 {
+    return r.width * r.height;
+}
+
+struct Person {
+    name: string,
+    age: i32,
+}
+
+fn main() -> i32 {
+    // Create struct instance
+    let p: Point = Point { x: 10, y: 20 };
+    println(p.x);
+    // expect: 10
+    println(p.y);
+    // expect: 20
+
+    // Pass struct to function
+    let rect: Rectangle = Rectangle { width: 5, height: 4 };
+    let a: i32 = area(rect);
+    println(a);
+    // expect: 20
+
+    // Struct with string field
+    let person: Person = Person { name: "Alice", age: 30 };
+    println(person.name);
+    // expect: Alice
+    println(person.age);
+    // expect: 30
+
+    // Mutable struct
+    let mut mp: Point = Point { x: 0, y: 0 };
+    mp.x = 100;
+    mp.y = 200;
+    println(mp.x);
+    // expect: 100
+    println(mp.y);
+    // expect: 200
+
+    return 0;
+}

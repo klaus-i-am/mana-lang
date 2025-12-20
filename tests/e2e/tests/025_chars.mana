@@ -1,0 +1,37 @@
+// Character types test
+module test_chars;
+
+fn main() -> i32 {
+    // Basic char
+    let c1: char = 'A';
+    println(c1);
+    // expect: A
+
+    let c2: char = 'Z';
+    println(c2);
+    // expect: Z
+
+    // Escape sequences
+    let newline: char = '\n';
+    let tab: char = '\t';
+    let quote: char = '\'';
+
+    print("before");
+    print(tab);
+    println("after");
+    // expect: before	after
+
+    // Char comparisons
+    println('a' < 'z');
+    // expect: true
+
+    println('A' == 'A');
+    // expect: true
+
+    // Numeric chars
+    let digit: char = '5';
+    println(digit);
+    // expect: 5
+
+    return 0;
+}

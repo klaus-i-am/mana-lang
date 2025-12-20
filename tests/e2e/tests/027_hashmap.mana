@@ -1,0 +1,46 @@
+// HashMap test
+module test_hashmap;
+
+fn main() -> i32 {
+    // Create hashmap
+    let mut map: HashMap<string, i32> = HashMap::new();
+
+    // Insert values
+    map.insert("one", 1);
+    map.insert("two", 2);
+    map.insert("three", 3);
+
+    // Get values
+    let v1 = map.get("one");
+    if let Some(val) = v1 {
+        println(val);
+    }
+    // expect: 1
+
+    let v2 = map.get("two");
+    if let Some(val) = v2 {
+        println(val);
+    }
+    // expect: 2
+
+    // Check contains
+    println(map.contains_key("three"));
+    // expect: true
+
+    println(map.contains_key("four"));
+    // expect: false
+
+    // Length
+    println(map.len());
+    // expect: 3
+
+    // Remove
+    map.remove("two");
+    println(map.len());
+    // expect: 2
+
+    println(map.contains_key("two"));
+    // expect: false
+
+    return 0;
+}

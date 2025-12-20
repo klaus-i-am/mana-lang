@@ -1,0 +1,50 @@
+// Enums test
+module test_enums;
+
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+
+enum Direction {
+    North,
+    South,
+    East,
+    West,
+}
+
+fn color_name(c: Color) -> string {
+    return match c {
+        Color::Red => "red",
+        Color::Green => "green",
+        Color::Blue => "blue",
+    };
+}
+
+fn main() -> i32 {
+    // Create enum values
+    let c1: Color = Color::Red;
+    let c2: Color = Color::Green;
+    let c3: Color = Color::Blue;
+
+    println(color_name(c1));
+    // expect: red
+    println(color_name(c2));
+    // expect: green
+    println(color_name(c3));
+    // expect: blue
+
+    // Direction enum
+    let dir: Direction = Direction::North;
+    let result: string = match dir {
+        Direction::North => "Going north",
+        Direction::South => "Going south",
+        Direction::East => "Going east",
+        Direction::West => "Going west",
+    };
+    println(result);
+    // expect: Going north
+
+    return 0;
+}

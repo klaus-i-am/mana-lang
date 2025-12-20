@@ -1,0 +1,57 @@
+// String operations test
+module test_strings;
+
+fn main() -> i32 {
+    // Basic string
+    let s1: string = "Hello";
+    println(s1);
+    // expect: Hello
+
+    // String concatenation
+    let s2: string = s1 + ", World!";
+    println(s2);
+    // expect: Hello, World!
+
+    // String length
+    let len: i32 = s1.len();
+    println(len);
+    // expect: 5
+
+    // String contains
+    let has: bool = s2.contains("World");
+    println(has);
+    // expect: true
+
+    // String starts/ends with
+    println(s2.starts_with("Hello"));
+    // expect: true
+    println(s2.ends_with("!"));
+    // expect: true
+
+    // Uppercase/lowercase
+    let upper: string = s1.to_uppercase();
+    println(upper);
+    // expect: HELLO
+
+    let lower: string = s1.to_lowercase();
+    println(lower);
+    // expect: hello
+
+    // Trim
+    let padded: string = "  spaces  ";
+    let trimmed: string = padded.trim();
+    println(f"[{trimmed}]");
+    // expect: [spaces]
+
+    // String comparison
+    let eq: bool = s1 == "Hello";
+    println(eq);
+    // expect: true
+
+    // Empty string
+    let empty: string = "";
+    println(empty.is_empty());
+    // expect: true
+
+    return 0;
+}

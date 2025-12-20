@@ -1,0 +1,31 @@
+// Closures test
+module test_closures;
+
+fn main() -> i32 {
+    // Simple closure
+    let double = |x: i32| x * 2;
+    println(double(5));
+    // expect: 10
+
+    // Closure with multiple params
+    let add = |a: i32, b: i32| a + b;
+    println(add(3, 4));
+    // expect: 7
+
+    // Closure capturing variable
+    let multiplier: i32 = 10;
+    let times = |x: i32| x * multiplier;
+    println(times(7));
+    // expect: 70
+
+    // Closure with block body
+    let compute = |x: i32| {
+        let y: i32 = x + 1;
+        let z: i32 = y * 2;
+        return z;
+    };
+    println(compute(4));
+    // expect: 10
+
+    return 0;
+}

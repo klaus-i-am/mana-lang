@@ -1,0 +1,48 @@
+// Standard library functions test
+module test_stdlib;
+
+fn main() -> i32 {
+    // Math functions
+    println(abs(-5));
+    // expect: 5
+
+    println(min(3, 7));
+    // expect: 3
+
+    println(max(3, 7));
+    // expect: 7
+
+    // Float math
+    let pi: f64 = 3.14159;
+    println(floor(pi));
+    // expect: 3
+
+    println(ceil(pi));
+    // expect: 4
+
+    println(round(pi));
+    // expect: 3
+
+    // Square root
+    println(sqrt(16.0));
+    // expect: 4
+
+    println(sqrt(2.0));
+    // expect-contains: 1.41
+
+    // Power
+    println(pow(2.0, 8.0));
+    // expect: 256
+
+    // Clamp
+    println(clamp(5, 0, 10));
+    // expect: 5
+
+    println(clamp(-5, 0, 10));
+    // expect: 0
+
+    println(clamp(15, 0, 10));
+    // expect: 10
+
+    return 0;
+}

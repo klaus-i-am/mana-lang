@@ -1,0 +1,59 @@
+// Functions test
+module test_functions;
+
+fn add(a: i32, b: i32) -> i32 {
+    return a + b;
+}
+
+fn multiply(x: i32, y: i32) -> i32 {
+    return x * y;
+}
+
+fn greet(name: string) -> void {
+    println(f"Hello, {name}!");
+}
+
+fn factorial(n: i32) -> i32 {
+    if n <= 1 {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+fn fibonacci(n: i32) -> i32 {
+    if n <= 1 {
+        return n;
+    }
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+fn main() -> i32 {
+    // Basic function calls
+    let sum: i32 = add(3, 4);
+    println(sum);
+    // expect: 7
+
+    let prod: i32 = multiply(5, 6);
+    println(prod);
+    // expect: 30
+
+    // Void function
+    greet("World");
+    // expect: Hello, World!
+
+    // Recursive functions
+    let fact: i32 = factorial(5);
+    println(fact);
+    // expect: 120
+
+    let fib: i32 = fibonacci(10);
+    println(fib);
+    // expect: 55
+
+    // Nested function calls
+    let result: i32 = add(multiply(2, 3), multiply(4, 5));
+    println(result);
+    // expect: 26
+
+    return 0;
+}

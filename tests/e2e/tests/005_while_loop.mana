@@ -1,0 +1,45 @@
+// While loop test
+module test_while;
+
+fn main() -> i32 {
+    // Basic while loop
+    let mut i: i32 = 0;
+    while i < 5 {
+        println(i);
+        i = i + 1;
+    }
+    // expect: 0
+    // expect: 1
+    // expect: 2
+    // expect: 3
+    // expect: 4
+
+    // While with break
+    let mut j: i32 = 0;
+    while true {
+        if j >= 3 {
+            break;
+        }
+        println(j);
+        j = j + 1;
+    }
+    // expect: 0
+    // expect: 1
+    // expect: 2
+
+    // While with continue
+    let mut k: i32 = 0;
+    while k < 5 {
+        k = k + 1;
+        if k == 3 {
+            continue;
+        }
+        println(k);
+    }
+    // expect: 1
+    // expect: 2
+    // expect: 4
+    // expect: 5
+
+    return 0;
+}

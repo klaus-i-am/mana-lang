@@ -1,0 +1,40 @@
+// Tuples test
+module test_tuples;
+
+fn get_pair() -> (i32, string) {
+    return (42, "answer");
+}
+
+fn main() -> i32 {
+    // Basic tuple
+    let t: (i32, string) = (10, "hello");
+    println(t.0);
+    // expect: 10
+    println(t.1);
+    // expect: hello
+
+    // Tuple from function
+    let pair = get_pair();
+    println(pair.0);
+    // expect: 42
+    println(pair.1);
+    // expect: answer
+
+    // Tuple destructuring
+    let (a, b) = get_pair();
+    println(a);
+    // expect: 42
+    println(b);
+    // expect: answer
+
+    // Three element tuple
+    let triple: (i32, i32, i32) = (1, 2, 3);
+    println(triple.0);
+    // expect: 1
+    println(triple.1);
+    // expect: 2
+    println(triple.2);
+    // expect: 3
+
+    return 0;
+}

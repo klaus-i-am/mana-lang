@@ -1,0 +1,392 @@
+// OpenGL Gamepad Controller Example
+// Demonstrates gamepad input for game controls
+
+fn main() {
+    if !gl_init() {
+        println("Failed to initialize GLFW");
+        return;
+    }
+
+    gl_window_hint(GLFW_CONTEXT_VERSION_MAJOR(), 3);
+    gl_window_hint(GLFW_CONTEXT_VERSION_MINOR(), 3);
+    gl_window_hint(GLFW_OPENGL_PROFILE(), GLFW_OPENGL_CORE_PROFILE());
+
+    let window = gl_create_window(1024, 768, "Mana - Gamepad Demo");
+    if window == 0 {
+        println("Failed to create window");
+        gl_terminate();
+        return;
+    }
+
+    gl_make_context_current(window);
+
+    if !gl_load_gl() {
+        println("Failed to load OpenGL");
+        gl_terminate();
+        return;
+    }
+
+    gl_enable(GL_DEPTH_TEST());
+
+    // Create shader
+    let shader = create_shader();
+    if shader == 0 {
+        gl_terminate();
+        return;
+    }
+
+    // Create geometry
+    let cube_vao = create_cube();
+
+    // Get uniform locations
+    gl_use_program(shader);
+    let model_loc = gl_get_uniform_location(shader, "model");
+    let view_loc = gl_get_uniform_location(shader, "view");
+    let proj_loc = gl_get_uniform_location(shader, "projection");
+    let color_loc = gl_get_uniform_location(shader, "objectColor");
+
+    // Player state (controlled by gamepad)
+    let player_x = 0.0;
+    let player_y = 0.5;
+    let player_z = 0.0;
+    let player_rotation = 0.0;
+    let player_scale = 1.0;
+
+    // Color (changes with buttons)
+    let color_r = 0.2;
+    let color_g = 0.6;
+    let color_b = 1.0;
+
+    // Camera
+    let cam_distance = 8.0;
+    let cam_height = 5.0;
+    let cam_angle = 0.0;
+
+    // Timing
+    let last_time = gl_get_time();
+
+    // Deadzone for analog sticks
+    let deadzone = 0.15;
+    let move_speed = 5.0;
+    let rotate_speed = 3.0;
+
+    println("=== Gamepad Demo ===");
+    println("Connect a controller to play!");
+    println("");
+    println("Controls:");
+    println("  Left Stick    - Move player");
+    println("  Right Stick   - Rotate camera");
+    println("  Triggers      - Scale player up/down");
+    println("  A/Cross       - Green color");
+    println("  B/Circle      - Red color");
+    println("  X/Square      - Blue color");
+    println("  Y/Triangle    - Yellow color");
+    println("  Bumpers       - Rotate player");
+    println("  D-Pad         - Move player (digital)");
+    println("  Start         - Reset position");
+    println("  Back/Select   - Quit");
+    println("");
+    println("Keyboard fallback: WASD to move, ESC to quit");
+    println("");
+
+    let gamepad_id = -1;
+    let gamepad_connected = false;
+
+    while !gl_window_should_close(window) {
+        // Calculate delta time
+        let current_time = gl_get_time();
+        let dt = current_time - last_time;
+        last_time = current_time;
+
+        // Check for gamepad
+        if !gamepad_connected {
+            gamepad_id = gl_find_first_gamepad();
+            if gamepad_id >= 0 {
+                gamepad_connected = true;
+                let name = gl_get_gamepad_name(gamepad_id);
+                println("Gamepad connected: " + name);
+            }
+        } else {
+            // Check if still connected
+            if !gl_joystick_present(gamepad_id) {
+                gamepad_connected = false;
+                gamepad_id = -1;
+                println("Gamepad disconnected");
+            }
+        }
+
+        // Handle keyboard input (fallback)
+        if gl_get_key(window, GLFW_KEY_ESCAPE()) == GLFW_PRESS() {
+            gl_set_window_should_close(window, true);
+        }
+
+        // Keyboard movement fallback
+        if gl_get_key(window, GLFW_KEY_W()) == GLFW_PRESS() {
+            player_z = player_z - move_speed * dt;
+        }
+        if gl_get_key(window, GLFW_KEY_S()) == GLFW_PRESS() {
+            player_z = player_z + move_speed * dt;
+        }
+        if gl_get_key(window, GLFW_KEY_A()) == GLFW_PRESS() {
+            player_x = player_x - move_speed * dt;
+        }
+        if gl_get_key(window, GLFW_KEY_D()) == GLFW_PRESS() {
+            player_x = player_x + move_speed * dt;
+        }
+
+        // Gamepad input
+        if gamepad_connected {
+            // Back/Select button to quit
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_BACK()) {
+                gl_set_window_should_close(window, true);
+            }
+
+            // Start button to reset
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_START()) {
+                player_x = 0.0;
+                player_y = 0.5;
+                player_z = 0.0;
+                player_rotation = 0.0;
+                player_scale = 1.0;
+                cam_angle = 0.0;
+            }
+
+            // Face buttons change color
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_A()) {
+                color_r = 0.2; color_g = 0.9; color_b = 0.3;  // Green
+            }
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_B()) {
+                color_r = 0.9; color_g = 0.2; color_b = 0.2;  // Red
+            }
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_X()) {
+                color_r = 0.2; color_g = 0.4; color_b = 0.9;  // Blue
+            }
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_Y()) {
+                color_r = 0.9; color_g = 0.9; color_b = 0.2;  // Yellow
+            }
+
+            // Bumpers rotate player
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_LEFT_BUMPER()) {
+                player_rotation = player_rotation + rotate_speed * dt;
+            }
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_RIGHT_BUMPER()) {
+                player_rotation = player_rotation - rotate_speed * dt;
+            }
+
+            // D-Pad movement (digital)
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_DPAD_UP()) {
+                player_z = player_z - move_speed * dt;
+            }
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_DPAD_DOWN()) {
+                player_z = player_z + move_speed * dt;
+            }
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_DPAD_LEFT()) {
+                player_x = player_x - move_speed * dt;
+            }
+            if gl_gamepad_button(gamepad_id, GAMEPAD_BUTTON_DPAD_RIGHT()) {
+                player_x = player_x + move_speed * dt;
+            }
+
+            // Left stick - move player (with deadzone)
+            let left_x = gl_gamepad_axis_deadzone(gamepad_id, GAMEPAD_AXIS_LEFT_X(), deadzone);
+            let left_y = gl_gamepad_axis_deadzone(gamepad_id, GAMEPAD_AXIS_LEFT_Y(), deadzone);
+
+            player_x = player_x + left_x * move_speed * dt;
+            player_z = player_z + left_y * move_speed * dt;
+
+            // Right stick - rotate camera
+            let right_x = gl_gamepad_axis_deadzone(gamepad_id, GAMEPAD_AXIS_RIGHT_X(), deadzone);
+            cam_angle = cam_angle + right_x * 2.0 * dt;
+
+            // Triggers - scale player
+            let left_trigger = gl_gamepad_axis(gamepad_id, GAMEPAD_AXIS_LEFT_TRIGGER());
+            let right_trigger = gl_gamepad_axis(gamepad_id, GAMEPAD_AXIS_RIGHT_TRIGGER());
+
+            // Triggers range from -1 to 1, normalize to 0..1
+            let lt = (left_trigger + 1.0) * 0.5;
+            let rt = (right_trigger + 1.0) * 0.5;
+
+            // Left trigger shrinks, right trigger grows
+            player_scale = 1.0 - lt * 0.5 + rt * 1.0;
+            if player_scale < 0.3 { player_scale = 0.3; }
+            if player_scale > 2.5 { player_scale = 2.5; }
+        }
+
+        // Clamp player position
+        if player_x < -10.0 { player_x = -10.0; }
+        if player_x > 10.0 { player_x = 10.0; }
+        if player_z < -10.0 { player_z = -10.0; }
+        if player_z > 10.0 { player_z = 10.0; }
+
+        // Camera position (orbits around origin, looking at player)
+        let cam_x = sin(cam_angle) * cam_distance;
+        let cam_z = cos(cam_angle) * cam_distance;
+
+        let cam_pos = math::vec3(cam_x, cam_height, cam_z);
+        let target = math::vec3(player_x, player_y, player_z);
+        let up = math::vec3(0.0, 1.0, 0.0);
+
+        let view = math::look_at(cam_pos, target, up);
+        let projection = math::perspective(math::radians(45.0), 1024.0 / 768.0, 0.1, 100.0);
+
+        // Clear screen
+        gl_clear_color(0.05, 0.05, 0.1, 1.0);
+        gl_clear(GL_COLOR_BUFFER_BIT() | GL_DEPTH_BUFFER_BIT());
+
+        // Setup shader
+        gl_use_program(shader);
+        gl_uniform_matrix4fv(view_loc, view, false);
+        gl_uniform_matrix4fv(proj_loc, projection, false);
+
+        gl_bind_vertex_array(cube_vao);
+
+        // Draw ground plane (grid of flat cubes)
+        let gx = -5;
+        while gx <= 5 {
+            let gz = -5;
+            while gz <= 5 {
+                let ground_model = math::translate(gx * 2.0, -0.1, gz * 2.0) *
+                                   math::scale(1.8, 0.1, 1.8);
+                gl_uniform_matrix4fv(model_loc, ground_model, false);
+
+                // Checkerboard pattern
+                if (gx + gz) % 2 == 0 {
+                    gl_uniform_3f(color_loc, 0.3, 0.3, 0.35);
+                } else {
+                    gl_uniform_3f(color_loc, 0.2, 0.2, 0.25);
+                }
+                gl_draw_arrays(GL_TRIANGLES(), 0, 36);
+                gz = gz + 1;
+            }
+            gx = gx + 1;
+        }
+
+        // Draw player cube
+        let player_model = math::translate(player_x, player_y * player_scale, player_z) *
+                          math::rotate_y(player_rotation) *
+                          math::scale(player_scale, player_scale, player_scale);
+        gl_uniform_matrix4fv(model_loc, player_model, false);
+        gl_uniform_3f(color_loc, color_r, color_g, color_b);
+        gl_draw_arrays(GL_TRIANGLES(), 0, 36);
+
+        // Draw some obstacle cubes
+        let obstacles = 0;
+        while obstacles < 8 {
+            let angle = obstacles * 0.785398;  // PI/4
+            let dist = 6.0;
+            let ox = sin(angle) * dist;
+            let oz = cos(angle) * dist;
+            let oy = 0.5 + sin(current_time * 2.0 + obstacles) * 0.2;
+
+            let obs_model = math::translate(ox, oy, oz) *
+                           math::rotate_y(current_time + obstacles) *
+                           math::scale(0.6, 0.6, 0.6);
+            gl_uniform_matrix4fv(model_loc, obs_model, false);
+
+            // Gradient colors
+            let r = 0.5 + sin(obstacles * 0.8) * 0.3;
+            let g = 0.5 + cos(obstacles * 0.8) * 0.3;
+            let b = 0.7;
+            gl_uniform_3f(color_loc, r, g, b);
+
+            gl_draw_arrays(GL_TRIANGLES(), 0, 36);
+            obstacles = obstacles + 1;
+        }
+
+        gl_swap_buffers(window);
+        gl_poll_events();
+    }
+
+    // Cleanup
+    gl_delete_vertex_array(cube_vao);
+    gl_delete_program(shader);
+    gl_terminate();
+
+    println("Goodbye!");
+}
+
+fn create_shader() -> u32 {
+    let vert_src = "#version 330 core
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main() {
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+}";
+
+    let frag_src = "#version 330 core
+uniform vec3 objectColor;
+out vec4 FragColor;
+
+void main() {
+    FragColor = vec4(objectColor, 1.0);
+}";
+
+    let vs = gl_create_shader(GL_VERTEX_SHADER());
+    gl_shader_source(vs, vert_src);
+    gl_compile_shader(vs);
+    if !gl_get_shader_compile_status(vs) {
+        println("Vertex shader error: " + gl_get_shader_info_log(vs));
+        return 0;
+    }
+
+    let fs = gl_create_shader(GL_FRAGMENT_SHADER());
+    gl_shader_source(fs, frag_src);
+    gl_compile_shader(fs);
+    if !gl_get_shader_compile_status(fs) {
+        println("Fragment shader error: " + gl_get_shader_info_log(fs));
+        return 0;
+    }
+
+    let prog = gl_create_program();
+    gl_attach_shader(prog, vs);
+    gl_attach_shader(prog, fs);
+    gl_link_program(prog);
+    if !gl_get_program_link_status(prog) {
+        println("Link error: " + gl_get_program_info_log(prog));
+        return 0;
+    }
+
+    gl_delete_shader(vs);
+    gl_delete_shader(fs);
+    return prog;
+}
+
+fn create_cube() -> u32 {
+    let verts: Vec<f32> = [
+        // Front
+        -0.5, -0.5,  0.5,   0.5, -0.5,  0.5,   0.5,  0.5,  0.5,
+         0.5,  0.5,  0.5,  -0.5,  0.5,  0.5,  -0.5, -0.5,  0.5,
+        // Back
+        -0.5, -0.5, -0.5,   0.5,  0.5, -0.5,   0.5, -0.5, -0.5,
+         0.5,  0.5, -0.5,  -0.5, -0.5, -0.5,  -0.5,  0.5, -0.5,
+        // Top
+        -0.5,  0.5, -0.5,  -0.5,  0.5,  0.5,   0.5,  0.5,  0.5,
+         0.5,  0.5,  0.5,   0.5,  0.5, -0.5,  -0.5,  0.5, -0.5,
+        // Bottom
+        -0.5, -0.5, -0.5,   0.5, -0.5,  0.5,  -0.5, -0.5,  0.5,
+         0.5, -0.5,  0.5,  -0.5, -0.5, -0.5,   0.5, -0.5, -0.5,
+        // Right
+         0.5, -0.5, -0.5,   0.5,  0.5,  0.5,   0.5, -0.5,  0.5,
+         0.5,  0.5,  0.5,   0.5, -0.5, -0.5,   0.5,  0.5, -0.5,
+        // Left
+        -0.5, -0.5, -0.5,  -0.5, -0.5,  0.5,  -0.5,  0.5,  0.5,
+        -0.5,  0.5,  0.5,  -0.5,  0.5, -0.5,  -0.5, -0.5, -0.5
+    ];
+
+    let vao = gl_gen_vertex_array();
+    let vbo = gl_gen_buffer();
+
+    gl_bind_vertex_array(vao);
+    gl_bind_buffer(GL_ARRAY_BUFFER(), vbo);
+    gl_buffer_data_f32(GL_ARRAY_BUFFER(), verts, GL_STATIC_DRAW());
+
+    gl_vertex_attrib_pointer(0, 3, 3, 0);
+    gl_enable_vertex_attrib_array(0);
+
+    gl_bind_vertex_array(0);
+    return vao;
+}

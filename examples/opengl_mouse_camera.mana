@@ -1,0 +1,400 @@
+// OpenGL Mouse Camera Example
+// Demonstrates FPS-style camera control with mouse look and WASD movement
+
+fn main() {
+    if !gl_init() {
+        println("Failed to initialize GLFW");
+        return;
+    }
+
+    gl_window_hint(GLFW_CONTEXT_VERSION_MAJOR(), 3);
+    gl_window_hint(GLFW_CONTEXT_VERSION_MINOR(), 3);
+    gl_window_hint(GLFW_OPENGL_PROFILE(), GLFW_OPENGL_CORE_PROFILE());
+
+    let window = gl_create_window(1280, 720, "Mana - Mouse Camera Demo");
+    if window == 0 {
+        println("Failed to create window");
+        gl_terminate();
+        return;
+    }
+
+    gl_make_context_current(window);
+
+    if !gl_load_gl() {
+        println("Failed to load OpenGL");
+        gl_terminate();
+        return;
+    }
+
+    // Enable depth testing
+    gl_enable(GL_DEPTH_TEST());
+
+    // Capture and hide cursor for FPS camera
+    gl_disable_cursor(window);
+
+    // Enable raw mouse motion if supported (more accurate)
+    if gl_raw_mouse_motion_supported() {
+        gl_enable_raw_mouse_motion(window);
+        println("Raw mouse motion enabled");
+    }
+
+    // Enable scroll callback for zoom/FOV control
+    gl_enable_scroll_callback(window);
+
+    // Initialize mouse tracking
+    gl_init_mouse_tracking(window);
+
+    // Create shader
+    let shader = create_shader();
+    if shader == 0 {
+        gl_terminate();
+        return;
+    }
+
+    // Create geometry
+    let cube_vao = create_cube();
+    let grid_vao = create_grid();
+
+    // Get uniform locations
+    gl_use_program(shader);
+    let model_loc = gl_get_uniform_location(shader, "model");
+    let view_loc = gl_get_uniform_location(shader, "view");
+    let proj_loc = gl_get_uniform_location(shader, "projection");
+    let color_loc = gl_get_uniform_location(shader, "objectColor");
+
+    // Camera state
+    let cam_x = 0.0;
+    let cam_y = 2.0;
+    let cam_z = 8.0;
+    let yaw = -90.0;    // Looking towards -Z
+    let pitch = -10.0;
+    let fov = 60.0;
+
+    // Mouse sensitivity
+    let mouse_sensitivity = 0.1;
+    let move_speed = 5.0;
+    let scroll_sensitivity = 2.0;
+
+    // Timing
+    let last_time = gl_get_time();
+
+    // Cursor capture state
+    let cursor_captured = true;
+
+    println("=== Mouse Camera Demo ===");
+    println("Controls:");
+    println("  Mouse      - Look around");
+    println("  WASD       - Move");
+    println("  Space      - Move up");
+    println("  Left Shift - Move down");
+    println("  Scroll     - Adjust FOV");
+    println("  Tab        - Toggle cursor capture");
+    println("  R          - Reset camera");
+    println("  ESC        - Quit");
+    println("");
+
+    // Tab key state for toggle
+    let tab_was_pressed = false;
+
+    while !gl_window_should_close(window) {
+        // Calculate delta time
+        let current_time = gl_get_time();
+        let dt = current_time - last_time;
+        last_time = current_time;
+
+        // Handle input
+        if gl_get_key(window, GLFW_KEY_ESCAPE()) == GLFW_PRESS() {
+            gl_set_window_should_close(window, true);
+        }
+
+        // Toggle cursor capture with Tab
+        let tab_pressed = gl_get_key(window, 258) == GLFW_PRESS();  // GLFW_KEY_TAB = 258
+        if tab_pressed && !tab_was_pressed {
+            cursor_captured = !cursor_captured;
+            if cursor_captured {
+                gl_disable_cursor(window);
+                gl_init_mouse_tracking(window);  // Reset delta tracking
+                println("Cursor captured - mouse look enabled");
+            } else {
+                gl_enable_cursor(window);
+                println("Cursor released - mouse look disabled");
+            }
+        }
+        tab_was_pressed = tab_pressed;
+
+        // Reset camera with R
+        if gl_get_key(window, 82) == GLFW_PRESS() {  // GLFW_KEY_R = 82
+            cam_x = 0.0;
+            cam_y = 2.0;
+            cam_z = 8.0;
+            yaw = -90.0;
+            pitch = -10.0;
+            fov = 60.0;
+        }
+
+        // Mouse look (only when cursor is captured)
+        if cursor_captured {
+            gl_update_mouse_delta(window);
+            let dx = gl_get_mouse_delta_x();
+            let dy = gl_get_mouse_delta_y();
+
+            yaw = yaw + dx * mouse_sensitivity;
+            pitch = pitch + dy * mouse_sensitivity;
+
+            // Clamp pitch
+            if pitch > 89.0 { pitch = 89.0; }
+            if pitch < -89.0 { pitch = -89.0; }
+        }
+
+        // Scroll to adjust FOV
+        if gl_has_scroll_input() {
+            let scroll_y = gl_get_scroll_y();
+            fov = fov - scroll_y * scroll_sensitivity;
+            if fov < 10.0 { fov = 10.0; }
+            if fov > 120.0 { fov = 120.0; }
+        }
+
+        // Calculate forward and right vectors
+        let yaw_rad = math::radians(yaw);
+        let pitch_rad = math::radians(pitch);
+
+        // Forward vector (in XZ plane for movement)
+        let forward_x = cos(yaw_rad);
+        let forward_z = sin(yaw_rad);
+
+        // Right vector (perpendicular to forward)
+        let right_x = sin(yaw_rad);
+        let right_z = -cos(yaw_rad);
+
+        // Movement speed (sprint with left shift held down)
+        let speed = move_speed;
+        if gl_get_key(window, 340) == GLFW_PRESS() {  // GLFW_KEY_LEFT_SHIFT = 340
+            speed = move_speed * 2.0;  // Sprint
+        }
+
+        // WASD movement
+        if gl_get_key(window, GLFW_KEY_W()) == GLFW_PRESS() {
+            cam_x = cam_x + forward_x * speed * dt;
+            cam_z = cam_z + forward_z * speed * dt;
+        }
+        if gl_get_key(window, GLFW_KEY_S()) == GLFW_PRESS() {
+            cam_x = cam_x - forward_x * speed * dt;
+            cam_z = cam_z - forward_z * speed * dt;
+        }
+        if gl_get_key(window, GLFW_KEY_A()) == GLFW_PRESS() {
+            cam_x = cam_x - right_x * speed * dt;
+            cam_z = cam_z - right_z * speed * dt;
+        }
+        if gl_get_key(window, GLFW_KEY_D()) == GLFW_PRESS() {
+            cam_x = cam_x + right_x * speed * dt;
+            cam_z = cam_z + right_z * speed * dt;
+        }
+
+        // Vertical movement
+        if gl_get_key(window, GLFW_KEY_SPACE()) == GLFW_PRESS() {
+            cam_y = cam_y + speed * dt;
+        }
+        if gl_get_key(window, 341) == GLFW_PRESS() {  // GLFW_KEY_LEFT_CONTROL = 341
+            cam_y = cam_y - speed * dt;
+        }
+
+        // Create view and projection matrices
+        let cam_pos = math::vec3(cam_x, cam_y, cam_z);
+        let view = math::fps_view(cam_pos, math::radians(yaw), math::radians(pitch));
+        let projection = math::perspective(math::radians(fov), 1280.0 / 720.0, 0.1, 1000.0);
+
+        // Clear screen
+        gl_clear_color(0.02, 0.02, 0.05, 1.0);
+        gl_clear(GL_COLOR_BUFFER_BIT() | GL_DEPTH_BUFFER_BIT());
+
+        // Setup shader
+        gl_use_program(shader);
+        gl_uniform_matrix4fv(view_loc, view, false);
+        gl_uniform_matrix4fv(proj_loc, projection, false);
+
+        // Draw grid
+        let grid_model = math::mat4_identity();
+        gl_uniform_matrix4fv(model_loc, grid_model, false);
+        gl_uniform_3f(color_loc, 0.2, 0.2, 0.25);
+        gl_bind_vertex_array(grid_vao);
+        gl_draw_arrays(GL_LINES(), 0, 168);
+
+        // Draw cubes
+        gl_bind_vertex_array(cube_vao);
+
+        // Draw a grid of cubes
+        let cube_idx = 0;
+        let gx = -4;
+        while gx <= 4 {
+            let gz = -4;
+            while gz <= 4 {
+                // Skip center area
+                if (gx >= -1 && gx <= 1) && (gz >= -1 && gz <= 1) {
+                    gz = gz + 2;
+                    continue;
+                }
+
+                let x = gx * 3.0;
+                let z = gz * 3.0;
+                let y = 0.5 + sin(current_time + cube_idx * 0.5) * 0.3;
+
+                let cube_model = math::translate(x, y, z) *
+                                 math::rotate_y(current_time * 0.5 + cube_idx) *
+                                 math::scale(0.8, 0.8, 0.8);
+                gl_uniform_matrix4fv(model_loc, cube_model, false);
+
+                // Color based on position
+                let r = (gx + 5.0) / 10.0;
+                let g = 0.4;
+                let b = (gz + 5.0) / 10.0;
+                gl_uniform_3f(color_loc, r, g, b);
+
+                gl_draw_arrays(GL_TRIANGLES(), 0, 36);
+                cube_idx = cube_idx + 1;
+                gz = gz + 2;
+            }
+            gx = gx + 2;
+        }
+
+        // Draw a larger cube at origin
+        let center_model = math::translate(0.0, 1.5, 0.0) *
+                          math::rotate_y(current_time * 0.3) *
+                          math::rotate_x(current_time * 0.2) *
+                          math::scale(2.0, 2.0, 2.0);
+        gl_uniform_matrix4fv(model_loc, center_model, false);
+        gl_uniform_3f(color_loc, 0.9, 0.3, 0.1);
+        gl_draw_arrays(GL_TRIANGLES(), 0, 36);
+
+        gl_swap_buffers(window);
+        gl_poll_events();
+    }
+
+    // Cleanup
+    gl_delete_vertex_array(cube_vao);
+    gl_delete_vertex_array(grid_vao);
+    gl_delete_program(shader);
+    gl_terminate();
+
+    println("Goodbye!");
+}
+
+fn create_shader() -> u32 {
+    let vert_src = "#version 330 core
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+void main() {
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+}";
+
+    let frag_src = "#version 330 core
+uniform vec3 objectColor;
+out vec4 FragColor;
+
+void main() {
+    FragColor = vec4(objectColor, 1.0);
+}";
+
+    let vs = gl_create_shader(GL_VERTEX_SHADER());
+    gl_shader_source(vs, vert_src);
+    gl_compile_shader(vs);
+    if !gl_get_shader_compile_status(vs) {
+        println("Vertex shader error: " + gl_get_shader_info_log(vs));
+        return 0;
+    }
+
+    let fs = gl_create_shader(GL_FRAGMENT_SHADER());
+    gl_shader_source(fs, frag_src);
+    gl_compile_shader(fs);
+    if !gl_get_shader_compile_status(fs) {
+        println("Fragment shader error: " + gl_get_shader_info_log(fs));
+        return 0;
+    }
+
+    let prog = gl_create_program();
+    gl_attach_shader(prog, vs);
+    gl_attach_shader(prog, fs);
+    gl_link_program(prog);
+    if !gl_get_program_link_status(prog) {
+        println("Link error: " + gl_get_program_info_log(prog));
+        return 0;
+    }
+
+    gl_delete_shader(vs);
+    gl_delete_shader(fs);
+    return prog;
+}
+
+fn create_cube() -> u32 {
+    let verts: Vec<f32> = [
+        // Front
+        -0.5, -0.5,  0.5,   0.5, -0.5,  0.5,   0.5,  0.5,  0.5,
+         0.5,  0.5,  0.5,  -0.5,  0.5,  0.5,  -0.5, -0.5,  0.5,
+        // Back
+        -0.5, -0.5, -0.5,   0.5,  0.5, -0.5,   0.5, -0.5, -0.5,
+         0.5,  0.5, -0.5,  -0.5, -0.5, -0.5,  -0.5,  0.5, -0.5,
+        // Top
+        -0.5,  0.5, -0.5,  -0.5,  0.5,  0.5,   0.5,  0.5,  0.5,
+         0.5,  0.5,  0.5,   0.5,  0.5, -0.5,  -0.5,  0.5, -0.5,
+        // Bottom
+        -0.5, -0.5, -0.5,   0.5, -0.5,  0.5,  -0.5, -0.5,  0.5,
+         0.5, -0.5,  0.5,  -0.5, -0.5, -0.5,   0.5, -0.5, -0.5,
+        // Right
+         0.5, -0.5, -0.5,   0.5,  0.5,  0.5,   0.5, -0.5,  0.5,
+         0.5,  0.5,  0.5,   0.5, -0.5, -0.5,   0.5,  0.5, -0.5,
+        // Left
+        -0.5, -0.5, -0.5,  -0.5, -0.5,  0.5,  -0.5,  0.5,  0.5,
+        -0.5,  0.5,  0.5,  -0.5,  0.5, -0.5,  -0.5, -0.5, -0.5
+    ];
+
+    let vao = gl_gen_vertex_array();
+    let vbo = gl_gen_buffer();
+
+    gl_bind_vertex_array(vao);
+    gl_bind_buffer(GL_ARRAY_BUFFER(), vbo);
+    gl_buffer_data_f32(GL_ARRAY_BUFFER(), verts, GL_STATIC_DRAW());
+
+    gl_vertex_attrib_pointer(0, 3, 3, 0);
+    gl_enable_vertex_attrib_array(0);
+
+    gl_bind_vertex_array(0);
+    return vao;
+}
+
+fn create_grid() -> u32 {
+    let lines: Vec<f32> = [];
+    let size = 20.0;
+    let step = 2.0;
+
+    // Lines along X axis
+    let z = -size;
+    while z <= size {
+        lines.push(-size); lines.push(0.0); lines.push(z);
+        lines.push(size);  lines.push(0.0); lines.push(z);
+        z = z + step;
+    }
+
+    // Lines along Z axis
+    let x = -size;
+    while x <= size {
+        lines.push(x); lines.push(0.0); lines.push(-size);
+        lines.push(x); lines.push(0.0); lines.push(size);
+        x = x + step;
+    }
+
+    let vao = gl_gen_vertex_array();
+    let vbo = gl_gen_buffer();
+
+    gl_bind_vertex_array(vao);
+    gl_bind_buffer(GL_ARRAY_BUFFER(), vbo);
+    gl_buffer_data_f32(GL_ARRAY_BUFFER(), lines, GL_STATIC_DRAW());
+
+    gl_vertex_attrib_pointer(0, 3, 3, 0);
+    gl_enable_vertex_attrib_array(0);
+
+    gl_bind_vertex_array(0);
+    return vao;
+}

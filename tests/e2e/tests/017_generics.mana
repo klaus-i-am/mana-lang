@@ -1,0 +1,42 @@
+// Generics test
+module test_generics;
+
+fn identity<T>(x: T) -> T {
+    return x;
+}
+
+fn pair<T, U>(first: T, second: U) -> (T, U) {
+    return (first, second);
+}
+
+struct Container<T> {
+    value: T,
+}
+
+fn main() -> i32 {
+    // Generic function with i32
+    let x: i32 = identity(42);
+    println(x);
+    // expect: 42
+
+    // Generic function with string
+    let s: string = identity("hello");
+    println(s);
+    // expect: hello
+
+    // Generic function with bool
+    let b: bool = identity(true);
+    println(b);
+    // expect: true
+
+    // Generic struct
+    let c1: Container<i32> = Container { value: 100 };
+    println(c1.value);
+    // expect: 100
+
+    let c2: Container<string> = Container { value: "world" };
+    println(c2.value);
+    // expect: world
+
+    return 0;
+}

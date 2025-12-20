@@ -1,0 +1,33 @@
+// Constants test
+module test_const;
+
+const PI: f64 = 3.14159;
+const MAX_SIZE: i32 = 100;
+const GREETING: string = "Hello";
+
+fn main() -> i32 {
+    // Use constants
+    println(PI);
+    // expect: 3.14159
+
+    println(MAX_SIZE);
+    // expect: 100
+
+    println(GREETING);
+    // expect: Hello
+
+    // Use constant in expression
+    let diameter: f64 = 10.0;
+    let circumference: f64 = PI * diameter;
+    println(circumference);
+    // expect: 31.4159
+
+    // Constant in condition
+    let size: i32 = 50;
+    if size < MAX_SIZE {
+        println("Size is within limit");
+    }
+    // expect: Size is within limit
+
+    return 0;
+}

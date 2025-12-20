@@ -1,0 +1,52 @@
+// Match expressions test
+module test_match;
+
+fn main() -> i32 {
+    // Basic match on integers
+    let x: i32 = 2;
+    let result: string = match x {
+        1 => "one",
+        2 => "two",
+        3 => "three",
+        _ => "other",
+    };
+    println(result);
+    // expect: two
+
+    // Match with wildcard
+    let y: i32 = 100;
+    let msg: string = match y {
+        0 => "zero",
+        1 => "one",
+        _ => "many",
+    };
+    println(msg);
+    // expect: many
+
+    // Match returning values directly in expression
+    for i in 0..4 {
+        let name: string = match i {
+            0 => "zero",
+            1 => "one",
+            2 => "two",
+            _ => "other",
+        };
+        println(name);
+    }
+    // expect: zero
+    // expect: one
+    // expect: two
+    // expect: other
+
+    // Match with multiple patterns
+    let z: i32 = 3;
+    let category: string = match z {
+        1 | 2 => "small",
+        3 | 4 | 5 => "medium",
+        _ => "large",
+    };
+    println(category);
+    // expect: medium
+
+    return 0;
+}

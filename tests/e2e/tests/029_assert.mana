@@ -1,0 +1,26 @@
+// Assert test
+module test_assert;
+
+fn main() -> i32 {
+    // Basic assertions that pass
+    assert(true);
+    assert(1 == 1);
+    assert(5 > 3);
+    assert("hello" == "hello");
+
+    // Computed assertions
+    let x: i32 = 10;
+    let y: i32 = 20;
+    assert(x < y);
+    assert(x + y == 30);
+
+    // String assertions
+    let s: string = "test";
+    assert(s.len() == 4);
+    assert(s.contains("es"));
+
+    println("All assertions passed");
+    // expect: All assertions passed
+
+    return 0;
+}

@@ -1,0 +1,36 @@
+// Defer statement test
+module test_defer;
+
+fn test_defer_order() -> void {
+    defer {
+        println("third");
+    }
+    defer {
+        println("second");
+    }
+    defer {
+        println("first");
+    }
+    println("start");
+}
+
+fn main() -> i32 {
+    // Basic defer
+    println("before");
+    // expect: before
+    defer {
+        println("deferred");
+    }
+    println("after");
+    // expect: after
+    // expect: deferred
+
+    // Multiple defers (LIFO order)
+    test_defer_order();
+    // expect: start
+    // expect: first
+    // expect: second
+    // expect: third
+
+    return 0;
+}

@@ -1,0 +1,41 @@
+// Arithmetic operations test
+module test_arithmetic;
+
+fn main() -> i32 {
+    // Addition
+    let a: i32 = 10 + 5;
+    println(a);
+    // expect: 15
+
+    // Subtraction
+    let b: i32 = 20 - 8;
+    println(b);
+    // expect: 12
+
+    // Multiplication
+    let c: i32 = 6 * 7;
+    println(c);
+    // expect: 42
+
+    // Division
+    let d: i32 = 100 / 4;
+    println(d);
+    // expect: 25
+
+    // Modulo
+    let e: i32 = 17 % 5;
+    println(e);
+    // expect: 2
+
+    // Negative numbers
+    let f: i32 = -10 + 3;
+    println(f);
+    // expect: -7
+
+    // Floating point
+    let g: f64 = 3.14 * 2.0;
+    println(g);
+    // expect: 6.28
+
+    return 0;
+}

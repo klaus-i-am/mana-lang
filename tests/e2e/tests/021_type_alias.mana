@@ -1,0 +1,40 @@
+// Type aliases test
+module test_type_alias;
+
+type Int = i32;
+type Str = string;
+type IntPair = (i32, i32);
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+type Pt = Point;
+
+fn main() -> i32 {
+    // Basic type alias
+    let x: Int = 42;
+    println(x);
+    // expect: 42
+
+    let s: Str = "hello";
+    println(s);
+    // expect: hello
+
+    // Tuple type alias
+    let pair: IntPair = (10, 20);
+    println(pair.0);
+    // expect: 10
+    println(pair.1);
+    // expect: 20
+
+    // Struct type alias
+    let p: Pt = Point { x: 5, y: 10 };
+    println(p.x);
+    // expect: 5
+    println(p.y);
+    // expect: 10
+
+    return 0;
+}

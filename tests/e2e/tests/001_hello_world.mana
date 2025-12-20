@@ -1,0 +1,8 @@
+// Basic hello world test
+module test_hello;
+
+fn main() -> i32 {
+    println("Hello, World!");
+    // expect: Hello, World!
+    return 0;
+}

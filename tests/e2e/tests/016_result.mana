@@ -1,0 +1,45 @@
+// Result type test
+module test_result;
+
+fn divide(a: i32, b: i32) -> Result<i32, string> {
+    if b == 0 {
+        return Err("Division by zero");
+    }
+    return Ok(a / b);
+}
+
+fn main() -> i32 {
+    // Ok result
+    let r1 = divide(10, 2);
+    println(r1.is_ok());
+    // expect: true
+    println(r1.unwrap());
+    // expect: 5
+
+    // Err result
+    let r2 = divide(10, 0);
+    println(r2.is_err());
+    // expect: true
+    println(r2.unwrap_err());
+    // expect: Division by zero
+
+    // unwrap_or
+    let r3 = divide(20, 4);
+    println(r3.unwrap_or(-1));
+    // expect: 5
+
+    let r4 = divide(20, 0);
+    println(r4.unwrap_or(-1));
+    // expect: -1
+
+    // Match on Result
+    let res = divide(100, 10);
+    let msg: string = match res {
+        Ok(v) => f"Result: {v}",
+        Err(e) => f"Error: {e}",
+    };
+    println(msg);
+    // expect: Result: 10
+
+    return 0;
+}
