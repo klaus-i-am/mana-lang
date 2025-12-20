@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <cstdlib>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <io.h>
