@@ -1,0 +1,149 @@
+{
+  "name": "mana-lang",
+  "displayName": "Mana",
+  "description": "Mana programming language support - syntax highlighting, LSP, and debugging",
+  "version": "1.0.2",
+  "publisher": "mana-lang",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/klaus-i-am/mana-lang"
+  },
+  "bugs": {
+    "url": "https://github.com/klaus-i-am/mana-lang/issues"
+  },
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Debuggers"
+  ],
+  "keywords": [
+    "mana",
+    "systems programming",
+    "low-level",
+    "game development"
+  ],
+  "activationEvents": [
+    "onLanguage:mana"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "languages": [
+      {
+        "id": "mana",
+        "aliases": ["Mana", "mana"],
+        "extensions": [".mana"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "mana",
+        "scopeName": "source.mana",
+        "path": "./syntaxes/mana.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "Mana",
+      "properties": {
+        "mana.path": {
+          "type": "string",
+          "default": "mana",
+          "description": "Path to the Mana compiler executable"
+        },
+        "mana.lspPath": {
+          "type": "string",
+          "default": "mana-lsp",
+          "description": "Path to the Mana language server executable"
+        },
+        "mana.enableLsp": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable the Mana language server"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "mana.build",
+        "title": "Mana: Build Project"
+      },
+      {
+        "command": "mana.run",
+        "title": "Mana: Run Project"
+      },
+      {
+        "command": "mana.test",
+        "title": "Mana: Run Tests"
+      },
+      {
+        "command": "mana.restartLsp",
+        "title": "Mana: Restart Language Server"
+      }
+    ],
+    "breakpoints": [
+      {
+        "language": "mana"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "mana",
+        "label": "Mana Debug",
+        "program": "./out/debugAdapter.js",
+        "runtime": "node",
+        "languages": ["mana"],
+        "configurationAttributes": {
+          "launch": {
+            "required": ["program"],
+            "properties": {
+              "program": {
+                "type": "string",
+                "description": "Path to the Mana file to debug",
+                "default": "${workspaceFolder}/main.mana"
+              },
+              "args": {
+                "type": "array",
+                "description": "Command line arguments",
+                "default": []
+              },
+              "cwd": {
+                "type": "string",
+                "description": "Working directory",
+                "default": "${workspaceFolder}"
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "mana",
+            "request": "launch",
+            "name": "Debug Mana",
+            "program": "${workspaceFolder}/main.mana"
+          }
+        ]
+      }
+    ]
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "publish": "vsce publish"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.74.0",
+    "typescript": "^5.3.0",
+    "@vscode/vsce": "^2.22.0"
+  }
+}

@@ -1,0 +1,208 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Mana",
+  "scopeName": "source.mana",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#functions" },
+    { "include": "#variables" },
+    { "include": "#operators" },
+    { "include": "#attributes" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.mana",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.mana",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.mana",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.mana",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.interpolation.mana",
+              "begin": "\\{",
+              "end": "\\}",
+              "patterns": [
+                { "include": "$self" }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.mana",
+          "match": "'[^'\\\\]'"
+        },
+        {
+          "name": "string.interpolated.mana",
+          "begin": "f\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.mana",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.interpolation.mana",
+              "begin": "\\{",
+              "end": "\\}",
+              "patterns": [
+                { "include": "$self" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.hex.mana",
+          "match": "\\b0x[0-9a-fA-F_]+\\b"
+        },
+        {
+          "name": "constant.numeric.binary.mana",
+          "match": "\\b0b[01_]+\\b"
+        },
+        {
+          "name": "constant.numeric.octal.mana",
+          "match": "\\b0o[0-7_]+\\b"
+        },
+        {
+          "name": "constant.numeric.float.mana",
+          "match": "\\b[0-9][0-9_]*\\.[0-9][0-9_]*([eE][+-]?[0-9_]+)?\\b"
+        },
+        {
+          "name": "constant.numeric.integer.mana",
+          "match": "\\b[0-9][0-9_]*\\b"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.mana",
+          "match": "\\b(if|else|match|for|while|loop|break|continue|return|defer|async|await|spawn|yield)\\b"
+        },
+        {
+          "name": "keyword.declaration.mana",
+          "match": "\\b(fn|struct|enum|trait|impl|type|module|use|pub|mut|const|static|let)\\b"
+        },
+        {
+          "name": "keyword.operator.mana",
+          "match": "\\b(as|in|is|and|or|not)\\b"
+        },
+        {
+          "name": "constant.language.mana",
+          "match": "\\b(true|false|nil|self|Self)\\b"
+        },
+        {
+          "name": "keyword.other.mana",
+          "match": "\\b(where|import|export|extern|unsafe|comptime)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.primitive.mana",
+          "match": "\\b(i8|i16|i32|i64|i128|u8|u16|u32|u64|u128|f32|f64|bool|char|str|string|void|usize|isize)\\b"
+        },
+        {
+          "name": "storage.type.generic.mana",
+          "match": "\\b(Vec|Map|Set|Option|Result|Box|Rc|Arc|Cell|RefCell|Future)\\b"
+        },
+        {
+          "name": "entity.name.type.mana",
+          "match": "\\b[A-Z][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.mana",
+          "match": "\\b([a-z_][a-zA-Z0-9_]*)\\s*(?=\\()"
+        },
+        {
+          "name": "support.function.builtin.mana",
+          "match": "\\b(println|print|format|len|push|pop|get|set|clone|drop|sizeof|typeof|panic|assert|debug)\\b"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.mana",
+          "match": "\\b[a-z_][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.arithmetic.mana",
+          "match": "[+\\-*/%]"
+        },
+        {
+          "name": "keyword.operator.comparison.mana",
+          "match": "(==|!=|<=|>=|<|>)"
+        },
+        {
+          "name": "keyword.operator.assignment.mana",
+          "match": "(=|\\+=|-=|\\*=|/=|%=|&=|\\|=|\\^=|<<=|>>=)"
+        },
+        {
+          "name": "keyword.operator.logical.mana",
+          "match": "(&&|\\|\\||!)"
+        },
+        {
+          "name": "keyword.operator.bitwise.mana",
+          "match": "(&|\\||\\^|~|<<|>>)"
+        },
+        {
+          "name": "keyword.operator.arrow.mana",
+          "match": "(->|=>)"
+        },
+        {
+          "name": "keyword.operator.range.mana",
+          "match": "(\\.\\.|\\.\\.=)"
+        },
+        {
+          "name": "keyword.operator.access.mana",
+          "match": "(\\.|::)"
+        }
+      ]
+    },
+    "attributes": {
+      "patterns": [
+        {
+          "name": "meta.attribute.mana",
+          "match": "#\\[([^\\]]+)\\]",
+          "captures": {
+            "1": { "name": "entity.other.attribute-name.mana" }
+          }
+        }
+      ]
+    }
+  }
+}
