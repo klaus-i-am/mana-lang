@@ -1,0 +1,8 @@
+// Minimal test for optional semicolons
+module test
+
+fn main() {
+    let x: i32 = 10
+    x++
+    println(x)
+}

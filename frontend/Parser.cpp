@@ -36,6 +36,11 @@ namespace mana::frontend {
         return false;
     }
 
+    void Parser::optional_semicolon() {
+        // Consume semicolon if present, but don't error if missing (vNext: semicolons optional)
+        match(TokenKind::Semicolon);
+    }
+
     void Parser::synchronize() {
         advance();
         while (!is_at_end()) {
@@ -96,7 +101,7 @@ namespace mana::frontend {
         expect(TokenKind::KwModule, "expected 'module'");
         expect(TokenKind::Identifier, "expected module name");
         Token name = previous();
-        expect(TokenKind::Semicolon, "expected ';' after module");
+        optional_semicolon();  // vNext: semicolons optional
 
         auto mod = std::make_unique<AstModule>(name.lexeme, name.line, name.column);
 
@@ -876,10 +881,10 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
             expect(TokenKind::Identifier, "expected identifier");
             Token name = previous();
             advance(); // consume ++
-            expect(TokenKind::Semicolon, "expected ';'");
+            optional_semicolon();  // vNext: semicolons optional
             // Desugar to: name = name + 1
             auto id = std::make_unique<AstIdentifierExpr>(name.lexeme, name.line, name.column);
-            auto one = std::make_unique<AstLiteralExpr>("1", name.line, name.column);
+            auto one = std::make_unique<AstLiteralExpr>("1", false, false, name.line, name.column);
             auto add = std::make_unique<AstBinaryExpr>("+", name.line, name.column);
             add->left = std::move(id);
             add->right = std::move(one);
@@ -894,10 +899,10 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
             expect(TokenKind::Identifier, "expected identifier");
             Token name = previous();
             advance(); // consume --
-            expect(TokenKind::Semicolon, "expected ';'");
+            optional_semicolon();  // vNext: semicolons optional
             // Desugar to: name = name - 1
             auto id = std::make_unique<AstIdentifierExpr>(name.lexeme, name.line, name.column);
-            auto one = std::make_unique<AstLiteralExpr>("1", name.line, name.column);
+            auto one = std::make_unique<AstLiteralExpr>("1", false, false, name.line, name.column);
             auto sub = std::make_unique<AstBinaryExpr>("-", name.line, name.column);
             sub->left = std::move(id);
             sub->right = std::move(one);
@@ -932,7 +937,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
                 else if (op_kind == TokenKind::StarStarEqual) op = "**";
                 advance(); // consume the compound operator
                 auto rhs = parse_expression();
-                expect(TokenKind::Semicolon, "expected ';'");
+                optional_semicolon();  // vNext: semicolons optional
                 // Desugar to: name = name op rhs
                 auto id = std::make_unique<AstIdentifierExpr>(name.lexeme, name.line, name.column);
                 auto bin = std::make_unique<AstBinaryExpr>(op, name.line, name.column);
@@ -957,7 +962,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
 
             if (match(TokenKind::Assign)) {
                 auto rhs = parse_expression();
-                expect(TokenKind::Semicolon, "expected ';'");
+                optional_semicolon();  // vNext: semicolons optional
                 auto a = std::make_unique<AstAssignStmt>(lhs->line, lhs->column);
                 // Check if it's a simple identifier or complex expression
                 if (auto* id = dynamic_cast<AstIdentifierExpr*>(lhs.get())) {
@@ -983,7 +988,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         std::string type = parse_type_name();
         expect(TokenKind::Assign, "expected '='");
         auto init = parse_expression();
-        expect(TokenKind::Semicolon, "expected ';'");
+        optional_semicolon();  // vNext: semicolons optional
 
         auto v = std::make_unique<AstVarDeclStmt>(name.line, name.column);
         v->name = name.lexeme;
@@ -1038,7 +1043,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         ds->type_name = parse_type_name();
         expect(TokenKind::Assign, "expected '=' in destructuring statement");
         ds->init_expr = parse_expression();
-        expect(TokenKind::Semicolon, "expected ';'");
+        optional_semicolon();  // vNext: semicolons optional
 
         return ds;
     }
@@ -1086,7 +1091,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
 
             expect(TokenKind::Assign, "expected '='");
             ds->init_expr = parse_expression();
-            expect(TokenKind::Semicolon, "expected ';'");
+            optional_semicolon();  // vNext: semicolons optional
 
             return ds;
         }
@@ -1101,7 +1106,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
 
         expect(TokenKind::Assign, "expected '='");
         auto init = parse_expression();
-        expect(TokenKind::Semicolon, "expected ';'");
+        optional_semicolon();  // vNext: semicolons optional
 
         auto v = std::make_unique<AstVarDeclStmt>(name.line, name.column);
         v->name = name.lexeme;
@@ -1125,7 +1130,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
 
         expect(TokenKind::Assign, "expected '='");
         auto init = parse_expression();
-        expect(TokenKind::Semicolon, "expected ';'");
+        optional_semicolon();  // vNext: semicolons optional
 
         auto v = std::make_unique<AstVarDeclStmt>(name.line, name.column);
         v->name = name.lexeme;
@@ -1140,7 +1145,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         Token name = previous();
         expect(TokenKind::Assign, "expected '='");
         auto rhs = parse_expression();
-        expect(TokenKind::Semicolon, "expected ';'");
+        optional_semicolon();  // vNext: semicolons optional
 
         auto a = std::make_unique<AstAssignStmt>(name.line, name.column);
         a->target_name = name.lexeme;
@@ -1153,7 +1158,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         Token name = previous();
         expect(TokenKind::Assign, "expected '='");
         auto init = parse_expression();
-        expect(TokenKind::Semicolon, "expected ';'");
+        optional_semicolon();  // vNext: semicolons optional
 
         auto s = std::make_unique<AstScopeStmt>(name.line, name.column);
         s->name = name.lexeme;
@@ -1172,11 +1177,13 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         int l = previous().line;
         int c = previous().column;
 
-        auto expr = parse_expression();
-        expect(TokenKind::Semicolon, "expected ';'");
-
         auto r = std::make_unique<AstReturnStmt>(l, c);
-        r->value = std::move(expr);
+        // Parse optional return value - check for tokens that end a statement
+        if (!check(TokenKind::Semicolon) && !check(TokenKind::RBrace)) {
+            r->value = parse_expression();
+        }
+        optional_semicolon();  // vNext: semicolons optional
+
         return r;
     }
 
@@ -1184,18 +1191,23 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         int l = previous().line;
         int c = previous().column;
         auto stmt = std::make_unique<AstBreakStmt>(l, c);
-        // Parse optional break value
-        if (!check(TokenKind::Semicolon)) {
+        // Parse optional break value - check for tokens that can start an expression
+        // but not end a statement (like } or a statement keyword)
+        if (!check(TokenKind::Semicolon) && !check(TokenKind::RBrace) &&
+            !check(TokenKind::KwLet) && !check(TokenKind::KwReturn) &&
+            !check(TokenKind::KwIf) && !check(TokenKind::KwWhile) &&
+            !check(TokenKind::KwFor) && !check(TokenKind::KwBreak) &&
+            !check(TokenKind::KwContinue)) {
             stmt->value = parse_expression();
         }
-        expect(TokenKind::Semicolon, "expected ';' after break");
+        optional_semicolon();  // vNext: semicolons optional
         return stmt;
     }
 
     std::unique_ptr<AstStmt> Parser::parse_continue_statement() {
         int l = previous().line;
         int c = previous().column;
-        expect(TokenKind::Semicolon, "expected ';' after continue");
+        optional_semicolon();  // vNext: semicolons optional
         return std::make_unique<AstContinueStmt>(l, c);
     }
 
@@ -1440,7 +1452,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
                 advance(); // consume ++
                 // Desugar to: name = name + 1
                 auto id = std::make_unique<AstIdentifierExpr>(name.lexeme, name.line, name.column);
-                auto one = std::make_unique<AstLiteralExpr>("1", name.line, name.column);
+                auto one = std::make_unique<AstLiteralExpr>("1", false, false, name.line, name.column);
                 auto add = std::make_unique<AstBinaryExpr>("+", name.line, name.column);
                 add->left = std::move(id);
                 add->right = std::move(one);
@@ -1456,7 +1468,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
                 advance(); // consume --
                 // Desugar to: name = name - 1
                 auto id = std::make_unique<AstIdentifierExpr>(name.lexeme, name.line, name.column);
-                auto one = std::make_unique<AstLiteralExpr>("1", name.line, name.column);
+                auto one = std::make_unique<AstLiteralExpr>("1", false, false, name.line, name.column);
                 auto sub = std::make_unique<AstBinaryExpr>("-", name.line, name.column);
                 sub->left = std::move(id);
                 sub->right = std::move(one);
@@ -1517,7 +1529,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         int c = peek().column;
 
         auto e = parse_expression();
-        expect(TokenKind::Semicolon, "expected ';'");
+        optional_semicolon();  // vNext: semicolons optional
 
         auto st = std::make_unique<AstExprStmt>(l, c);
         st->expr = std::move(e);
@@ -2255,7 +2267,7 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         }
 
         diag_.error("expected expression", peek().line, peek().column);
-        return std::make_unique<AstLiteralExpr>("0", peek().line, peek().column); // recover
+        return std::make_unique<AstLiteralExpr>("0", false, false, peek().line, peek().column); // recover
     }
 
     std::unique_ptr<AstExpr> Parser::parse_match_expression(bool is_when_style) {

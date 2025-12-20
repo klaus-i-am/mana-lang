@@ -1,0 +1,58 @@
+// vNext Phase 5 Test File
+// Tests: Optional semicolons (no semicolons used)
+
+module test
+
+fn add(a: i32, b: i32) -> i32 {
+    return a + b
+}
+
+fn main() {
+    // Variable declarations without semicolons
+    let x: i32 = 10
+    let y: i32 = 20
+    let name: string = "World"
+
+    // Const without semicolon
+    const PI: f32 = 3.14
+
+    // Assignment without semicolon
+    x = 15
+
+    // Compound assignment without semicolons
+    x += 5
+    y -= 3
+
+    // Increment/decrement without semicolons
+    x++
+    y--
+
+    // Function calls without semicolons
+    println("Hello, ", name, "!")
+    println("x = ", x, ", y = ", y)
+    println("sum = ", add(x, y))
+
+    // If statement
+    if x > 10 {
+        println("x is big")
+    }
+
+    // While loop
+    let i: i32 = 0
+    while i < 3 {
+        println("i = ", i)
+        i++
+    }
+
+    // For loop (semicolons required in header only)
+    for j: i32 = 0; j < 3; j++ {
+        println("j = ", j)
+    }
+
+    // For-in loop
+    for k in 0..3 {
+        println("k = ", k)
+    }
+
+    // No explicit return needed - semicolon-free syntax works!
+}

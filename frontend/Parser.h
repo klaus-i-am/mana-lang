@@ -30,6 +30,7 @@ namespace mana::frontend {
         const Token& advance();
         bool match(TokenKind kind);
         bool expect(TokenKind kind, const char* msg);
+        void optional_semicolon();  // Consume semicolon if present (vNext: semicolons optional)
         void synchronize();
         void synchronize_statement();  // Synchronize within a block
 
