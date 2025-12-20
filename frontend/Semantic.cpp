@@ -32,6 +32,10 @@ namespace mana::frontend {
         builtin_functions_["Ok"] = true;
         builtin_functions_["Err"] = true;
         builtin_functions_["Some"] = true;
+        // Also accept lowercase (vNext compatibility with spec examples)
+        builtin_functions_["ok"] = true;
+        builtin_functions_["err"] = true;
+        builtin_functions_["some"] = true;
 
         // String functions
         builtin_functions_["len"] = true;
@@ -82,6 +86,10 @@ namespace mana::frontend {
         declare("Ok", { "Ok", Type::unknown(), false });
         declare("Err", { "Err", Type::unknown(), false });
         declare("Some", { "Some", Type::unknown(), false });
+        // Lowercase aliases (vNext compatibility with spec examples)
+        declare("ok", { "ok", Type::unknown(), false });
+        declare("err", { "err", Type::unknown(), false });
+        declare("some", { "some", Type::unknown(), false });
 
         // String functions
         declare("len", { "len", Type::i32(), false });           // returns size
@@ -424,8 +432,9 @@ namespace mana::frontend {
         }
 
         // Human-friendly type aliases (vNext)
-        if (resolved == "int") resolved = "i64";
-        if (resolved == "float") resolved = "f64";
+        // int = i32, float = f32 (as per language spec)
+        if (resolved == "int") resolved = "i32";
+        if (resolved == "float") resolved = "f32";
 
         // All integer types map to I32 for type checking
         if (resolved == "i8" || resolved == "i16" || resolved == "i32" || resolved == "i64" ||
@@ -435,7 +444,8 @@ namespace mana::frontend {
         if (resolved == "f32" || resolved == "f64")
             return Type::f32();
         if (resolved == "bool") return Type::boolean();
-        if (resolved == "string") return Type::string();
+        // str and string are both valid string types (string is alias for str)
+        if (resolved == "string" || resolved == "str") return Type::string();
         if (resolved == "void") return Type::void_();
         if (resolved == "auto") return Type::unknown();
 
@@ -856,15 +866,16 @@ namespace mana::frontend {
                 Type expr_type = visit_expr(static_cast<AstExpr*>(i->pattern_expr.get()));
 
                 // Determine the inner type based on pattern and expr type
+                // Accept both uppercase (Some, Ok, Err) and lowercase (some, ok, err)
                 Type inner_type = Type::unknown();
-                if (i->pattern_kind == "Some") {
+                if (i->pattern_kind == "Some" || i->pattern_kind == "some") {
                     // Option<T> -> T
                     if (expr_type.kind == TypeKind::Struct && expr_type.struct_name.rfind("Option<", 0) == 0) {
                         size_t start = 7;
                         size_t end = expr_type.struct_name.size() - 1;
                         inner_type = parse_type_name(expr_type.struct_name.substr(start, end - start));
                     }
-                } else if (i->pattern_kind == "Ok") {
+                } else if (i->pattern_kind == "Ok" || i->pattern_kind == "ok") {
                     // Result<T, E> -> T
                     if (expr_type.kind == TypeKind::Struct && expr_type.struct_name.rfind("Result<", 0) == 0) {
                         size_t start = 7;
@@ -873,7 +884,7 @@ namespace mana::frontend {
                             inner_type = parse_type_name(expr_type.struct_name.substr(start, comma - start));
                         }
                     }
-                } else if (i->pattern_kind == "Err") {
+                } else if (i->pattern_kind == "Err" || i->pattern_kind == "err") {
                     // Result<T, E> -> E
                     if (expr_type.kind == TypeKind::Struct && expr_type.struct_name.rfind("Result<", 0) == 0) {
                         size_t comma = expr_type.struct_name.find(',');
@@ -885,7 +896,7 @@ namespace mana::frontend {
                         }
                     }
                 }
-                // None pattern doesn't bind a variable
+                // None/none pattern doesn't bind a variable
 
                 // Create a new scope for the then block with the bound variable
                 push_scope();
@@ -916,13 +927,13 @@ namespace mana::frontend {
 
                 // Determine the inner type based on pattern and expr type
                 Type inner_type = Type::unknown();
-                if (w->pattern_kind == "Some") {
+                if (w->pattern_kind == "Some" || w->pattern_kind == "some") {
                     if (expr_type.kind == TypeKind::Struct && expr_type.struct_name.rfind("Option<", 0) == 0) {
                         size_t start = 7;
                         size_t end = expr_type.struct_name.size() - 1;
                         inner_type = parse_type_name(expr_type.struct_name.substr(start, end - start));
                     }
-                } else if (w->pattern_kind == "Ok") {
+                } else if (w->pattern_kind == "Ok" || w->pattern_kind == "ok") {
                     if (expr_type.kind == TypeKind::Struct && expr_type.struct_name.rfind("Result<", 0) == 0) {
                         size_t start = 7;
                         size_t comma = expr_type.struct_name.find(',', start);
@@ -930,7 +941,7 @@ namespace mana::frontend {
                             inner_type = parse_type_name(expr_type.struct_name.substr(start, comma - start));
                         }
                     }
-                } else if (w->pattern_kind == "Err") {
+                } else if (w->pattern_kind == "Err" || w->pattern_kind == "err") {
                     if (expr_type.kind == TypeKind::Struct && expr_type.struct_name.rfind("Result<", 0) == 0) {
                         size_t comma = expr_type.struct_name.find(',');
                         if (comma != std::string::npos) {
@@ -1710,7 +1721,7 @@ namespace mana::frontend {
                             Type inner_type = Type::unknown();
                             std::string type_name = match_value_type.struct_name;
                             
-                            if (optPat->pattern_kind == "Some") {
+                            if (optPat->pattern_kind == "Some" || optPat->pattern_kind == "some") {
                                 // Extract T from Option<T>
                                 if (type_name.rfind("Option<", 0) == 0) {
                                     size_t end = type_name.rfind('>');
@@ -1718,7 +1729,7 @@ namespace mana::frontend {
                                         inner_type = parse_type_name(type_name.substr(7, end - 7));
                                     }
                                 }
-                            } else if (optPat->pattern_kind == "Ok") {
+                            } else if (optPat->pattern_kind == "Ok" || optPat->pattern_kind == "ok") {
                                 // Extract T from Result<T, E>
                                 if (type_name.rfind("Result<", 0) == 0) {
                                     size_t comma = type_name.find(',');
@@ -1726,7 +1737,7 @@ namespace mana::frontend {
                                         inner_type = parse_type_name(type_name.substr(7, comma - 7));
                                     }
                                 }
-                            } else if (optPat->pattern_kind == "Err") {
+                            } else if (optPat->pattern_kind == "Err" || optPat->pattern_kind == "err") {
                                 // Extract E from Result<T, E>
                                 if (type_name.rfind("Result<", 0) == 0) {
                                     size_t comma = type_name.find(',');

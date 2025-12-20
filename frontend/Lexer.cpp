@@ -47,6 +47,11 @@ namespace mana::frontend {
                 // Regular comment - skip
                 while (!is_at_end() && peek_char() != '\n') advance_char();
             }
+            else if (c == '\\' && (peek_next() == ' ' || peek_next() == '\t' || is_alpha(peek_next()) || peek_next() == '\n')) {
+                // Backslash-style single-line comment (\ comment text)
+                // Only treat as comment if followed by whitespace, letter, or newline
+                while (!is_at_end() && peek_char() != '\n') advance_char();
+            }
             else if (c == '/' && peek_next() == '*') {
                 advance_char();
                 advance_char();

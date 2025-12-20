@@ -211,8 +211,9 @@ void CppEmitter::emit_expr(const AstExpr* e, std::ostream& out) {
             else if (fname == "print") fname = "mana::print";
             else if (fname == "Some") fname = "mana::Some";
             else if (fname == "None") { out << "mana::None"; break; }
-            else if (fname == "Ok") fname = "mana::Ok";
-            else if (fname == "Err") fname = "mana::Err";
+            else if (fname == "Ok" || fname == "ok") fname = "mana::Ok";
+            else if (fname == "Err" || fname == "err") fname = "mana::Err";
+            else if (fname == "some") fname = "mana::Some";
             else if (fname == "assert") fname = "mana::assert_true";
             else if (fname == "format") fname = "mana::format";
             else if (fname == "read_file") fname = "mana::read_file";
@@ -659,10 +660,10 @@ void CppEmitter::emit_expr(const AstExpr* e, std::ostream& out) {
         case NodeKind::NoneExpr: { out << "mana::None"; break; }
         case NodeKind::OptionPattern: {
             auto op = static_cast<const AstOptionPattern*>(e);
-            if (op->pattern_kind == "Some") out << "mana::Some(" << op->binding << ")";
-            else if (op->pattern_kind == "None") out << "mana::None";
-            else if (op->pattern_kind == "Ok") out << "mana::Ok(" << op->binding << ")";
-            else if (op->pattern_kind == "Err") out << "mana::Err(" << op->binding << ")";
+            if (op->pattern_kind == "Some" || op->pattern_kind == "some") out << "mana::Some(" << op->binding << ")";
+            else if (op->pattern_kind == "None" || op->pattern_kind == "none") out << "mana::None";
+            else if (op->pattern_kind == "Ok" || op->pattern_kind == "ok") out << "mana::Ok(" << op->binding << ")";
+            else if (op->pattern_kind == "Err" || op->pattern_kind == "err") out << "mana::Err(" << op->binding << ")";
             break;
         }
         case NodeKind::CastExpr: {
@@ -838,10 +839,10 @@ void CppEmitter::emit_stmt(const AstStmt* s, std::ostream& out, int ind) {
             indent(out, ind);
             if (ifs->is_if_let) {
                 std::string check_method, unwrap_method;
-                if (ifs->pattern_kind == "Some") { check_method = "is_some()"; unwrap_method = "unwrap()"; }
-                else if (ifs->pattern_kind == "None") { check_method = "is_none()"; unwrap_method = ""; }
-                else if (ifs->pattern_kind == "Ok") { check_method = "is_ok()"; unwrap_method = "unwrap()"; }
-                else if (ifs->pattern_kind == "Err") { check_method = "is_err()"; unwrap_method = "unwrap_err()"; }
+                if (ifs->pattern_kind == "Some" || ifs->pattern_kind == "some") { check_method = "is_some()"; unwrap_method = "unwrap()"; }
+                else if (ifs->pattern_kind == "None" || ifs->pattern_kind == "none") { check_method = "is_none()"; unwrap_method = ""; }
+                else if (ifs->pattern_kind == "Ok" || ifs->pattern_kind == "ok") { check_method = "is_ok()"; unwrap_method = "unwrap()"; }
+                else if (ifs->pattern_kind == "Err" || ifs->pattern_kind == "err") { check_method = "is_err()"; unwrap_method = "unwrap_err()"; }
                 out << "if (";
                 emit_expr(static_cast<const AstExpr*>(ifs->pattern_expr.get()), out);
                 out << "." << check_method << ") {\n";
@@ -876,9 +877,9 @@ void CppEmitter::emit_stmt(const AstStmt* s, std::ostream& out, int ind) {
             if (ws->is_while_let) {
                 int wcnt = while_let_counter++;
                 std::string check_method, unwrap_method;
-                if (ws->pattern_kind == "Some") { check_method = "is_some()"; unwrap_method = "unwrap()"; }
-                else if (ws->pattern_kind == "Ok") { check_method = "is_ok()"; unwrap_method = "unwrap()"; }
-                else if (ws->pattern_kind == "Err") { check_method = "is_err()"; unwrap_method = "unwrap_err()"; }
+                if (ws->pattern_kind == "Some" || ws->pattern_kind == "some") { check_method = "is_some()"; unwrap_method = "unwrap()"; }
+                else if (ws->pattern_kind == "Ok" || ws->pattern_kind == "ok") { check_method = "is_ok()"; unwrap_method = "unwrap()"; }
+                else if (ws->pattern_kind == "Err" || ws->pattern_kind == "err") { check_method = "is_err()"; unwrap_method = "unwrap_err()"; }
                 out << "while (true) {\n";
                 indent(out, ind + 1);
                 out << "auto __wl_" << wcnt << " = ";
