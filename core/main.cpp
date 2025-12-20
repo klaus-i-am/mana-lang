@@ -549,7 +549,7 @@ namespace mana {
 )";
 
 static void print_usage() {
-    std::cerr << "Mana Compiler v0.1.0\n\n";
+    std::cerr << "Mana Compiler v1.0.0\n\n";
     std::cerr << "Usage: mana <command> [options] [file]\n\n";
     std::cerr << "Commands:\n";
     std::cerr << "  build        Build the current project\n";
@@ -567,6 +567,7 @@ static void print_usage() {
     std::cerr << "  --doc        Generate Markdown documentation\n";
     std::cerr << "  --no-cache   Disable incremental compilation\n";
     std::cerr << "  --clear-cache  Clear compilation cache\n";
+    std::cerr << "  -v, --version  Show version\n";
     std::cerr << "  -h, --help   Show this help\n";
 }
 
@@ -673,6 +674,9 @@ int main(int argc, char** argv) {
             use_cache = false;
         } else if (arg == "--clear-cache") {
             clear_cache = true;
+        } else if (arg == "-v" || arg == "--version") {
+            std::cout << "mana 1.0.0" << std::endl;
+            return 0;
         } else if (arg == "-h" || arg == "--help") {
             print_usage();
             return 0;
