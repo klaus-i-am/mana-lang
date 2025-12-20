@@ -1,0 +1,34 @@
+// vNext Phase 3 Test File
+// Tests: or operator for Result unwrapping
+
+module test;
+
+fn get_result(success: bool) -> Result<i32, string> {
+    if success {
+        return Ok(42);
+    }
+    return Err("failed");
+}
+
+fn test_or_return() -> i32 {
+    // or with return - unwraps Ok or returns on Err
+    let value: i32 = get_result(true) or return 0;
+    return value;
+}
+
+fn test_or_block() -> i32 {
+    // or with block - unwraps Ok or executes block on Err
+    let value: i32 = get_result(false) or {
+        println("Error occurred, returning default");
+        return -1;
+    };
+    return value;
+}
+
+fn main() {
+    let result1 = test_or_return();
+    println(result1);
+
+    let result2 = test_or_block();
+    println(result2);
+}

@@ -1,0 +1,14 @@
+module test;
+
+fn get_result() -> Result<i32, string> {
+    return Ok(42);
+}
+
+fn test() -> i32 {
+    let x: i32 = get_result() or return 0;
+    return x;
+}
+
+fn main() {
+    println(test());
+}

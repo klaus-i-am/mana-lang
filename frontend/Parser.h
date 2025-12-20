@@ -67,6 +67,7 @@ namespace mana::frontend {
 
         // Expressions (precedence)
         std::unique_ptr<AstExpr> parse_expression();
+        std::unique_ptr<AstExpr> parse_or_control_flow();  // expr or return/break/block (vNext)
         std::unique_ptr<AstExpr> parse_null_coalesce();
         std::unique_ptr<AstExpr> parse_logical_or();
         std::unique_ptr<AstExpr> parse_logical_and();

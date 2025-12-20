@@ -44,6 +44,7 @@ namespace mana::frontend {
         if (s == "static") { out = TokenKind::KwStatic; return true; }
         if (s == "variant") { out = TokenKind::KwVariant; return true; }
         if (s == "when") { out = TokenKind::KwWhen; return true; }
+        if (s == "or") { out = TokenKind::KwOr; return true; }
         return false;
     }
 

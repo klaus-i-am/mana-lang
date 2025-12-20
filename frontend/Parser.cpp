@@ -1527,7 +1527,54 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
     // ---------------- expressions ----------------
 
     std::unique_ptr<AstExpr> Parser::parse_expression() {
-        return parse_null_coalesce();
+        return parse_or_control_flow();
+    }
+
+    std::unique_ptr<AstExpr> Parser::parse_or_control_flow() {
+        // Parse: expr or return/break/continue/{ block }
+        // Very low precedence - binds loosest
+        auto left = parse_null_coalesce();
+
+        if (match(TokenKind::KwOr)) {
+            int l = previous().line;
+            int c = previous().column;
+            auto or_expr = std::make_unique<AstOrExpr>(l, c);
+            or_expr->lhs = std::move(left);
+
+            // Check for block form: expr or { ... }
+            if (check(TokenKind::LBrace)) {
+                or_expr->fallback_block = parse_block();
+            }
+            // Check for return statement: expr or return [value]
+            // Parse directly - don't use parse_return_statement() since it expects ';'
+            else if (match(TokenKind::KwReturn)) {
+                int rl = previous().line;
+                int rc = previous().column;
+                auto ret = std::make_unique<AstReturnStmt>(rl, rc);
+                // Parse optional return value (don't expect semicolon)
+                if (!check(TokenKind::Semicolon) && !check(TokenKind::RBrace)) {
+                    ret->value = parse_expression();
+                }
+                or_expr->fallback_stmt = std::move(ret);
+            }
+            // Check for break statement: expr or break
+            else if (match(TokenKind::KwBreak)) {
+                or_expr->fallback_stmt = std::make_unique<AstBreakStmt>(previous().line, previous().column);
+            }
+            // Check for continue statement: expr or continue
+            else if (match(TokenKind::KwContinue)) {
+                or_expr->fallback_stmt = std::make_unique<AstContinueStmt>(previous().line, previous().column);
+            }
+            else {
+                diag_.error("expected 'return', 'break', 'continue', or block after 'or'",
+                           peek().line, peek().column);
+                return or_expr;
+            }
+
+            return or_expr;
+        }
+
+        return left;
     }
 
     std::unique_ptr<AstExpr> Parser::parse_null_coalesce() {

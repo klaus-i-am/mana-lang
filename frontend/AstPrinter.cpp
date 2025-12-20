@@ -304,6 +304,21 @@ namespace mana::frontend {
             return;
         }
 
+        if (auto o = dynamic_cast<const AstOrExpr*>(e)) {
+            out << "OrExpr\n";
+            indent(out, ind + 1); out << "LHS:\n";
+            print_expr(o->lhs.get(), out, ind + 2);
+            indent(out, ind + 1); out << "Fallback: ";
+            if (o->has_block()) {
+                out << "block\n";
+                print_stmt(o->fallback_block.get(), out, ind + 2);
+            } else if (o->fallback_stmt) {
+                out << "statement\n";
+                print_stmt(o->fallback_stmt.get(), out, ind + 2);
+            }
+            return;
+        }
+
         out << "(unknown expr)\n";
     }
 

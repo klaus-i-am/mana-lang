@@ -1985,6 +1985,50 @@ namespace mana::frontend {
             return Type::string();
         }
 
+        if (auto o = dynamic_cast<AstOrExpr*>(e)) {
+            // Or expression: expr or return/break/{ block }
+            // LHS must be Result<T, E>, result is unwrapped T
+            Type lhs_type = visit_expr(o->lhs.get());
+            std::string type_name = lhs_type.name();
+
+            // Check that LHS is Result<T, E>
+            if (type_name.rfind("Result<", 0) != 0) {
+                diag_.error("'or' operator requires Result type, got '" + type_name + "'",
+                           o->line, o->column);
+                return Type::unknown();
+            }
+
+            // Visit the fallback to check it's valid
+            if (o->has_block()) {
+                visit_stmt(o->fallback_block.get());
+                // Check that block diverges (ends with return/break/continue/panic)
+                if (!always_returns(o->fallback_block.get())) {
+                    diag_.error("'or' block must not fall through (must return, break, or continue)",
+                               o->line, o->column);
+                }
+            } else if (o->fallback_stmt) {
+                visit_stmt(o->fallback_stmt.get());
+                // return/break/continue are inherently diverging
+            }
+
+            // Extract T from Result<T, E>
+            size_t start = 7;  // After "Result<"
+            size_t comma = type_name.find(',', start);
+            size_t end = (comma != std::string::npos) ? comma : type_name.find('>', start);
+            if (end != std::string::npos) {
+                std::string inner = type_name.substr(start, end - start);
+                // Trim whitespace
+                size_t first = inner.find_first_not_of(' ');
+                size_t last = inner.find_last_not_of(' ');
+                if (first != std::string::npos) {
+                    inner = inner.substr(first, last - first + 1);
+                }
+                return parse_type_name(inner);
+            }
+
+            return Type::unknown();
+        }
+
         return Type::unknown();
     }
 

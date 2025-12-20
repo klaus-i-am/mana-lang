@@ -393,4 +393,23 @@ namespace mana::frontend {
             : AstExpr(NodeKind::IfExpr, line, column) {}
     };
 
+    // Forward declaration for block statement
+    struct AstBlockStmt;
+    struct AstStmt;
+
+    // Or expression: expr or return/break/{ block } (vNext Result unwrapping)
+    // value = result_expr or return error
+    // value = result_expr or { println("failed"); return; }
+    struct AstOrExpr : AstExpr {
+        std::unique_ptr<AstExpr> lhs;           // Must be Result<T, E>
+        std::unique_ptr<AstStmt> fallback_stmt; // return/break/continue statement
+        std::unique_ptr<AstBlockStmt> fallback_block;  // Block alternative
+        std::string error_binding;              // Binding for error value (optional, e.g., 'e' in 'or return e')
+
+        bool has_block() const { return fallback_block != nullptr; }
+
+        AstOrExpr(int line = 0, int column = 0)
+            : AstExpr(NodeKind::OrExpr, line, column) {}
+    };
+
 } // namespace mana::frontend

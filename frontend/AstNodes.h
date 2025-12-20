@@ -63,6 +63,7 @@ namespace mana::frontend {
         CastExpr,       // expr as Type
         IfExpr,         // if cond { expr } else { expr }
         SliceExpr,      // expr[start..end] slice syntax
+        OrExpr,         // expr or return/break/block (vNext Result unwrapping)
     };
 
     struct AstNode {

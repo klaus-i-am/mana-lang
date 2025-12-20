@@ -699,6 +699,28 @@ void CppEmitter::emit_expr(const AstExpr* e, std::ostream& out) {
             out << ")";
             break;
         }
+        case NodeKind::OrExpr: {
+            // expr or return/break/{ block }
+            // Desugar to: [&]() { auto __or_N = expr; if (__or_N.is_ok()) return __or_N.unwrap(); fallback; }()
+            static int or_counter = 0;
+            int ocnt = or_counter++;
+            auto oe = static_cast<const AstOrExpr*>(e);
+            out << "[&]() {\n";
+            out << "        auto __or_" << ocnt << " = ";
+            emit_expr(oe->lhs.get(), out);
+            out << ";\n";
+            out << "        if (__or_" << ocnt << ".is_ok()) return __or_" << ocnt << ".unwrap();\n";
+            // Emit fallback
+            if (oe->has_block()) {
+                for (const auto& stmt : oe->fallback_block->statements) {
+                    emit_stmt(stmt.get(), out, 2);
+                }
+            } else if (oe->fallback_stmt) {
+                emit_stmt(oe->fallback_stmt.get(), out, 2);
+            }
+            out << "    }()";
+            break;
+        }
         default: out << "/* unknown expr */"; break;
     }
 }

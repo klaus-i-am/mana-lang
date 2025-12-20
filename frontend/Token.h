@@ -56,6 +56,7 @@ namespace mana::frontend {
         KwStatic,       // static for static methods
         KwVariant,      // variant as synonym for enum (vNext)
         KwWhen,         // when as preferred pattern matching (vNext)
+        KwOr,           // or for Result unwrapping (vNext)
 
         // Punctuation
         LParen, RParen,
