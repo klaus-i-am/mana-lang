@@ -1,52 +1,50 @@
 module fstrings;
 
+// Note: This example has been updated to use variadic println
+// instead of f-strings (which have been removed in vNext)
+
 fn main() -> i32 {
-    println("=== F-String Demo ===");
+    println("=== Variadic Print Demo ===");
     println();
 
-    // Basic variable interpolation
-    println("1. Basic interpolation:");
+    // Basic variable printing
+    println("1. Basic printing:");
     let name: string = "Alice";
-    let greeting: string = f"Hello, {name}!";
-    println(greeting);
+    println("Hello, ", name, "!");
     println();
 
-    // Number interpolation
-    println("2. Number interpolation:");
+    // Number printing
+    println("2. Number printing:");
     let age: i32 = 30;
-    let message: string = f"{name} is {age} years old.";
-    println(message);
+    println(name, " is ", age, " years old.");
     println();
 
-    // Expression interpolation
-    println("3. Expression interpolation:");
+    // Expression printing
+    println("3. Expression printing:");
     let x: i32 = 5;
     let y: i32 = 3;
-    let result: string = f"{x} + {y} = {x + y}";
-    println(result);
+    println(x, " + ", y, " = ", x + y);
     println();
 
     // Multiple variables
     println("4. Multiple variables:");
     let first: string = "Hello";
     let second: string = "World";
-    let combined: string = f"{first}, {second}!";
-    println(combined);
+    println(first, ", ", second, "!");
     println();
 
-    // Boolean interpolation
-    println("5. Boolean interpolation:");
+    // Boolean printing
+    println("5. Boolean printing:");
     let flag: bool = true;
-    let status: string = f"Flag is {flag}";
-    println(status);
+    println("Flag is ", flag);
     println();
 
-    // Direct f-string in function call
-    println("6. Direct f-string in println:");
+    // Multiple values in one call
+    println("6. Multiple values:");
     let count: i32 = 42;
-    println(f"The answer is {count}");
+    println("The answer is ", count);
     println();
 
-    println("=== All f-string tests passed! ===");
+    println("=== All variadic print tests passed! ===");
     return 0;
 }

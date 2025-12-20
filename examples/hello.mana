@@ -1,12 +1,11 @@
-module main;
+module main
 
 fn main() -> i32 {
-    x: i32 = 10;
-    y: i32 = 20;
-    sum: i32 = x + y;
+    x: i32 = 10
+    y: i32 = 20
+    sum: i32 = x + y
 
-    print("Sum: ");
-    println(sum);
+    println("Sum: ", sum)
 
-    return 0;
+    return 0
 }

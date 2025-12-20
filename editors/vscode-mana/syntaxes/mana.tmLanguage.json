@@ -21,6 +21,10 @@
           "match": "//.*$"
         },
         {
+          "name": "comment.line.backslash.mana",
+          "match": "\\\\.*$"
+        },
+        {
           "name": "comment.block.mana",
           "begin": "/\\*",
           "end": "\\*/"
@@ -51,25 +55,6 @@
         {
           "name": "string.quoted.single.mana",
           "match": "'[^'\\\\]'"
-        },
-        {
-          "name": "string.interpolated.mana",
-          "begin": "f\"",
-          "end": "\"",
-          "patterns": [
-            {
-              "name": "constant.character.escape.mana",
-              "match": "\\\\."
-            },
-            {
-              "name": "meta.interpolation.mana",
-              "begin": "\\{",
-              "end": "\\}",
-              "patterns": [
-                { "include": "$self" }
-              ]
-            }
-          ]
         }
       ]
     },
@@ -101,7 +86,7 @@
       "patterns": [
         {
           "name": "keyword.control.mana",
-          "match": "\\b(if|else|match|for|while|loop|break|continue|return|defer|async|await|spawn|yield)\\b"
+          "match": "\\b(if|else|match|when|for|while|loop|break|continue|return|defer|async|await|spawn|yield)\\b"
         },
         {
           "name": "keyword.declaration.mana",
@@ -125,7 +110,7 @@
       "patterns": [
         {
           "name": "storage.type.primitive.mana",
-          "match": "\\b(i8|i16|i32|i64|i128|u8|u16|u32|u64|u128|f32|f64|bool|char|str|string|void|usize|isize)\\b"
+          "match": "\\b(i8|i16|i32|i64|i128|u8|u16|u32|u64|u128|f32|f64|int|float|bool|char|str|string|void|usize|isize)\\b"
         },
         {
           "name": "storage.type.generic.mana",

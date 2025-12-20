@@ -25,6 +25,7 @@ This document provides a complete reference for the Mana programming language sy
 
 ```mana
 // Single-line comment
+\ Alternative single-line comment (backslash style)
 
 /* Multi-line
    comment */
@@ -47,13 +48,14 @@ Reserved keywords cannot be used as identifiers.
 | Category | Keywords |
 |----------|----------|
 | Declarations | `fn`, `struct`, `enum`, `trait`, `impl`, `type`, `const`, `static` |
-| Control Flow | `if`, `else`, `match`, `while`, `for`, `loop`, `break`, `continue`, `return` |
+| Control Flow | `if`, `else`, `match`, `when`, `while`, `for`, `loop`, `break`, `continue`, `return` |
 | Variables | `let`, `mut` |
 | Modules | `module`, `import`, `use`, `from`, `pub` |
 | Types | `self`, `Self`, `dyn` |
 | Values | `true`, `false`, `none` |
 | Memory | `move` |
 | Async | `async`, `await` |
+| Logical | `and`, `or`, `not` (alternatives to `&&`, `\|\|`, `!`) |
 | Other | `in`, `as`, `where`, `defer`, `scope` |
 
 ### 1.4 Literals
@@ -87,8 +89,13 @@ r"no\escape"               // Raw string (no escape processing)
 Multi-line
 string
 """                        // Multi-line string
-f"Hello, {name}!"          // Interpolated string (f-string)
 ```
+
+> **Note**: Use variadic `println` for string formatting instead of interpolation:
+> ```mana
+> println("Hello, ", name, "!")   // Variadic print
+> println("x = ", x, ", y = ", y) // Multiple values
+> ```
 
 #### Escape Sequences
 
@@ -169,11 +176,13 @@ none    // Represents absence of value (Option type)
 
 #### Logical Operators
 
-| Operator | Description |
-|----------|-------------|
-| `&&` | Logical AND |
-| `\|\|` | Logical OR |
-| `!` | Logical NOT |
+| Operator | Keyword | Description |
+|----------|---------|-------------|
+| `&&` | `and` | Logical AND |
+| `\|\|` | `or` | Logical OR |
+| `!` | `not` | Logical NOT |
+
+> **Note**: Keyword forms (`and`, `or`, `not`) are alternative syntax with identical semantics.
 
 #### Bitwise Operators
 
@@ -239,6 +248,8 @@ none    // Represents absence of value (Option type)
 | `u64` | Unsigned 64-bit integer | 8 bytes |
 | `f32` | 32-bit floating point | 4 bytes |
 | `f64` | 64-bit floating point | 8 bytes |
+| `int` | Alias for `i32` | 4 bytes |
+| `float` | Alias for `f32` | 4 bytes |
 | `bool` | Boolean | 1 byte |
 | `char` | Unicode character | 4 bytes |
 | `string` | UTF-8 string | varies |
@@ -289,7 +300,7 @@ let slice = arr[1..4];    // [2, 3, 4]
 &T
 
 fn print_value(x: &i32) {
-    println(f"{x}");
+    println(x);
 }
 ```
 
@@ -531,7 +542,53 @@ let name = match status {
 };
 ```
 
-### 3.14 Cast Expressions
+### 3.14 When Expressions
+
+`when` is an alternative keyword for pattern matching, identical to `match`:
+
+```mana
+when value {
+    pattern1 => expr1,
+    pattern2 => expr2,
+    _ => default_expr,
+}
+
+let name = when status {
+    0 => "ok",
+    1 => "warning",
+    _ => "error",
+};
+```
+
+### 3.15 Or Control Flow (Result Unwrapping)
+
+The `or` operator provides concise error handling for `Result` and `Option` types:
+
+```mana
+// Return early on error
+let value = result or return
+let data = option or return default_value
+
+// Break from loop on error
+let item = result or break
+let item = result or break fallback_value
+
+// Continue to next iteration on error
+let parsed = result or continue
+
+// Provide fallback expression
+let config = load_config() or { default_config() }
+```
+
+This is equivalent to:
+```mana
+let value = match result {
+    Ok(v) => v,
+    Err(_) => return,
+};
+```
+
+### 3.16 Cast Expressions
 
 ```mana
 expr as Type
@@ -540,19 +597,19 @@ let f = 42 as f64;
 let i = 3.14 as i32;
 ```
 
-### 3.15 Try Expressions
+### 3.17 Try Expressions
 
 ```mana
 expr?       // Propagate error if Result is Err or Option is None
 ```
 
-### 3.16 Null Coalescing
+### 3.18 Null Coalescing
 
 ```mana
 expr ?? default     // Use default if expr is none
 ```
 
-### 3.17 Await Expressions
+### 3.19 Await Expressions
 
 ```mana
 future.await        // Await async result
@@ -561,6 +618,13 @@ future.await        // Await async result
 ---
 
 ## 4. Statements
+
+> **Note**: Semicolons are optional for statement terminators. Both of these are valid:
+> ```mana
+> let x = 42;    // With semicolon
+> let y = 100    // Without semicolon
+> ```
+> Semicolons remain required in for-loop headers: `for init; cond; step { }`
 
 ### 4.1 Variable Declaration
 
@@ -641,7 +705,7 @@ for init; condition; update {
 }
 
 for let i = 0; i < 10; i++ {
-    println(f"{i}");
+    println("i = ", i);
 }
 
 // For-in loop (iteration)
@@ -650,7 +714,7 @@ for item in collection {
 }
 
 for i in 0..10 {
-    println(f"{i}");
+    println("i = ", i);
 }
 
 for (index, value) in collection.enumerate() {
@@ -769,7 +833,7 @@ fn name(param1: Type1, param2: Type2) -> ReturnType {
 
 // No return type (void)
 fn greet(name: string) {
-    println(f"Hello, {name}!");
+    println("Hello, ", name, "!");
 }
 
 // Public function
@@ -923,7 +987,7 @@ impl TraitName for StructName {
 // Impl trait for generic type
 impl<T> Display for Container<T> where T: Display {
     fn to_string(self) -> string {
-        return f"Container({self.value})";
+        return "Container(" + to_string(self.value) + ")";
     }
 }
 ```
@@ -988,9 +1052,9 @@ let (x, _) = pair;      // Ignore second element
 ```mana
 match tuple {
     (0, 0) => "origin",
-    (x, 0) => f"on x-axis at {x}",
-    (0, y) => f"on y-axis at {y}",
-    (x, y) => f"at ({x}, {y})",
+    (x, 0) => "on x-axis",      // x is bound
+    (0, y) => "on y-axis",      // y is bound
+    (x, y) => "somewhere else", // x, y are bound
 }
 
 let (a, b, c) = triple;
@@ -1001,9 +1065,9 @@ let (a, b, c) = triple;
 ```mana
 match point {
     Point { x: 0, y: 0 } => "origin",
-    Point { x, y: 0 } => f"on x-axis at {x}",
-    Point { x: 0, y } => f"on y-axis at {y}",
-    Point { x, y } => f"at ({x}, {y})",
+    Point { x, y: 0 } => "on x-axis",      // x is bound
+    Point { x: 0, y } => "on y-axis",      // y is bound
+    Point { x, y } => "somewhere else",    // x, y are bound
 }
 
 let Point { x, y } = point;
@@ -1014,9 +1078,9 @@ let Point { x, y } = point;
 ```mana
 match message {
     Message::Quit => "quit",
-    Message::Move { x, y } => f"move to ({x}, {y})",
-    Message::Write(text) => f"write: {text}",
-    Message::Color(r, g, b) => f"color: rgb({r}, {g}, {b})",
+    Message::Move { x, y } => "move",   // x, y are bound
+    Message::Write(text) => "write",    // text is bound
+    Message::Color(r, g, b) => "color", // r, g, b are bound
 }
 ```
 
@@ -1213,10 +1277,18 @@ fn test_math_operations() {
 
 | Function | Description |
 |----------|-------------|
-| `print(msg)` | Print without newline |
-| `println(msg)` | Print with newline |
+| `print(args...)` | Print values without newline (variadic) |
+| `println(args...)` | Print values with newline (variadic) |
 | `input()` | Read line from stdin |
 | `input(prompt)` | Print prompt, read line |
+
+```mana
+// Variadic print examples
+println("Hello, ", name, "!")        // Multiple arguments
+println("x = ", x, ", y = ", y)      // Mix strings and values
+print("Loading...")                   // No newline
+println()                             // Just newline
+```
 
 ### 9.2 Type Conversion
 
@@ -1444,4 +1516,4 @@ result.map_err(|e| new_error)
 
 ---
 
-*This reference is for Mana v1.0.0*
+*This reference is for Mana v1.1.0 (includes vNext syntax)*

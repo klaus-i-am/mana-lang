@@ -58,7 +58,7 @@ fn main() -> i32 {
     let pi: f64 = 3.14159;
     let flag: bool = true;
 
-    println(f"x = {x}, counter = {counter}");
+    println("x = ", x, ", counter = ", counter);
     return 0;
 }
 ```
@@ -108,17 +108,17 @@ fn add(a: i32, b: i32) -> i32 {
 
 // Void function (no return value)
 fn greet(name: str) {
-    println(f"Hello, {name}!");
+    println("Hello, ", name, "!");
 }
 
 // Default parameters
 fn connect(host: str, port: i32 = 8080) {
-    println(f"Connecting to {host}:{port}");
+    println("Connecting to ", host, ":", port);
 }
 
 fn main() -> i32 {
     let sum = add(3, 4);
-    println(f"3 + 4 = {sum}");
+    println("3 + 4 = ", sum);
 
     greet("World");
 
@@ -934,12 +934,16 @@ let c = 65 as char;    // i32 to char
 let name = "World";
 let count = 42;
 
-// F-strings
-let msg = f"Hello, {name}!";
-let info = f"Count: {count}";
+// Variadic print - pass multiple arguments
+println("Hello, ", name, "!");
+println("Count: ", count);
 
-// Formatting expressions
-let calc = f"Result: {2 + 2}";
+// Multiple values in one call
+println("a = ", a, ", b = ", b, ", sum = ", a + b);
+
+// String concatenation
+let msg = "Hello, " + name + "!";
+let info = "Count: " + to_string(count);
 ```
 
 ### Common Operations

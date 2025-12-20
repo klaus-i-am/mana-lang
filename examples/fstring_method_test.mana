@@ -1,4 +1,4 @@
-module fstring_method_test;
+module fstring_method_test
 
 enum Color {
     Red,
@@ -12,13 +12,12 @@ impl Color {
             Color::Red => "red",
             Color::Green => "green",
             Color::Blue => "blue"
-        };
+        }
     }
 }
 
 fn main() -> i32 {
-    let c = Color::Red;
-    let msg = f"The color is {c.name()}";
-    println(msg);
-    return 0;
+    let c = Color::Red
+    println("The color is ", c.name())
+    return 0
 }
