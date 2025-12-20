@@ -155,8 +155,12 @@ target_include_directories(my_app PRIVATE ${MANA_RUNTIME_DIR})
 ### Example Workflow
 
 ```bash
-# 1. Create source file
-echo 'module main; fn main() -> i32 { println("Hello!"); return 0; }' > hello.mana
+# 1. Create source file (vNext syntax - no semicolons, optional main return)
+echo 'module main
+
+fn main() {
+    println("Hello!")
+}' > hello.mana
 
 # 2. Compile to C++
 mana_lang hello.mana --emit-cpp
@@ -197,7 +201,13 @@ The compiler searches for imported modules in:
 ```mana
 #[test]
 fn test_addition() {
-    assert_eq(1 + 1, 2);
+    assert_eq(1 + 1, 2)
+}
+
+#[test]
+fn test_string_concat() {
+    let s = "hello" + " world"
+    assert_eq(s, "hello world")
 }
 ```
 
@@ -215,6 +225,30 @@ Generate markdown documentation from doc comments:
 ```bash
 mana_lang src/lib.mana --doc
 # Creates: src/lib.md
+```
+
+### Doc Comment Syntax
+
+```mana
+/// Calculates the factorial of n.
+///
+/// # Arguments
+/// * `n` - The number to calculate factorial for
+///
+/// # Returns
+/// The factorial of n
+///
+/// # Example
+/// ```mana
+/// let result = factorial(5)
+/// assert_eq(result, 120)
+/// ```
+fn factorial(n: int) -> int {
+    if n <= 1 {
+        return 1
+    }
+    return n * factorial(n - 1)
+}
 ```
 
 ## IDE Integration
@@ -262,3 +296,19 @@ This shows:
 - AST dump
 - Semantic analysis details
 - Code generation steps
+
+## vNext Syntax Support
+
+The build system fully supports vNext syntax features:
+
+| Feature | Example |
+|---------|---------|
+| Optional semicolons | `let x = 42` |
+| Type aliases | `int` for `i32`, `float` for `f32` |
+| Optional main return | `fn main() { }` |
+| `when` expressions | `when x { 1 -> "one" _ -> "other" }` |
+| `or` operator | `value or default` |
+| `variant` keyword | `variant Color { Red, Green, Blue }` |
+| Variadic println | `println("Value: ", x)` |
+
+See [Language Specification](LANGUAGE_SPEC.md) for full syntax reference.

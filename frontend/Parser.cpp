@@ -241,9 +241,16 @@ namespace mana::frontend {
             if (match(TokenKind::Assign)) {
                 field.default_value = parse_expression();
             }
-            
-            expect(TokenKind::Semicolon, "expected ';' after field");
+
             s->fields.push_back(std::move(field));
+
+            // Accept comma or semicolon as field separator (both optional for vNext)
+            if (!match(TokenKind::Comma) && !match(TokenKind::Semicolon)) {
+                // Neither found - only ok if we're at the closing brace
+                if (!check(TokenKind::RBrace)) {
+                    diag_.error("expected ',' or '}' after field", peek().line, peek().column);
+                }
+            }
         }
 
         expect(TokenKind::RBrace, "expected '}' after struct fields");
@@ -783,6 +790,7 @@ namespace mana::frontend {
         fn->is_pub = is_pub;
         fn->is_async = is_async;
         fn->is_test = is_test;
+        fn->has_self = has_self;
         return fn;
     }
 

@@ -87,8 +87,10 @@ namespace mana::frontend {
         bool is_async = false;  // async fn
         bool is_static = false;  // static fn (no self parameter)
         bool is_test = false;  // #[test] fn
+        bool has_self = false;  // method has 'self' parameter
 
         bool is_method() const { return !receiver_type.empty(); }
+        bool is_instance_method() const { return has_self; }
         bool is_generic() const { return !type_params.empty(); }
         bool has_constraints() const { return !constraints.empty(); }
         bool is_public() const override { return is_pub; }

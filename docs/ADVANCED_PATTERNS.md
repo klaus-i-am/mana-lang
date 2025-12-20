@@ -25,7 +25,7 @@ struct HttpRequest {
     url: string,
     headers: Vec<(string, string)>,
     body: Option<string>,
-    timeout_ms: i32,
+    timeout_ms: int,
 }
 
 struct HttpRequestBuilder {
@@ -33,7 +33,7 @@ struct HttpRequestBuilder {
     url: string,
     headers: Vec<(string, string)>,
     body: Option<string>,
-    timeout_ms: i32,
+    timeout_ms: int,
 }
 
 impl HttpRequestBuilder {
@@ -44,27 +44,27 @@ impl HttpRequestBuilder {
             headers: vec![],
             body: none,
             timeout_ms: 30000,
-        };
+        }
     }
 
     fn method(mut self, m: string) -> HttpRequestBuilder {
-        self.method = m;
-        return self;
+        self.method = m
+        return self
     }
 
     fn header(mut self, key: string, value: string) -> HttpRequestBuilder {
-        self.headers.push((key, value));
-        return self;
+        self.headers.push((key, value))
+        return self
     }
 
     fn body(mut self, b: string) -> HttpRequestBuilder {
-        self.body = some(b);
-        return self;
+        self.body = some(b)
+        return self
     }
 
-    fn timeout(mut self, ms: i32) -> HttpRequestBuilder {
-        self.timeout_ms = ms;
-        return self;
+    fn timeout(mut self, ms: int) -> HttpRequestBuilder {
+        self.timeout_ms = ms
+        return self
     }
 
     fn build(self) -> HttpRequest {
@@ -74,21 +74,19 @@ impl HttpRequestBuilder {
             headers: self.headers,
             body: self.body,
             timeout_ms: self.timeout_ms,
-        };
+        }
     }
 }
 
 // Usage
-fn main() -> i32 {
+fn main() {
     let request = HttpRequestBuilder::new("https://api.example.com/users")
         .method("POST")
         .header("Content-Type", "application/json")
         .header("Authorization", "Bearer token123")
         .body("{\"name\": \"Alice\"}")
         .timeout(5000)
-        .build();
-
-    return 0;
+        .build()
 }
 ```
 
@@ -108,54 +106,66 @@ enum AppError {
 
 impl AppError {
     fn message(self) -> string {
-        return match self {
-            AppError::NotFound(s) => f"Not found: {s}",
-            AppError::InvalidInput(s) => f"Invalid input: {s}",
-            AppError::NetworkError(s) => f"Network error: {s}",
-            AppError::DatabaseError(s) => f"Database error: {s}",
-        };
+        return when self {
+            AppError::NotFound(s) -> "Not found: " + s
+            AppError::InvalidInput(s) -> "Invalid input: " + s
+            AppError::NetworkError(s) -> "Network error: " + s
+            AppError::DatabaseError(s) -> "Database error: " + s
+        }
     }
 }
 
-type AppResult<T> = Result<T, AppError>;
+type AppResult<T> = Result<T, AppError>
 
-fn find_user(id: i32) -> AppResult<User> {
+fn find_user(id: int) -> AppResult<User> {
     if id <= 0 {
-        return err(AppError::InvalidInput("ID must be positive"));
+        return err(AppError::InvalidInput("ID must be positive"))
     }
 
     // ... database lookup
-    return err(AppError::NotFound(f"User {id}"));
+    return err(AppError::NotFound("User " + id.to_string()))
 }
 ```
 
-### Early Return Pattern
+### Early Return with `or` Operator
 
 ```mana
-fn process_order(order_id: i32) -> AppResult<Receipt> {
-    // Each ? propagates errors up the chain
-    let order = get_order(order_id)?;
-    let user = get_user(order.user_id)?;
-    let payment = process_payment(order, user)?;
-    let receipt = generate_receipt(order, payment)?;
+fn process_order(order_id: int) -> AppResult<Receipt> {
+    // Using the `or` operator for clean error handling
+    let order = get_order(order_id) or return err(AppError::NotFound("order"))
+    let user = get_user(order.user_id) or return err(AppError::NotFound("user"))
+    let payment = process_payment(order, user) or return err(AppError::NetworkError("payment failed"))
+    let receipt = generate_receipt(order, payment) or return err(AppError::DatabaseError("receipt generation"))
 
-    return ok(receipt);
+    return ok(receipt)
+}
+
+// Or with ? propagation
+fn process_order_short(order_id: int) -> AppResult<Receipt> {
+    let order = get_order(order_id)?
+    let user = get_user(order.user_id)?
+    let payment = process_payment(order, user)?
+    let receipt = generate_receipt(order, payment)?
+
+    return ok(receipt)
 }
 ```
 
-### Fallback Values
+### Fallback Values with `or`
 
 ```mana
 fn get_config_or_default() -> Config {
-    // Use unwrap_or for simple defaults
-    let port = env::get("PORT").unwrap_or("8080").parse_i32().unwrap_or(8080);
+    // Use `or` for simple defaults
+    let port_str = env::get("PORT") or "8080"
+    let port = port_str.parse_int() or 8080
 
-    // Use unwrap_or_else for computed defaults
-    let db_url = env::get("DATABASE_URL").unwrap_or_else(|| {
-        return "sqlite://local.db";
-    });
+    // Use `or` with blocks for computed defaults
+    let db_url = env::get("DATABASE_URL") or {
+        println("Using default database")
+        "sqlite://local.db"
+    }
 
-    return Config { port: port, db_url: db_url };
+    return Config { port: port, db_url: db_url }
 }
 ```
 
@@ -167,7 +177,7 @@ Model explicit states to prevent invalid operations:
 
 ```mana
 // Connection states
-enum ConnectionState {
+variant ConnectionState {
     Disconnected,
     Connecting,
     Connected(Socket),
@@ -177,63 +187,63 @@ enum ConnectionState {
 struct Connection {
     state: ConnectionState,
     host: string,
-    port: i32,
+    port: int,
 }
 
 impl Connection {
-    fn new(host: string, port: i32) -> Connection {
+    fn new(host: string, port: int) -> Connection {
         return Connection {
             state: ConnectionState::Disconnected,
             host: host,
             port: port,
-        };
+        }
     }
 
     fn connect(mut self) -> Result<(), string> {
         // Can only connect from Disconnected state
-        match self.state {
-            ConnectionState::Disconnected => {
-                self.state = ConnectionState::Connecting;
+        when self.state {
+            ConnectionState::Disconnected -> {
+                self.state = ConnectionState::Connecting
 
-                match Socket::connect(self.host, self.port) {
-                    ok(socket) => {
-                        self.state = ConnectionState::Connected(socket);
-                        return ok(());
-                    },
-                    err(e) => {
-                        self.state = ConnectionState::Error(e);
-                        return err(e);
+                when Socket::connect(self.host, self.port) {
+                    ok(socket) -> {
+                        self.state = ConnectionState::Connected(socket)
+                        return ok(())
+                    }
+                    err(e) -> {
+                        self.state = ConnectionState::Error(e)
+                        return err(e)
                     }
                 }
-            },
-            ConnectionState::Connected(_) => {
-                return err("Already connected");
-            },
-            ConnectionState::Connecting => {
-                return err("Connection in progress");
-            },
-            ConnectionState::Error(e) => {
-                return err(f"Previous error: {e}");
+            }
+            ConnectionState::Connected(_) -> {
+                return err("Already connected")
+            }
+            ConnectionState::Connecting -> {
+                return err("Connection in progress")
+            }
+            ConnectionState::Error(e) -> {
+                return err("Previous error: " + e)
             }
         }
     }
 
     fn send(self, data: string) -> Result<(), string> {
-        match self.state {
-            ConnectionState::Connected(socket) => {
-                return socket.send(data);
-            },
-            _ => {
-                return err("Not connected");
+        when self.state {
+            ConnectionState::Connected(socket) -> {
+                return socket.send(data)
+            }
+            _ -> {
+                return err("Not connected")
             }
         }
     }
 
     fn is_connected(self) -> bool {
-        return match self.state {
-            ConnectionState::Connected(_) => true,
-            _ => false,
-        };
+        return when self.state {
+            ConnectionState::Connected(_) -> true
+            _ -> false
+        }
     }
 }
 ```
@@ -246,9 +256,9 @@ Chain operations for readable data transformations:
 
 ```mana
 struct Order {
-    id: i32,
+    id: int,
     customer: string,
-    total: f64,
+    total: float,
     status: string,
 }
 
@@ -259,38 +269,38 @@ fn get_high_value_customers(orders: Vec<Order>) -> Vec<string> {
         .map(|o| o.customer)
         .collect::<HashSet<string>>()  // Deduplicate
         .into_iter()
-        .collect::<Vec<string>>();
+        .collect::<Vec<string>>()
 }
 
 // Multi-step processing with intermediate variables for clarity
 fn process_data(items: Vec<RawItem>) -> Vec<ProcessedItem> {
-    let valid_items = items.filter(|i| i.is_valid());
-    let transformed = valid_items.map(|i| transform(i));
-    let sorted = transformed.sorted_by(|a, b| a.priority.cmp(b.priority));
-    return sorted.collect();
+    let valid_items = items.filter(|i| i.is_valid())
+    let transformed = valid_items.map(|i| transform(i))
+    let sorted = transformed.sorted_by(|a, b| a.priority.cmp(b.priority))
+    return sorted.collect()
 }
 
 // Fold for aggregation
-fn calculate_stats(numbers: Vec<f64>) -> Stats {
+fn calculate_stats(numbers: Vec<float>) -> Stats {
     let (sum, count, min, max) = numbers.fold(
-        (0.0, 0, f64::MAX, f64::MIN),
+        (0.0, 0, float::MAX, float::MIN),
         |(sum, count, min, max), n| {
             return (
                 sum + n,
                 count + 1,
                 if n < min { n } else { min },
                 if n > max { n } else { max },
-            );
+            )
         }
-    );
+    )
 
     return Stats {
         sum: sum,
         count: count,
         min: min,
         max: max,
-        avg: if count > 0 { sum / count as f64 } else { 0.0 },
-    };
+        avg: if count > 0 { sum / count as float } else { 0.0 },
+    }
 }
 ```
 
@@ -302,30 +312,30 @@ fn calculate_stats(numbers: Vec<f64>) -> Stats {
 
 ```mana
 fn read_file_safely(path: string) -> Result<string, string> {
-    let file = File::open(path)?;
-    defer file.close();  // Guaranteed cleanup
+    let file = File::open(path)?
+    defer file.close()  // Guaranteed cleanup
 
-    let content = file.read_all()?;
-    return ok(content);
+    let content = file.read_all()?
+    return ok(content)
 }
 
 fn with_transaction(db: Database, work: fn() -> Result<(), string>) -> Result<(), string> {
-    db.begin_transaction()?;
+    db.begin_transaction()?
 
     // Rollback on failure, commit on success
     defer {
         if result.is_err() {
-            db.rollback();
+            db.rollback()
         }
     }
 
-    let result = work();
+    let result = work()
 
     if result.is_ok() {
-        db.commit()?;
+        db.commit()?
     }
 
-    return result;
+    return result
 }
 ```
 
@@ -342,31 +352,29 @@ impl<T> ManagedResource<T> {
         return ManagedResource {
             value: value,
             cleanup: cleanup,
-        };
+        }
     }
 
     fn get(self) -> T {
-        return self.value;
+        return self.value
     }
 }
 
 impl<T> Drop for ManagedResource<T> {
     fn drop(self) {
-        (self.cleanup)(self.value);
+        (self.cleanup)(self.value)
     }
 }
 
 // Usage
-fn main() -> i32 {
+fn main() {
     let buffer = ManagedResource::new(
         allocate_buffer(1024),
         |b| free_buffer(b)
-    );
+    )
 
     // Use buffer.get()...
     // Automatically freed when buffer goes out of scope
-
-    return 0;
 }
 ```
 
@@ -378,27 +386,27 @@ Prevent mixing up different ID types:
 
 ```mana
 // Newtype pattern for type-safe IDs
-struct UserId(i64);
-struct OrderId(i64);
-struct ProductId(i64);
+struct UserId(i64)
+struct OrderId(i64)
+struct ProductId(i64)
 
 impl UserId {
     fn new(id: i64) -> UserId {
-        return UserId(id);
+        return UserId(id)
     }
 
     fn value(self) -> i64 {
-        return self.0;
+        return self.0
     }
 }
 
 impl OrderId {
     fn new(id: i64) -> OrderId {
-        return OrderId(id);
+        return OrderId(id)
     }
 
     fn value(self) -> i64 {
-        return self.0;
+        return self.0
     }
 }
 
@@ -411,14 +419,12 @@ fn get_order(id: OrderId) -> Option<Order> {
     // ...
 }
 
-fn main() -> i32 {
-    let user_id = UserId::new(123);
-    let order_id = OrderId::new(456);
+fn main() {
+    let user_id = UserId::new(123)
+    let order_id = OrderId::new(456)
 
-    get_user(user_id);    // OK
-    // get_user(order_id); // Compile error! Type mismatch
-
-    return 0;
+    get_user(user_id)    // OK
+    // get_user(order_id) // Compile error! Type mismatch
 }
 ```
 
@@ -431,10 +437,10 @@ Layered configuration with defaults, files, and environment:
 ```mana
 struct Config {
     host: string,
-    port: i32,
+    port: int,
     debug: bool,
     database_url: string,
-    max_connections: i32,
+    max_connections: int,
 }
 
 impl Config {
@@ -445,44 +451,44 @@ impl Config {
             debug: false,
             database_url: "sqlite://app.db",
             max_connections: 10,
-        };
+        }
     }
 
     fn from_file(path: string) -> Result<Config, string> {
-        let content = fs::read_string(path)?;
+        let content = fs::read_string(path)?
         // Parse TOML/JSON/etc
-        return parse_config(content);
+        return parse_config(content)
     }
 
     fn from_env(mut self) -> Config {
         if let some(host) = env::get("APP_HOST") {
-            self.host = host;
+            self.host = host
         }
         if let some(port) = env::get("APP_PORT") {
-            self.port = port.parse_i32().unwrap_or(self.port);
+            self.port = port.parse_int() or self.port
         }
         if let some(_) = env::get("APP_DEBUG") {
-            self.debug = true;
+            self.debug = true
         }
         if let some(url) = env::get("DATABASE_URL") {
-            self.database_url = url;
+            self.database_url = url
         }
-        return self;
+        return self
     }
 
     /// Load config: defaults -> file -> environment
     fn load() -> Config {
-        let mut config = Config::defaults();
+        let mut config = Config::defaults()
 
         // Try config file (optional)
         if let ok(file_config) = Config::from_file("config.toml") {
-            config = file_config;
+            config = file_config
         }
 
         // Environment overrides everything
-        config = config.from_env();
+        config = config.from_env()
 
-        return config;
+        return config
     }
 }
 ```
@@ -494,7 +500,7 @@ impl Config {
 ### Simple Observer Pattern
 
 ```mana
-type EventHandler<T> = fn(T);
+type EventHandler<T> = fn(T)
 
 struct EventEmitter<T> {
     handlers: Vec<EventHandler<T>>,
@@ -502,41 +508,39 @@ struct EventEmitter<T> {
 
 impl<T> EventEmitter<T> {
     fn new() -> EventEmitter<T> {
-        return EventEmitter { handlers: vec![] };
+        return EventEmitter { handlers: vec![] }
     }
 
     fn on(mut self, handler: EventHandler<T>) {
-        self.handlers.push(handler);
+        self.handlers.push(handler)
     }
 
     fn emit(self, event: T) {
         for handler in self.handlers {
-            handler(event.clone());
+            handler(event.clone())
         }
     }
 }
 
 // Usage
 struct UserCreated {
-    id: i32,
+    id: int,
     name: string,
 }
 
-fn main() -> i32 {
-    let mut emitter = EventEmitter::new();
+fn main() {
+    let mut emitter = EventEmitter::new()
 
     emitter.on(|e: UserCreated| {
-        println(f"Welcome email sent to {e.name}");
-    });
+        println("Welcome email sent to ", e.name)
+    })
 
     emitter.on(|e: UserCreated| {
-        println(f"User {e.id} added to analytics");
-    });
+        println("User ", e.id, " added to analytics")
+    })
 
     // Trigger event
-    emitter.emit(UserCreated { id: 1, name: "Alice" });
-
-    return 0;
+    emitter.emit(UserCreated { id: 1, name: "Alice" })
 }
 ```
 
@@ -544,8 +548,8 @@ fn main() -> i32 {
 
 ```mana
 trait Command {
-    fn execute(self);
-    fn undo(self);
+    fn execute(self)
+    fn undo(self)
 }
 
 struct CommandHistory {
@@ -554,17 +558,17 @@ struct CommandHistory {
 
 impl CommandHistory {
     fn new() -> CommandHistory {
-        return CommandHistory { executed: vec![] };
+        return CommandHistory { executed: vec![] }
     }
 
     fn execute(mut self, cmd: Box<dyn Command>) {
-        cmd.execute();
-        self.executed.push(cmd);
+        cmd.execute()
+        self.executed.push(cmd)
     }
 
     fn undo(mut self) {
         if let some(cmd) = self.executed.pop() {
-            cmd.undo();
+            cmd.undo()
         }
     }
 }
@@ -572,17 +576,17 @@ impl CommandHistory {
 // Example command
 struct InsertTextCommand {
     document: Document,
-    position: i32,
+    position: int,
     text: string,
 }
 
 impl Command for InsertTextCommand {
     fn execute(self) {
-        self.document.insert(self.position, self.text);
+        self.document.insert(self.position, self.text)
     }
 
     fn undo(self) {
-        self.document.delete(self.position, self.text.len());
+        self.document.delete(self.position, self.text.len())
     }
 }
 ```
@@ -593,15 +597,16 @@ impl Command for InsertTextCommand {
 
 1. **Prefer `Option` over nullable values** - Make absence explicit
 2. **Use `Result` for recoverable errors** - Don't panic on expected failures
-3. **Favor composition over inheritance** - Use traits and composition
-4. **Make invalid states unrepresentable** - Use enums for state machines
-5. **Keep functions small and focused** - Single responsibility
-6. **Use meaningful names** - Code is read more than written
-7. **Defer for cleanup** - Guarantee resource release
-8. **Leverage type system** - Newtypes prevent bugs at compile time
-9. **Chain iterators** - Functional style for transformations
-10. **Document public APIs** - Help future maintainers (including yourself)
+3. **Use `or` for clean error handling** - `value or default` and `result or return err`
+4. **Favor composition over inheritance** - Use traits and composition
+5. **Make invalid states unrepresentable** - Use enums/variants for state machines
+6. **Keep functions small and focused** - Single responsibility
+7. **Use meaningful names** - Code is read more than written
+8. **Defer for cleanup** - Guarantee resource release
+9. **Leverage type system** - Newtypes prevent bugs at compile time
+10. **Chain iterators** - Functional style for transformations
+11. **Document public APIs** - Help future maintainers (including yourself)
 
 ---
 
-*See also: [Language Reference](LANGUAGE_REFERENCE.md) | [Standard Library](STDLIB.md)*
+*See also: [Language Reference](LANGUAGE_SPEC.md) | [Standard Library](STDLIB.md)*

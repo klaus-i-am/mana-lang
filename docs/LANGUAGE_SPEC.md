@@ -1,4 +1,4 @@
-# Mana Language Specification v1.0
+# Mana Language Specification v1.1 (vNext)
 
 ## Table of Contents
 
@@ -35,11 +35,10 @@ Mana is a modern systems programming language designed for game engines and perf
 ### 1.2 Hello World
 
 ```mana
-module main;
+module main
 
-fn main() -> i32 {
-    println("Hello, Mana!");
-    return 0;
+fn main() {
+    println("Hello, Mana!")
 }
 ```
 
@@ -51,12 +50,13 @@ fn main() -> i32 {
 
 ```
 module    import    export    pub       fn        return
-struct    enum      trait     impl      generic   where
-let       mut       const     if        else      match
-while     for       in        break     continue  loop
-true      false     none      self      Self      async
-await     try       ref       ptr       borrow    unsafe
-defer     scope     test      type      as        is
+struct    enum      variant   trait     impl      generic
+where     let       mut       const     if        else
+match     when      while     for       in        break
+continue  loop      true      false     none      self
+Self      async     await     try       or        ref
+ptr       borrow    unsafe    defer     scope     test
+type      as        is
 ```
 
 ### 2.2 Identifiers
@@ -72,39 +72,39 @@ identifier = [a-zA-Z_][a-zA-Z0-9_]*
 #### Integer Literals
 
 ```mana
-let decimal = 42;
-let hex = 0xFF;
-let octal = 0o77;
-let binary = 0b1010;
-let with_sep = 1_000_000;
+let decimal = 42
+let hex = 0xFF
+let octal = 0o77
+let binary = 0b1010
+let with_sep = 1_000_000
 ```
 
 #### Floating-Point Literals
 
 ```mana
-let f1 = 3.14;
-let f2 = 1.0e-10;
-let f3 = 2.5E+3;
+let f1 = 3.14
+let f2 = 1.0e-10
+let f3 = 2.5E+3
 ```
 
 #### String Literals
 
 ```mana
-let simple = "hello";
-let escaped = "line1\nline2";
-let raw = r#"no \n escaping"#;
+let simple = "hello"
+let escaped = "line1\nline2"
+let raw = r#"no \n escaping"#
 let multiline = """
     multi-line
     string
-""";
+"""
 ```
 
 #### Character Literals
 
 ```mana
-let ch = 'a';
-let newline = '\n';
-let unicode = '\u{1F600}';
+let ch = 'a'
+let newline = '\n'
+let unicode = '\u{1F600}'
 ```
 
 ### 2.4 Comments
@@ -129,6 +129,22 @@ let unicode = '\u{1F600}';
 ..  ..=                          // Range
 ?.  ??                           // Optional chaining/coalescing
 ->  =>                           // Arrow operators
+or                               // Error unwrapping
+```
+
+### 2.6 Semicolons
+
+Semicolons are **optional** for statement terminators:
+
+```mana
+// Both are valid:
+let x = 42
+let y = 42;
+
+// Semicolons required only in for loop headers:
+for i = 0; i < 10; i++ {
+    println(i)
+}
 ```
 
 ---
@@ -146,58 +162,81 @@ let unicode = '\u{1F600}';
 | `char` | Unicode character | 4 bytes |
 | `str` | String slice | pointer + length |
 
-### 3.2 Compound Types
+### 3.2 Type Aliases
+
+Mana provides convenient aliases for common types:
+
+| Alias | Equivalent | Description |
+|-------|------------|-------------|
+| `int` | `i32` | Default integer type |
+| `float` | `f32` | Default floating-point type |
+| `string` | `str` | String type |
+
+```mana
+// Preferred style using aliases
+let count: int = 42
+let temperature: float = 98.6
+let name: string = "Mana"
+```
+
+### 3.3 Compound Types
 
 ```mana
 // Arrays
-let arr: [i32; 5] = [1, 2, 3, 4, 5];
-let filled: [i32; 10] = [0; 10];  // Array fill syntax
+let arr: [int; 5] = [1, 2, 3, 4, 5]
+let filled: [int; 10] = [0; 10]  // Array fill syntax
 
 // Tuples
-let tuple: (i32, str, bool) = (42, "hello", true);
-let (x, y, z) = tuple;  // Destructuring
+let tuple: (int, str, bool) = (42, "hello", true)
+let (x, y, z) = tuple  // Destructuring
 
 // Vectors
-let vec: Vec<i32> = Vec::new();
-let vec2 = vec![1, 2, 3];
+let vec: Vec<int> = Vec::new()
+let vec2 = vec![1, 2, 3]
 
 // HashMaps
-let map: HashMap<str, i32> = HashMap::new();
+let map: HashMap<str, int> = HashMap::new()
 ```
 
-### 3.3 Optional Types
+### 3.4 Optional Types
 
 ```mana
-let maybe: Option<i32> = some(42);
-let nothing: Option<i32> = none;
+let maybe: Option<int> = some(42)
+let nothing: Option<int> = none
 
 // Optional chaining
-let value = obj?.field?.method();
+let value = obj?.field?.method()
 
 // Null coalescing
-let result = maybe ?? 0;
+let result = maybe ?? 0
 ```
 
-### 3.4 Result Types
+### 3.5 Result Types
 
 ```mana
-let ok: Result<i32, str> = ok(42);
-let err: Result<i32, str> = err("failed");
+let ok: Result<int, str> = Ok(42)
+let err: Result<int, str> = Err("failed")
 
-// Error propagation
+// Error propagation with ?
 fn read_file(path: str) -> Result<str, Error> {
-    let file = File::open(path)?;
-    let content = file.read_to_string()?;
-    return ok(content);
+    let file = File::open(path)?
+    let content = file.read_to_string()?
+    return Ok(content)
+}
+
+// Error propagation with or
+fn read_file_or_default(path: str) -> str {
+    let content = File::open(path) or return ""
+    return content.read_to_string() or return ""
 }
 ```
 
-### 3.5 Type Aliases
+### 3.6 Type Aliases
 
 ```mana
-type Point = (f32, f32);
-type Callback = fn(i32) -> bool;
-type StringResult = Result<str, Error>;
+type Point = (float, float)
+type Callback = fn(int) -> bool
+type StringResult = Result<str, Error>
 ```
 
 ---
@@ -207,37 +246,37 @@ type StringResult = Result<str, Error>;
 ### 4.1 Arithmetic Expressions
 
 ```mana
-let sum = a + b;
-let diff = a - b;
-let prod = a * b;
-let quot = a / b;
-let rem = a % b;
-let power = a ** 2;  // Exponentiation
+let sum = a + b
+let diff = a - b
+let prod = a * b
+let quot = a / b
+let rem = a % b
+let power = a ** 2  // Exponentiation
 ```
 
 ### 4.2 Comparison Expressions
 
 ```mana
-let eq = a == b;
-let ne = a != b;
-let lt = a < b;
-let gt = a > b;
-let le = a <= b;
-let ge = a >= b;
+let eq = a == b
+let ne = a != b
+let lt = a < b
+let gt = a > b
+let le = a <= b
+let ge = a >= b
 ```
 
 ### 4.3 Logical Expressions
 
 ```mana
-let and = a && b;
-let or = a || b;
-let not = !a;
+let and = a && b
+let or = a || b
+let not = !a
 ```
 
 ### 4.4 If Expressions
 
 ```mana
-let max = if a > b { a } else { b };
+let max = if a > b { a } else { b }
 ```
 
 ### 4.5 Match Expressions
@@ -249,45 +288,59 @@ let result = match value {
     3..=9 => "three to nine",
     n if n < 0 => "negative",
     _ => "other"
-};
+}
 ```
 
-### 4.6 Range Expressions
+### 4.6 When Expressions
+
+The `when` keyword is an alternative to `match` with `->` arrow syntax:
 
 ```mana
-let inclusive = 1..=10;   // 1 to 10 inclusive
-let exclusive = 1..10;    // 1 to 9
-let from = 5..;           // 5 to infinity
-let to = ..10;            // 0 to 9
+let result = when value {
+    0 -> "zero"
+    1 | 2 -> "one or two"
+    3..=9 -> "three to nine"
+    n if n < 0 -> "negative"
+    _ -> "other"
+}
 ```
 
-### 4.7 Lambda Expressions
+### 4.7 Range Expressions
 
 ```mana
-let add = |a, b| a + b;
-let square = |x: i32| -> i32 { x * x };
-let closure = |x| x + captured_var;  // Captures environment
+let inclusive = 1..=10   // 1 to 10 inclusive
+let exclusive = 1..10    // 1 to 9
+let from = 5..           // 5 to infinity
+let to = ..10            // 0 to 9
 ```
 
-### 4.8 Call Expressions
+### 4.8 Lambda Expressions
+
+```mana
+let add = |a, b| a + b
+let square = |x: int| -> int { x * x }
+let closure = |x| x + captured_var  // Captures environment
+```
+
+### 4.9 Call Expressions
 
 ```mana
 // Regular call
-let result = func(arg1, arg2);
+let result = func(arg1, arg2)
 
 // Named arguments
-let point = Point::new(x: 10, y: 20);
+let point = Point::new(x: 10, y: 20)
 
 // Method call
-let len = string.len();
+let len = string.len()
 ```
 
-### 4.9 Cast Expressions
+### 4.10 Cast Expressions
 
 ```mana
-let i = 42;
-let f = i as f64;
-let u = i as u32;
+let i = 42
+let f = i as f64
+let u = i as u32
 ```
 
 ---
@@ -297,20 +350,22 @@ let u = i as u32;
 ### 5.1 Variable Declarations
 
 ```mana
-let immutable = 42;
-let mut mutable = 0;
-let typed: i32 = 100;
-const CONSTANT: i32 = 1000;
+let immutable = 42
+let mut mutable = 0
+let typed: int = 100
+const CONSTANT: int = 1000
 ```
 
 ### 5.2 Assignment
 
 ```mana
-x = 10;
-x += 5;
-x -= 3;
-x *= 2;
-x /= 4;
+x = 10
+x += 5
+x -= 3
+x *= 2
+x /= 4
+x++
+x--
 ```
 
 ### 5.3 If Statement
@@ -329,13 +384,13 @@ if condition {
 
 ```mana
 if let some(x) = optional {
-    println(f"Got value: {x}");
+    println("Got value: ", x)
 }
 
-if let ok(value) = result {
-    use(value);
+if let Ok(value) = result {
+    use(value)
 } else {
-    handle_error();
+    handle_error()
 }
 ```
 
@@ -345,13 +400,27 @@ if let ok(value) = result {
 match expr {
     Pattern1 => statement1,
     Pattern2 => {
-        multiple_statements();
+        multiple_statements()
     },
     _ => default_case
 }
 ```
 
-### 5.6 While Loop
+### 5.6 When Statement
+
+Alternative syntax using `when` with `->` arrows:
+
+```mana
+when expr {
+    Pattern1 -> statement1
+    Pattern2 -> {
+        multiple_statements()
+    }
+    _ -> default_case
+}
+```
+
+### 5.7 While Loop
 
 ```mana
 while condition {
@@ -360,57 +429,62 @@ while condition {
 
 // While-let
 while let some(item) = iterator.next() {
-    process(item);
+    process(item)
 }
 ```
 
-### 5.7 For Loop
+### 5.8 For Loop
 
 ```mana
 for i in 0..10 {
-    println(i);
+    println(i)
 }
 
 for item in collection {
-    process(item);
+    process(item)
 }
 
 for (index, value) in collection.enumerate() {
-    println(f"{index}: {value}");
+    println(index, ": ", value)
+}
+
+// C-style for loop (semicolons required in header)
+for i = 0; i < 10; i++ {
+    println(i)
 }
 ```
 
-### 5.8 Loop Statement
+### 5.9 Loop Statement
 
 ```mana
 loop {
     if done {
-        break;
+        break
     }
-    continue;
+    continue
 }
 ```
 
-### 5.9 Return Statement
+### 5.10 Return Statement
 
 ```mana
-return value;
-return;  // For void functions
+return value
+return  // For void functions
 ```
 
-### 5.10 Break and Continue
+### 5.11 Break and Continue
 
 ```mana
-break;        // Exit loop
-continue;     // Skip to next iteration
+break        // Exit loop
+continue     // Skip to next iteration
 ```
 
-### 5.11 Defer Statement
+### 5.12 Defer Statement
 
 ```mana
 fn process_file() {
-    let file = open("data.txt");
-    defer file.close();
+    let file = open("data.txt")
+    defer file.close()
 
     // file.close() called automatically when function exits
 }
@@ -423,32 +497,37 @@ fn process_file() {
 ### 6.1 Function Declaration
 
 ```mana
-fn add(a: i32, b: i32) -> i32 {
-    return a + b;
+fn add(a: int, b: int) -> int {
+    return a + b
 }
 
 fn greet(name: str) {
-    println(f"Hello, {name}!");
+    println("Hello, ", name, "!")
+}
+
+// main() without return type (implicit return 0)
+fn main() {
+    println("Hello!")
 }
 ```
 
 ### 6.2 Default Parameters
 
 ```mana
-fn connect(host: str, port: i32 = 8080, timeout: i32 = 30) {
+fn connect(host: str, port: int = 8080, timeout: int = 30) {
     // ...
 }
 
 // Call with defaults
-connect("localhost");
-connect("localhost", 9000);
-connect("localhost", port: 9000, timeout: 60);
+connect("localhost")
+connect("localhost", 9000)
+connect("localhost", port: 9000, timeout: 60)
 ```
 
 ### 6.3 Named Arguments
 
 ```mana
-fn create_window(title: str, width: i32, height: i32, fullscreen: bool) {
+fn create_window(title: str, width: int, height: int, fullscreen: bool) {
     // ...
 }
 
@@ -457,7 +536,7 @@ create_window(
     width: 800,
     height: 600,
     fullscreen: false
-);
+)
 ```
 
 ### 6.4 Generic Functions
@@ -465,12 +544,12 @@ create_window(
 ```mana
 generic<T>
 fn identity(x: T) -> T {
-    return x;
+    return x
 }
 
 generic<T, U>
 fn pair(first: T, second: U) -> (T, U) {
-    return (first, second);
+    return (first, second)
 }
 ```
 
@@ -479,9 +558,9 @@ fn pair(first: T, second: U) -> (T, U) {
 ```mana
 generic<T> where T: Display + Clone
 fn print_twice(x: T) {
-    println(x.to_string());
-    let copy = x.clone();
-    println(copy.to_string());
+    println(x.to_string())
+    let copy = x.clone()
+    println(copy.to_string())
 }
 ```
 
@@ -490,8 +569,8 @@ fn print_twice(x: T) {
 ```mana
 #[test]
 fn test_addition() {
-    assert(1 + 1 == 2);
-    assert_eq(2 + 2, 4);
+    assert(1 + 1 == 2)
+    assert_eq(2 + 2, 4)
 }
 ```
 
@@ -503,13 +582,13 @@ fn test_addition() {
 
 ```mana
 struct Point {
-    x: f32,
-    y: f32,
+    x: float,
+    y: float,
 }
 
 pub struct Player {
     pub name: str,
-    health: i32,
+    health: int,
     position: Point,
 }
 ```
@@ -519,30 +598,30 @@ pub struct Player {
 ```mana
 struct Config {
     host: str = "localhost",
-    port: i32 = 8080,
+    port: int = 8080,
     debug: bool = false,
 }
 
-let config = Config { debug: true };  // Uses defaults for host and port
+let config = Config { debug: true }  // Uses defaults for host and port
 ```
 
 ### 7.3 Struct Methods (impl blocks)
 
 ```mana
 impl Point {
-    fn new(x: f32, y: f32) -> Point {
-        return Point { x, y };
+    fn new(x: float, y: float) -> Point {
+        return Point { x, y }
     }
 
-    fn distance(self, other: Point) -> f32 {
-        let dx = self.x - other.x;
-        let dy = self.y - other.y;
-        return (dx*dx + dy*dy).sqrt();
+    fn distance(self, other: Point) -> float {
+        let dx = self.x - other.x
+        let dy = self.y - other.y
+        return (dx*dx + dy*dy).sqrt()
     }
 
-    fn translate(mut self, dx: f32, dy: f32) {
-        self.x += dx;
-        self.y += dy;
+    fn translate(mut self, dx: float, dy: float) {
+        self.x += dx
+        self.y += dy
     }
 }
 ```
@@ -552,15 +631,15 @@ impl Point {
 ```mana
 impl Math {
     fn pi() -> f64 {
-        return 3.14159265358979;
+        return 3.14159265358979
     }
 
-    fn max(a: i32, b: i32) -> i32 {
-        return if a > b { a } else { b };
+    fn max(a: int, b: int) -> int {
+        return if a > b { a } else { b }
     }
 }
 
-let pi = Math::pi();
+let pi = Math::pi()
 ```
 
 ### 7.5 Enum Declaration
@@ -571,6 +650,13 @@ enum Direction {
     South,
     East,
     West,
+}
+
+// variant is a synonym for enum
+variant Color {
+    Red,
+    Green,
+    Blue,
 }
 ```
 
@@ -589,9 +675,9 @@ enum Result<T, E> {
 
 enum Message {
     Quit,
-    Move { x: i32, y: i32 },
+    Move { x: int, y: int },
     Write(str),
-    Color(i32, i32, i32),
+    Color(int, int, int),
 }
 ```
 
@@ -603,11 +689,11 @@ enum Message {
 
 ```mana
 trait Display {
-    fn to_string(self) -> str;
+    fn to_string(self) -> str
 }
 
 trait Clone {
-    fn clone(self) -> Self;
+    fn clone(self) -> Self
 }
 ```
 
@@ -615,14 +701,14 @@ trait Clone {
 
 ```mana
 trait Iterator<T> {
-    fn next(mut self) -> Option<T>;
+    fn next(mut self) -> Option<T>
 
-    fn count(mut self) -> i32 {
-        let mut c = 0;
+    fn count(mut self) -> int {
+        let mut c = 0
         while let some(_) = self.next() {
-            c += 1;
+            c += 1
         }
-        return c;
+        return c
     }
 }
 ```
@@ -632,7 +718,7 @@ trait Iterator<T> {
 ```mana
 impl Display for Point {
     fn to_string(self) -> str {
-        return f"({self.x}, {self.y})";
+        return "(" + self.x + ", " + self.y + ")"
     }
 }
 ```
@@ -641,21 +727,21 @@ impl Display for Point {
 
 ```mana
 trait Container {
-    type Item;
+    type Item
 
-    fn get(self, index: i32) -> Self::Item;
-    fn len(self) -> i32;
+    fn get(self, index: int) -> Self::Item
+    fn len(self) -> int
 }
 
-impl Container for Vec<i32> {
-    type Item = i32;
+impl Container for Vec<int> {
+    type Item = int
 
-    fn get(self, index: i32) -> i32 {
-        return self[index];
+    fn get(self, index: int) -> int {
+        return self[index]
     }
 
-    fn len(self) -> i32 {
-        return self.length();
+    fn len(self) -> int {
+        return self.length()
     }
 }
 ```
@@ -664,22 +750,22 @@ impl Container for Vec<i32> {
 
 ```mana
 trait Add<Rhs = Self> {
-    type Output;
-    fn add(self, rhs: Rhs) -> Self::Output;
+    type Output
+    fn add(self, rhs: Rhs) -> Self::Output
 }
 
 impl Add for Point {
-    type Output = Point;
+    type Output = Point
 
     fn add(self, rhs: Point) -> Point {
         return Point {
             x: self.x + rhs.x,
             y: self.y + rhs.y
-        };
+        }
     }
 }
 
-let p3 = p1 + p2;  // Uses Add::add
+let p3 = p1 + p2  // Uses Add::add
 ```
 
 ---
@@ -694,34 +780,41 @@ match x {
     1 => "one",
     _ => "other"
 }
+
+// Or with when syntax
+when x {
+    0 -> "zero"
+    1 -> "one"
+    _ -> "other"
+}
 ```
 
 ### 9.2 Variable Binding
 
 ```mana
 match value {
-    n => println(f"Got {n}")
+    n => println("Got ", n)
 }
 ```
 
 ### 9.3 Tuple Patterns
 
 ```mana
-match point {
-    (0, 0) => "origin",
-    (x, 0) => f"on x-axis at {x}",
-    (0, y) => f"on y-axis at {y}",
-    (x, y) => f"at ({x}, {y})"
+when point {
+    (0, 0) -> "origin"
+    (x, 0) -> "on x-axis at " + x
+    (0, y) -> "on y-axis at " + y
+    (x, y) -> "at (" + x + ", " + y + ")"
 }
 ```
 
 ### 9.4 Struct Patterns
 
 ```mana
-match player {
-    Player { health: 0, .. } => "dead",
-    Player { health: h, .. } if h < 20 => "critical",
-    Player { name, health, .. } => f"{name}: {health}hp"
+when player {
+    Player { health: 0, .. } -> "dead"
+    Player { health: h, .. } if h < 20 -> "critical"
+    Player { name, health, .. } -> name + ": " + health + "hp"
 }
 ```
 
@@ -734,40 +827,40 @@ match option {
 }
 
 match result {
-    ok(value) => success(value),
-    err(e) => handle_error(e)
+    Ok(value) => success(value),
+    Err(e) => handle_error(e)
 }
 ```
 
 ### 9.6 Range Patterns
 
 ```mana
-match score {
-    0..=59 => "F",
-    60..=69 => "D",
-    70..=79 => "C",
-    80..=89 => "B",
-    90..=100 => "A",
-    _ => "invalid"
+when score {
+    0..=59 -> "F"
+    60..=69 -> "D"
+    70..=79 -> "C"
+    80..=89 -> "B"
+    90..=100 -> "A"
+    _ -> "invalid"
 }
 ```
 
 ### 9.7 Or Patterns
 
 ```mana
-match direction {
-    North | South => "vertical",
-    East | West => "horizontal"
+when direction {
+    North | South -> "vertical"
+    East | West -> "horizontal"
 }
 ```
 
 ### 9.8 Guards
 
 ```mana
-match value {
-    n if n < 0 => "negative",
-    n if n > 0 => "positive",
-    _ => "zero"
+when value {
+    n if n < 0 -> "negative"
+    n if n > 0 -> "positive"
+    _ -> "zero"
 }
 ```
 
@@ -778,10 +871,10 @@ match value {
 ### 10.1 Module Declaration
 
 ```mana
-module math;
+module math
 
-pub fn add(a: i32, b: i32) -> i32 {
-    return a + b;
+pub fn add(a: int, b: int) -> int {
+    return a + b
 }
 
 fn private_helper() {
@@ -792,9 +885,9 @@ fn private_helper() {
 ### 10.2 Import Statement
 
 ```mana
-import math;
-import std::collections::HashMap;
-import graphics::{Window, Canvas, Color};
+import math
+import std::collections::HashMap
+import graphics::{Window, Canvas, Color}
 ```
 
 ### 10.3 Visibility
@@ -804,8 +897,8 @@ import graphics::{Window, Canvas, Color};
 
 ```mana
 pub struct PublicStruct {
-    pub field1: i32,    // Public field
-    field2: i32,        // Private field
+    pub field1: int,    // Public field
+    field2: int,        // Private field
 }
 ```
 
@@ -813,17 +906,16 @@ pub struct PublicStruct {
 
 ```mana
 // lib.mana
-module mylib;
+module mylib
 
 pub fn exported_function() { }
 
 // main.mana
-module main;
-import mylib;
+module main
+import mylib
 
-fn main() -> i32 {
-    mylib::exported_function();
-    return 0;
+fn main() {
+    mylib::exported_function()
 }
 ```
 
@@ -836,39 +928,60 @@ fn main() -> i32 {
 ```mana
 fn divide(a: f64, b: f64) -> Result<f64, str> {
     if b == 0.0 {
-        return err("division by zero");
+        return Err("division by zero")
     }
-    return ok(a / b);
+    return Ok(a / b)
 }
 ```
 
-### 11.2 Error Propagation
+### 11.2 Error Propagation with ?
 
 ```mana
-fn process() -> Result<i32, Error> {
-    let value = get_value()?;  // Propagates error
-    let result = compute(value)?;
-    return ok(result);
+fn process() -> Result<int, Error> {
+    let value = get_value()?  // Propagates error
+    let result = compute(value)?
+    return Ok(result)
 }
 ```
 
-### 11.3 Try Expression
+### 11.3 Error Propagation with or
+
+The `or` operator provides alternative error handling:
+
+```mana
+// or return - unwrap Ok or early return on Err
+fn get_value_or_default() -> int {
+    let value = try_get_value() or return 0
+    return value
+}
+
+// or { block } - unwrap Ok or execute block on Err
+fn get_value_with_handler() -> int {
+    let value = try_get_value() or {
+        println("Error occurred, using default")
+        return -1
+    }
+    return value
+}
+```
+
+### 11.4 Try Expression
 
 ```mana
 let result = try {
-    let file = File::open("data.txt")?;
-    let content = file.read_to_string()?;
+    let file = File::open("data.txt")?
+    let content = file.read_to_string()?
     parse(content)?
-};
+}
 ```
 
-### 11.4 Assert
+### 11.5 Assert
 
 ```mana
-assert(condition);
-assert(condition, "custom message");
-assert_eq(a, b);
-assert_ne(a, b);
+assert(condition)
+assert(condition, "custom message")
+assert_eq(a, b)
+assert_ne(a, b)
 ```
 
 ---
@@ -881,8 +994,8 @@ Each value has a single owner. When the owner goes out of scope, the value is dr
 
 ```mana
 fn example() {
-    let s = String::from("hello");  // s owns the string
-    take_ownership(s);               // Ownership moved to function
+    let s = String::from("hello")  // s owns the string
+    take_ownership(s)               // Ownership moved to function
     // s is no longer valid here
 }
 ```
@@ -891,13 +1004,13 @@ fn example() {
 
 ```mana
 fn example() {
-    let s = String::from("hello");
-    let len = calculate_length(&s);  // Borrow s
-    println(s);  // s is still valid
+    let s = String::from("hello")
+    let len = calculate_length(&s)  // Borrow s
+    println(s)  // s is still valid
 }
 
-fn calculate_length(s: &str) -> i32 {
-    return s.len();
+fn calculate_length(s: &str) -> int {
+    return s.len()
 }
 ```
 
@@ -905,12 +1018,12 @@ fn calculate_length(s: &str) -> i32 {
 
 ```mana
 fn example() {
-    let mut s = String::from("hello");
-    change(&mut s);
+    let mut s = String::from("hello")
+    change(&mut s)
 }
 
 fn change(s: &mut str) {
-    s.push_str(", world");
+    s.push_str(", world")
 }
 ```
 
@@ -918,15 +1031,15 @@ fn change(s: &mut str) {
 
 ```mana
 fn process_file(path: str) -> Result<(), Error> {
-    let file = File::open(path)?;
-    defer file.close();
+    let file = File::open(path)?
+    defer file.close()
 
-    let buffer = allocate(1024);
-    defer free(buffer);
+    let buffer = allocate(1024)
+    defer free(buffer)
 
     // Work with file and buffer
     // Cleanup happens automatically in reverse order
-    return ok(());
+    return Ok(())
 }
 ```
 
@@ -934,112 +1047,124 @@ fn process_file(path: str) -> Result<(), Error> {
 
 ## 13. Standard Library
 
-### 13.1 String Operations
+### 13.1 Printing
 
 ```mana
-let s = "hello world";
-let len = s.len();
-let upper = s.to_upper();
-let lower = s.to_lower();
-let trimmed = s.trim();
-let contains = s.contains("world");
-let replaced = s.replace("world", "mana");
-let parts = s.split(" ");
-let starts = s.starts_with("hello");
-let ends = s.ends_with("world");
-let sub = s.substring(0, 5);
+// Variadic println - prints arguments and newline
+println("Hello, World!")
+println("Name: ", name, ", Age: ", age)
+println("Values: ", 1, " ", 2.5, " ", true)
+
+// print - no newline
+print("Enter value: ")
 ```
 
-### 13.2 Vector Operations
+### 13.2 String Operations
 
 ```mana
-let mut v = vec![1, 2, 3];
-v.push(4);
-let popped = v.pop();
-let first = v[0];
-let len = v.len();
-let empty = v.is_empty();
-v.clear();
-v.insert(0, 10);
-v.remove(1);
-let reversed = v.reverse();
-let sorted = v.sort();
+let s = "hello world"
+let len = s.len()
+let upper = s.to_upper()
+let lower = s.to_lower()
+let trimmed = s.trim()
+let contains = s.contains("world")
+let replaced = s.replace("world", "mana")
+let parts = s.split(" ")
+let starts = s.starts_with("hello")
+let ends = s.ends_with("world")
+let sub = s.substring(0, 5)
 ```
 
-### 13.3 HashMap Operations
+### 13.3 Vector Operations
 
 ```mana
-let mut map = HashMap::new();
-map.insert("key", 42);
-let value = map.get("key");
-let has = map.contains_key("key");
-map.remove("key");
-let len = map.len();
-let keys = map.keys();
-let values = map.values();
+let mut v = vec![1, 2, 3]
+v.push(4)
+let popped = v.pop()
+let first = v[0]
+let len = v.len()
+let empty = v.is_empty()
+v.clear()
+v.insert(0, 10)
+v.remove(1)
+let reversed = v.reverse()
+let sorted = v.sort()
 ```
 
-### 13.4 Iterator Methods
+### 13.4 HashMap Operations
 
 ```mana
-let numbers = vec![1, 2, 3, 4, 5];
-
-let doubled = numbers.map(|x| x * 2);
-let evens = numbers.filter(|x| x % 2 == 0);
-let sum = numbers.fold(0, |acc, x| acc + x);
-let found = numbers.find(|x| x > 3);
-let any_big = numbers.any(|x| x > 10);
-let all_pos = numbers.all(|x| x > 0);
+let mut map = HashMap::new()
+map.insert("key", 42)
+let value = map.get("key")
+let has = map.contains_key("key")
+map.remove("key")
+let len = map.len()
+let keys = map.keys()
+let values = map.values()
 ```
 
-### 13.5 File I/O
+### 13.5 Iterator Methods
+
+```mana
+let numbers = vec![1, 2, 3, 4, 5]
+
+let doubled = numbers.map(|x| x * 2)
+let evens = numbers.filter(|x| x % 2 == 0)
+let sum = numbers.fold(0, |acc, x| acc + x)
+let found = numbers.find(|x| x > 3)
+let any_big = numbers.any(|x| x > 10)
+let all_pos = numbers.all(|x| x > 0)
+```
+
+### 13.6 File I/O
 
 ```mana
 // Reading
-let content = read_file("data.txt")?;
-let lines = read_lines("data.txt")?;
-let exists = file_exists("data.txt");
+let content = read_file("data.txt")?
+let lines = read_lines("data.txt")?
+let exists = file_exists("data.txt")
 
 // Writing
-write_file("output.txt", content)?;
-append_file("log.txt", message)?;
+write_file("output.txt", content)?
+append_file("log.txt", message)?
 
 // File operations
-let file = File::open("data.txt")?;
-let content = file.read_to_string()?;
-file.close();
+let file = File::open("data.txt")?
+let content = file.read_to_string()?
+file.close()
 ```
 
-### 13.6 Math Functions
+### 13.7 Math Functions
 
 ```mana
-let abs_val = abs(-42);
-let minimum = min(a, b);
-let maximum = max(a, b);
-let clamped = clamp(value, 0, 100);
-let sq = sqrt(16.0);
-let sn = sin(angle);
-let cs = cos(angle);
-let tn = tan(angle);
-let pw = pow(2.0, 10.0);
-let lg = log(100.0);
-let fl = floor(3.7);
-let cl = ceil(3.2);
-let rn = round(3.5);
+let abs_val = abs(-42)
+let minimum = min(a, b)
+let maximum = max(a, b)
+let clamped = clamp(value, 0, 100)
+let sq = sqrt(16.0)
+let sn = sin(angle)
+let cs = cos(angle)
+let tn = tan(angle)
+let pw = pow(2.0, 10.0)
+let lg = log(100.0)
+let fl = floor(3.7)
+let cl = ceil(3.2)
+let rn = round(3.5)
 ```
 
-### 13.7 Random
+### 13.8 Random
 
 ```mana
-let r = random();           // 0.0 to 1.0
-let n = random_int(1, 100); // 1 to 100
+let r = random()           // 0.0 to 1.0
+let n = random_int(1, 100) // 1 to 100
 ```
 
-### 13.8 Time
+### 13.9 Time
 
 ```mana
-let now = time_now();       // Unix timestamp
-sleep(1000);                // Sleep 1 second
+let now = time_now()       // Unix timestamp
+sleep(1000)                // Sleep 1 second
 ```
 
 ---
@@ -1050,8 +1175,8 @@ sleep(1000);                // Sleep 1 second
 
 ```mana
 async fn fetch_data(url: str) -> Result<str, Error> {
-    let response = await http_get(url)?;
-    return ok(response.body);
+    let response = await http_get(url)?
+    return Ok(response.body)
 }
 ```
 
@@ -1059,9 +1184,9 @@ async fn fetch_data(url: str) -> Result<str, Error> {
 
 ```mana
 async fn process() {
-    let data = await fetch_data("https://api.example.com")?;
-    let parsed = parse(data)?;
-    await save_to_db(parsed)?;
+    let data = await fetch_data("https://api.example.com")?
+    let parsed = parse(data)?
+    await save_to_db(parsed)?
 }
 ```
 
@@ -1075,12 +1200,12 @@ Mana compiles to C++ and can interoperate with C++ code:
 
 ```mana
 // Declare external C++ function
-extern fn cpp_function(x: i32) -> i32;
+extern fn cpp_function(x: int) -> int
 
 // Use in Mana
-fn main() -> i32 {
-    let result = cpp_function(42);
-    return result;
+fn main() {
+    let result = cpp_function(42)
+    println("Result: ", result)
 }
 ```
 
@@ -1090,8 +1215,8 @@ Mana generates clean, readable C++ code:
 
 ```mana
 // Mana
-fn add(a: i32, b: i32) -> i32 {
-    return a + b;
+fn add(a: int, b: int) -> int {
+    return a + b
 }
 ```
 
@@ -1107,24 +1232,26 @@ int32_t add(int32_t a, int32_t b) {
 ## Appendix A: Grammar Summary
 
 ```ebnf
-program         = { module_decl | import_decl | declaration } ;
-module_decl     = "module" identifier ";" ;
-import_decl     = "import" import_path ";" ;
-declaration     = func_decl | struct_decl | enum_decl | trait_decl | impl_decl ;
+program         = { module_decl | import_decl | declaration }
+module_decl     = "module" identifier
+import_decl     = "import" import_path
+declaration     = func_decl | struct_decl | enum_decl | trait_decl | impl_decl
 
 func_decl       = [ "pub" ] [ "async" ] [ generics ] "fn" identifier
-                  "(" [ params ] ")" [ "->" type ] [ where_clause ] block ;
+                  "(" [ params ] ")" [ "->" type ] [ where_clause ] block
 
-struct_decl     = [ "pub" ] "struct" identifier [ generics ] "{" { field } "}" ;
-enum_decl       = [ "pub" ] "enum" identifier [ generics ] "{" { variant } "}" ;
-trait_decl      = [ "pub" ] "trait" identifier [ generics ] "{" { trait_item } "}" ;
-impl_decl       = "impl" [ generics ] type [ "for" type ] "{" { impl_item } "}" ;
+struct_decl     = [ "pub" ] "struct" identifier [ generics ] "{" { field } "}"
+enum_decl       = [ "pub" ] ( "enum" | "variant" ) identifier [ generics ] "{" { variant } "}"
+trait_decl      = [ "pub" ] "trait" identifier [ generics ] "{" { trait_item } "}"
+impl_decl       = "impl" [ generics ] type [ "for" type ] "{" { impl_item } "}"
 
 statement       = var_decl | assignment | expr_stmt | if_stmt | match_stmt
-                | while_stmt | for_stmt | return_stmt | break_stmt | continue_stmt ;
+                | when_stmt | while_stmt | for_stmt | return_stmt | break_stmt
+                | continue_stmt
 
 expression      = literal | identifier | binary_expr | unary_expr | call_expr
-                | field_expr | index_expr | lambda_expr | if_expr | match_expr ;
+                | field_expr | index_expr | lambda_expr | if_expr | match_expr
+                | when_expr | or_expr
 ```
 
 ---
@@ -1134,18 +1261,19 @@ expression      = literal | identifier | binary_expr | unary_expr | call_expr
 | Precedence | Operators | Associativity |
 |------------|-----------|---------------|
 | 1 (lowest) | `=` `+=` `-=` `*=` `/=` | Right |
-| 2 | `||` | Left |
-| 3 | `&&` | Left |
-| 4 | `==` `!=` | Left |
-| 5 | `<` `>` `<=` `>=` | Left |
-| 6 | `|` | Left |
-| 7 | `^` | Left |
-| 8 | `&` | Left |
-| 9 | `<<` `>>` | Left |
-| 10 | `+` `-` | Left |
-| 11 | `*` `/` `%` | Left |
-| 12 | `**` | Right |
-| 13 (highest) | `!` `-` (unary) | Right |
+| 2 | `or` | Left |
+| 3 | `||` | Left |
+| 4 | `&&` | Left |
+| 5 | `==` `!=` | Left |
+| 6 | `<` `>` `<=` `>=` | Left |
+| 7 | `|` | Left |
+| 8 | `^` | Left |
+| 9 | `&` | Left |
+| 10 | `<<` `>>` | Left |
+| 11 | `+` `-` | Left |
+| 12 | `*` `/` `%` | Left |
+| 13 | `**` | Right |
+| 14 (highest) | `!` `-` (unary) `++` `--` | Right |
 
 ---
 
@@ -1160,5 +1288,21 @@ yield    union     static  virtual final  override
 
 ---
 
-*Document Version: 1.0*
+## Appendix D: vNext Syntax Changes
+
+Summary of syntax changes from v1.0:
+
+| Feature | Old Syntax | New Syntax |
+|---------|-----------|------------|
+| Semicolons | Required | Optional |
+| Type aliases | `i32`, `f32` | `int`, `float` (aliases) |
+| Pattern matching | `match x { 0 => ... }` | `when x { 0 -> ... }` (alternative) |
+| Error handling | `let x = y?` | `let x = y or return 0` (alternative) |
+| Enum keyword | `enum` | `variant` (synonym) |
+| String output | `println(f"x={x}")` | `println("x=", x)` (variadic) |
+| Main function | `fn main() -> i32 { return 0 }` | `fn main() { }` (optional return) |
+
+---
+
+*Document Version: 1.1 (vNext)*
 *Last Updated: December 2025*

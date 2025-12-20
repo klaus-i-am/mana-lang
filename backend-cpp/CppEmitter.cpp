@@ -192,18 +192,20 @@ void CppEmitter::emit_expr(const AstExpr* e, std::ostream& out) {
         case NodeKind::CallExpr: {
             auto call = static_cast<const AstCallExpr*>(e);
             std::string fname = call->func_name;
-            // Handle static constructor calls like HashMap::new(), Vec::new()
+            // Handle static method calls like HashMap::new(), Point::new()
             size_t scope_pos = fname.find("::");
             if (scope_pos != std::string::npos) {
                 std::string type_name = fname.substr(0, scope_pos);
                 std::string method = fname.substr(scope_pos + 2);
                 if (method == "new") {
-                    // Static constructor for mana types
+                    // Built-in mana types with special constructors
                     if (type_name == "HashMap" || type_name == "Vec") {
                         out << "mana::" << type_name << "<>{}";
                         break;
                     }
                 }
+                // Transform Type::method to Type_method for user-defined impl methods
+                fname = type_name + "_" + method;
             }
             if (fname == "println") fname = "mana::println";
             else if (fname == "print") fname = "mana::print";
@@ -1396,9 +1398,16 @@ void CppEmitter::emit(const AstModule* m, std::ostream& out, bool test_mode) {
                 if (method->return_type.empty()) out << "void ";
                 else out << map_type(method->return_type) << " ";
                 out << impl->type_name << "_" << method->name << "(";
-                out << impl->type_name << "& self";
+                // Only add self parameter for instance methods (not static)
+                bool first_param = true;
+                if (method->has_self) {
+                    out << impl->type_name << "& self";
+                    first_param = false;
+                }
                 for (size_t i = 0; i < method->params.size(); ++i) {
-                    out << ", " << map_type(method->params[i].type_name) << " " << method->params[i].name;
+                    if (!first_param) out << ", ";
+                    first_param = false;
+                    out << map_type(method->params[i].type_name) << " " << method->params[i].name;
                     if (method->params[i].has_default()) {
                         out << " = ";
                         emit_expr(method->params[i].default_value.get(), out);

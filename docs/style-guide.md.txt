@@ -1,54 +1,342 @@
 # Mana Language Style Guide
 
+This guide covers the recommended coding style and conventions for Mana programs.
+
 ## Keywords
 
 Core keywords (reserved):
-- module, import, export
-- struct, trivial, enum, variant
-- generic, where
-- fn, return
-- ref, ptr, borrow
-- scope, unsafe, defer
-- if, else, while
-- true, false
+
+```
+module    import    export    pub       fn        return
+struct    enum      variant   trait     impl      generic
+where     let       mut       const     if        else
+when      match     while     for       in        break
+continue  loop      true      false     none      self
+Self      async     await     try       ref       ptr
+borrow    unsafe    defer     scope     test      type
+as        is        or
+```
 
 ## Naming Conventions
 
-- Types: `PascalCase` (e.g., `Vec3`, `PlayerState`).
-- Functions: `snake_case` (e.g., `load_texture`, `update_player`).
-- Variables: `snake_case`.
-- Modules: short, lowercase, no spaces (e.g., `math`, `graphics`, `ecs`).
+### Types
+
+Use `PascalCase` for types (structs, enums, variants, traits):
+
+```mana
+// Good
+struct PlayerState { ... }
+enum ConnectionStatus { ... }
+variant Result { Ok(T), Err(E) }
+trait Serializable { ... }
+
+// Avoid
+struct player_state { ... }   // snake_case
+struct playerState { ... }    // camelCase
+```
+
+### Functions and Variables
+
+Use `snake_case` for functions and variables:
+
+```mana
+// Good
+fn load_texture(path: string) -> Texture { ... }
+fn update_player(delta: float) { ... }
+let user_name = "Alice"
+let total_count = 42
+
+// Avoid
+fn loadTexture(path: string) { ... }  // camelCase
+let userName = "Alice"                 // camelCase
+```
+
+### Constants
+
+Use `SCREAMING_SNAKE_CASE` for constants:
+
+```mana
+// Good
+const MAX_CONNECTIONS = 100
+const DEFAULT_TIMEOUT = 30
+const PI = 3.14159
+
+// Avoid
+const maxConnections = 100   // camelCase
+const max_connections = 100  // snake_case
+```
+
+### Modules
+
+Use short, lowercase names with no spaces:
+
+```mana
+// Good
+module math
+module graphics
+module ecs
+
+// Avoid
+module MyMath       // PascalCase
+module game_utils   // underscores (acceptable but not preferred)
+```
+
+### Generics
+
+Use single uppercase letters or short descriptive names:
+
+```mana
+// Good
+generic<T>
+fn identity(x: T) -> T { ... }
+
+generic<K, V>
+struct HashMap { ... }
+
+generic<Item>
+trait Iterator { ... }
+
+// Avoid
+generic<type>        // Lowercase
+generic<TheType>     // Too verbose
+```
 
 ## Formatting
 
-- 4 spaces per indent.
-- Curly braces on same line:
+### Indentation
 
-  ```mana
-  fn foo() -> i32 {
-      ...
-  }
-One space after keywords:
+Use 4 spaces for indentation (no tabs):
 
-mana
-Copy code
-if (cond) { ... }
-No tabs; spaces only.
+```mana
+fn example() {
+    if condition {
+        do_something()
+    }
+}
+```
 
-(This will drive your formatter later.)
+### Line Length
 
-r
-Copy code
+Keep lines under 100 characters. Break long lines sensibly:
+
+```mana
+// Good
+let result = some_function(
+    argument_one,
+    argument_two,
+    argument_three,
+)
+
+// Avoid
+let result = some_function(argument_one, argument_two, argument_three, argument_four, argument_five)
+```
+
+### Braces
+
+Opening braces on the same line:
+
+```mana
+// Good
+fn example() {
+    if condition {
+        // ...
+    }
+}
+
+// Avoid (Allman style)
+fn example()
+{
+    if condition
+    {
+        // ...
+    }
+}
+```
+
+### Spacing
+
+```mana
+// Operators with spaces
+let x = a + b
+let y = c * d
+if x == y { ... }
+
+// No space before colons in types
+let name: string = "Alice"
+fn greet(name: string) { ... }
+
+// Space after colons
+struct Point { x: int, y: int }
+
+// Commas followed by space
+let tuple = (1, 2, 3)
+some_function(a, b, c)
+```
+
+### Semicolons
+
+Semicolons are optional in vNext syntax. Prefer omitting them:
+
+```mana
+// Preferred (vNext style)
+let x = 42
+let y = x + 1
+println("Result: ", y)
+
+// Also valid (classic style)
+let x = 42;
+let y = x + 1;
+println("Result: ", y);
+```
+
+## Control Flow Style
+
+### Prefer `when` over `match`
+
+Use the `when` keyword with `->` arrows for cleaner pattern matching:
+
+```mana
+// Preferred
+when status {
+    Status::Active -> println("Active")
+    Status::Pending -> println("Waiting...")
+    Status::Error(msg) -> println("Error: ", msg)
+    _ -> println("Unknown")
+}
+
+// Also valid
+match status {
+    Status::Active => println("Active"),
+    Status::Pending => println("Waiting..."),
+    Status::Error(msg) => println("Error: ", msg),
+    _ => println("Unknown"),
+}
+```
+
+### Use `or` for Defaults and Error Handling
+
+```mana
+// Simple defaults
+let port = env::get("PORT") or "8080"
+let count = parse_int(input) or 0
+
+// Error handling with early return
+let config = load_config() or return Err("Config not found")
+let user = find_user(id) or {
+    log_warning("User not found")
+    return none
+}
+```
+
+## Best Practices
+
+### Prefer Immutability
+
+Use `let` by default, `mut` only when needed:
+
+```mana
+// Good - immutable by default
+let name = "Alice"
+let config = load_config()
+
+// Only use mut when modification is needed
+let mut count = 0
+count = count + 1
+```
+
+### Use Descriptive Names
+
+```mana
+// Good
+let user_count = users.len()
+let is_valid = validate(input)
+fn calculate_total_price(items: Vec<Item>) -> float { ... }
+
+// Avoid
+let n = users.len()
+let x = validate(input)
+fn calc(i: Vec<Item>) -> float { ... }
+```
+
+### Handle All Cases
+
+Use exhaustive pattern matching:
+
+```mana
+// Good - handles all cases
+when result {
+    Ok(value) -> process(value)
+    Err(e) -> handle_error(e)
+}
+
+// Avoid - ignores errors silently
+if let Ok(value) = result {
+    process(value)
+}
+```
+
+### Return Early
+
+Use early returns to reduce nesting:
+
+```mana
+// Good
+fn process(x: Option<int>) -> int {
+    let value = x or return 0
+    return value * 2
+}
+
+// Avoid deep nesting
+fn process(x: Option<int>) -> int {
+    if let some(value) = x {
+        return value * 2
+    } else {
+        return 0
+    }
+}
+```
+
+### Avoid Magic Numbers
+
+```mana
+// Good
+const MAX_RETRIES = 3
+const TIMEOUT_SECONDS = 30
+
+if retries < MAX_RETRIES { ... }
+
+// Avoid
+if retries < 3 { ... }  // What does 3 mean?
+```
+
+## Documentation
+
+### Doc Comments
+
+Use `///` for documentation comments:
+
+```mana
+/// Calculates the area of a rectangle.
+///
+/// # Arguments
+/// * `width` - The width of the rectangle
+/// * `height` - The height of the rectangle
+///
+/// # Returns
+/// The area as a floating-point number
+///
+/// # Example
+/// ```mana
+/// let area = calculate_area(10.0, 5.0)
+/// assert_eq(area, 50.0)
+/// ```
+fn calculate_area(width: float, height: float) -> float {
+    return width * height
+}
+```
 
 ---
 
-### 4.4 coding-conventions.md (for **compiler implementation**)
-
-Create: `C:\dev\mana-lang\docs\coding-conventions.md`
-
-Content:
-
-```markdown
 # Mana Compiler Coding Conventions
 
 ## Language & Standard
@@ -58,23 +346,23 @@ Content:
 
 ## Naming
 
-- Types (classes, structs): `PascalCase` (e.g., `Token`, `Parser`, `AstNode`).
-- Functions: `snake_case` (e.g., `parse_expression`, `emit_cpp`).
-- Member variables: trailing underscore (e.g., `source_`, `position_`).
-- Namespaces: `lowercase` (e.g., `mana::frontend`).
+- Types (classes, structs): `PascalCase` (e.g., `Token`, `Parser`, `AstNode`)
+- Functions: `snake_case` (e.g., `parse_expression`, `emit_cpp`)
+- Member variables: trailing underscore (e.g., `source_`, `position_`)
+- Namespaces: `lowercase` (e.g., `mana::frontend`)
 
 ## Files & Folders
 
 - `frontend/`:
-  - Lexing, parsing, AST, semantic analysis.
+  - Lexing, parsing, AST, semantic analysis
 - `middle/`:
-  - IR, optimization passes (later).
+  - IR, optimization passes (later)
 - `backend_cpp/`:
-  - C++ code generator.
+  - C++ code generator
 - `stdlib/`:
-  - Standard library written in Mana.
+  - Standard library written in Mana
 - `tests/`:
-  - Unit and integration tests.
+  - Unit and integration tests
 
 Header/source naming:
 - `Token.h` / `Token.cpp`
@@ -83,7 +371,7 @@ Header/source naming:
 
 ## General Rules
 
-- No `using namespace std;`.
-- Prefer `std::unique_ptr` and `std::shared_ptr` where appropriate.
-- Use `enum class` instead of plain `enum`.
-- Use `const` wherever possible.
+- No `using namespace std;`
+- Prefer `std::unique_ptr` and `std::shared_ptr` where appropriate
+- Use `enum class` instead of plain `enum`
+- Use `const` wherever possible
