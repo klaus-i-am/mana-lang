@@ -1282,6 +1282,44 @@ void CppEmitter::emit(const AstModule* m, std::ostream& out, bool test_mode) {
         }
     }
 
+    // Emit forward declarations for all functions (enables forward references)
+    for (const auto& decl : m->decls) {
+        if (decl->kind == NodeKind::FunctionDecl) {
+            auto fd = static_cast<const AstFuncDecl*>(decl.get());
+            // Skip main - it doesn't need forward declaration
+            if (fd->name == "main") continue;
+            if (fd->is_generic()) {
+                out << "template<";
+                for (size_t i = 0; i < fd->type_params.size(); ++i) {
+                    if (i > 0) out << ", ";
+                    out << "typename " << fd->type_params[i];
+                }
+                out << ">\n";
+            }
+            if (fd->is_async) {
+                if (fd->return_type.empty()) out << "std::future<void> ";
+                else out << "std::future<" << map_type(fd->return_type) << "> ";
+            } else {
+                if (fd->return_type.empty()) out << "void ";
+                else out << map_type(fd->return_type) << " ";
+            }
+            if (fd->is_method()) out << fd->receiver_type << "_" << fd->name;
+            else out << fd->name;
+            out << "(";
+            if (fd->is_method()) {
+                out << fd->receiver_type << "& self";
+                if (!fd->params.empty()) out << ", ";
+            }
+            for (size_t i = 0; i < fd->params.size(); ++i) {
+                if (i > 0) out << ", ";
+                out << map_type(fd->params[i].type_name) << " " << fd->params[i].name;
+            }
+            out << ");\n";
+        }
+    }
+    out << "\n";
+
+    // Emit function implementations
     for (const auto& decl : m->decls) {
         if (decl->kind == NodeKind::FunctionDecl) {
             auto fd = static_cast<const AstFuncDecl*>(decl.get());
