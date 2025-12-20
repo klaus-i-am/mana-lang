@@ -1,0 +1,19 @@
+// vNext Phase 2 Test File
+// Tests: when keyword with -> arrow
+
+module test;
+
+fn test_when(x: i32) -> i32 {
+    // when with -> syntax
+    let result: i32 = when x {
+        0 -> 100
+        1 -> 200
+        _ -> 300
+    };
+    return result;
+}
+
+fn main() {
+    let val = test_when(42);
+    println(val);
+}

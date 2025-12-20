@@ -1947,7 +1947,11 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         }
 
         if (match(TokenKind::KwMatch)) {
-            return parse_match_expression();
+            return parse_match_expression(false);  // match style: => and commas
+        }
+
+        if (match(TokenKind::KwWhen)) {
+            return parse_match_expression(true);   // when style: -> and newlines
         }
 
         if (match(TokenKind::LParen)) {
@@ -2211,13 +2215,15 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
         return std::make_unique<AstLiteralExpr>("0", peek().line, peek().column); // recover
     }
 
-    std::unique_ptr<AstExpr> Parser::parse_match_expression() {
-        // match (value) { pattern => expr, ... }
-        // OR match value { ... } where value is a simple expression (not struct literal)
+    std::unique_ptr<AstExpr> Parser::parse_match_expression(bool is_when_style) {
+        // match (value) { pattern => expr, ... }        (match style)
+        // when value { pattern -> expr ... }            (when style, vNext)
+        // OR match/when value { ... } where value is a simple expression (not struct literal)
         int l = previous().line;
         int c = previous().column;
 
         auto match_expr = std::make_unique<AstMatchExpr>(l, c);
+        match_expr->declared_as_when = is_when_style;
 
         // Parse the match value - handle ambiguity with struct literals
         // If we see an identifier followed by '{', it's the match body, not a struct literal
@@ -2380,15 +2386,25 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
                 arm.guard = parse_expression();
             }
 
-            expect(TokenKind::FatArrow, "expected '=>' after pattern");
+            // when uses ->, match uses =>
+            if (is_when_style) {
+                expect(TokenKind::Arrow, "expected '->' after pattern");
+            } else {
+                expect(TokenKind::FatArrow, "expected '=>' after pattern");
+            }
 
             // Parse result expression
             arm.result = parse_expression();
             match_expr->arms.push_back(std::move(arm));
 
-            // Comma is optional for last arm
+            // when style: newlines separate arms (commas optional)
+            // match style: commas required between arms
             if (!check(TokenKind::RBrace)) {
-                expect(TokenKind::Comma, "expected ',' after match arm");
+                if (is_when_style) {
+                    match(TokenKind::Comma);  // Optional comma in when style
+                } else {
+                    expect(TokenKind::Comma, "expected ',' after match arm");
+                }
             } else {
                 match(TokenKind::Comma); // allow trailing comma
             }

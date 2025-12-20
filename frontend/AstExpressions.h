@@ -194,10 +194,12 @@ namespace mana::frontend {
     };
 
     // Match expression: match value { pattern => expr, ... }
+    // When expression: when value { pattern -> expr ... } (vNext preferred syntax)
     struct AstMatchExpr : AstExpr {
         std::unique_ptr<AstExpr> value;       // The value being matched
         std::vector<AstMatchArm> arms;        // Match arms
         bool has_default = false;             // True if _ wildcard is present
+        bool declared_as_when = false;        // True if declared with 'when' keyword (vNext)
 
         AstMatchExpr(int line = 0, int column = 0)
             : AstExpr(NodeKind::MatchExpr, line, column) {

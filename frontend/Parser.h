@@ -82,7 +82,7 @@ namespace mana::frontend {
         std::unique_ptr<AstExpr> parse_unary();
         std::unique_ptr<AstExpr> parse_postfix();
         std::unique_ptr<AstExpr> parse_primary();
-        std::unique_ptr<AstExpr> parse_match_expression();
+        std::unique_ptr<AstExpr> parse_match_expression(bool is_when_style = false);
         std::unique_ptr<AstExpr> parse_closure_expression();
         std::unique_ptr<AstExpr> parse_closure_with_captures();
         std::unique_ptr<AstExpr> parse_fstring_expression();

@@ -284,6 +284,26 @@ namespace mana::frontend {
             return;
         }
 
+        if (auto m = dynamic_cast<const AstMatchExpr*>(e)) {
+            out << (m->declared_as_when ? "When" : "Match") << "\n";
+            indent(out, ind + 1); out << "Value:\n";
+            print_expr(m->value.get(), out, ind + 2);
+            for (size_t i = 0; i < m->arms.size(); ++i) {
+                indent(out, ind + 1); out << "Arm " << i << ":\n";
+                for (const auto& pat : m->arms[i].patterns) {
+                    indent(out, ind + 2); out << "Pattern:\n";
+                    print_expr(pat.get(), out, ind + 3);
+                }
+                if (m->arms[i].guard) {
+                    indent(out, ind + 2); out << "Guard:\n";
+                    print_expr(m->arms[i].guard.get(), out, ind + 3);
+                }
+                indent(out, ind + 2); out << "Result:\n";
+                print_expr(m->arms[i].result.get(), out, ind + 3);
+            }
+            return;
+        }
+
         out << "(unknown expr)\n";
     }
 

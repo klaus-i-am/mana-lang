@@ -1,0 +1,18 @@
+// Verify match still works alongside when
+
+module test;
+
+fn test_match(x: i32) -> i32 {
+    // Original match syntax with => and commas
+    let result: i32 = match x {
+        0 => 100,
+        1 => 200,
+        _ => 300,
+    };
+    return result;
+}
+
+fn main() {
+    let val = test_match(42);
+    println(val);
+}
