@@ -380,16 +380,19 @@ namespace mana::frontend {
     struct AstBlockStmt;
     struct AstStmt;
 
-    // Or expression: expr or return/break/{ block } (vNext Result unwrapping)
+    // Or expression: expr or return/break/{ block }/default_value (vNext Result unwrapping)
     // value = result_expr or return error
     // value = result_expr or { println("failed"); return; }
+    // value = result_expr or default_value
     struct AstOrExpr : AstExpr {
-        std::unique_ptr<AstExpr> lhs;           // Must be Result<T, E>
+        std::unique_ptr<AstExpr> lhs;           // Must be Result<T, E> or Option<T>
         std::unique_ptr<AstStmt> fallback_stmt; // return/break/continue statement
         std::unique_ptr<AstBlockStmt> fallback_block;  // Block alternative
+        std::unique_ptr<AstExpr> default_expr;  // Default value (e.g., x or 0.0)
         std::string error_binding;              // Binding for error value (optional, e.g., 'e' in 'or return e')
 
         bool has_block() const { return fallback_block != nullptr; }
+        bool has_default() const { return default_expr != nullptr; }
 
         AstOrExpr(int line = 0, int column = 0)
             : AstExpr(NodeKind::OrExpr, line, column) {}

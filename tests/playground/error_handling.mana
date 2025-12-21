@@ -1,5 +1,6 @@
 module main
 
+// Force cache invalidation with updated example
 fn divide(a: float, b: float) -> Result<float, str> {
     if b == 0.0 {
         return err("Division by zero")
@@ -21,9 +22,10 @@ fn main() {
         err(e) -> println("Error: ", e)
     }
 
-    // Handle division by zero
-    when divide(10.0, 0.0) {
-        ok(val) -> println("Got: ", val)
-        err(e) -> println("Caught: ", e)
-    }
+    // 'or' with default value - use fallback on error
+    let safe_result = divide(10.0, 0.0) or 0.0
+    println("10 / 0 with fallback: ", safe_result)
+
+    let good_result = divide(20.0, 4.0) or 0.0
+    println("20 / 4 = ", good_result)
 }

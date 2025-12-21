@@ -1,5 +1,6 @@
 module main
 
+// Updated when expression example
 fn grade_message(score: int) -> str {
     // 'when' with conditions (no value to match)
     return when {

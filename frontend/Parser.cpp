@@ -1585,10 +1585,10 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
             else if (match(TokenKind::KwContinue)) {
                 or_expr->fallback_stmt = std::make_unique<AstContinueStmt>(previous().line, previous().column);
             }
+            // Otherwise parse as default value expression: expr or default_value
             else {
-                diag_.error("expected 'return', 'break', 'continue', or block after 'or'",
-                           peek().line, peek().column);
-                return or_expr;
+                // Parse a simple expression as default value (use higher precedence to avoid infinite recursion)
+                or_expr->default_expr = parse_null_coalesce();
             }
 
             return or_expr;
