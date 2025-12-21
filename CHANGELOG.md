@@ -5,6 +5,36 @@ All notable changes to the Mana programming language will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2024-12-20
+
+### Added
+
+- **`or` with default value**: Use `expr or default_value` to unwrap Result/Option with a fallback
+  ```mana
+  let result = divide(10.0, 0.0) or 0.0  // Returns 0.0 on error
+  ```
+
+- **For-in loops with arrays**: Iterate directly over array literals
+  ```mana
+  let nums = [1, 2, 3, 4, 5]
+  for n in nums {
+      println(n)
+  }
+  ```
+
+### Fixed
+
+- Array type emission in C++ backend: `[5]i32` now correctly emits as `std::array<int32_t, 5>`
+
+### Changed
+
+- Updated playground examples:
+  - `error_handling.mana`: Now demonstrates `or` with default value
+  - `iterators.mana`: New example showing for-in with ranges and arrays
+  - Removed `loops.mana` (functionality merged into iterators)
+
+---
+
 ## [1.0.0] - 2024-12-20
 
 ### Added
@@ -61,5 +91,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+[1.2.4]: https://github.com/klaus-i-am/mana-lang/releases/tag/v1.2.4
 [1.0.0]: https://github.com/klaus-i-am/mana-lang/releases/tag/v1.0.0
-[Unreleased]: https://github.com/klaus-i-am/mana-lang/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/klaus-i-am/mana-lang/compare/v1.2.4...HEAD

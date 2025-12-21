@@ -88,6 +88,34 @@ fn calculate() -> Result<i32, str> {
 - `unwrap_or(default: T) -> T` - Get value or default
 - `map(fn: T -> U) -> Result<U, E>` - Transform Ok value
 
+**The `or` Operator:**
+
+The `or` operator provides concise error handling with multiple forms:
+
+```mana
+// Error propagation with control flow
+fn calculate() -> Result<float, str> {
+    let x = divide(10.0, 2.0) or return err("Division failed")
+    return ok(x * 2.0)
+}
+
+// Default value fallback (new in v1.2.4)
+let result = divide(10.0, 0.0) or 0.0  // Returns 0.0 on error
+
+// Block fallback for complex error handling
+let value = parse_config() or {
+    println("Using defaults")
+    return default_config()
+}
+```
+
+The `or` operator works with both `Result<T, E>` and `Option<T>` types:
+- `expr or return value` - Return early on error
+- `expr or break` - Break from loop on error
+- `expr or continue` - Continue loop on error
+- `expr or default_value` - Use default value on error
+- `expr or { block }` - Execute block on error
+
 ---
 
 ## Collections
@@ -4365,6 +4393,17 @@ match load_data("config.json") {
         use_defaults()
     }
 }
+
+// Use 'or' for concise error handling
+fn calculate() -> Result<float, str> {
+    let x = divide(10.0, 2.0) or return err("Division failed")
+    let y = divide(x, 3.0) or return err("Second division failed")
+    return ok(y)
+}
+
+// Use 'or' with default values for safe unwrapping
+let config_value = load_setting("timeout") or 30    // Use 30 as default
+let user_name = get_user_name() or "Guest"          // Use "Guest" as default
 
 // Provide context when propagating errors
 fn init() -> Result<(), str> {

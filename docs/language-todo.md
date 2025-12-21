@@ -7,7 +7,7 @@
 - [x] More tutorials/guides
 - [x] Error message catalog with explanations
 - [x] Contributing guide
-- [ ] Changelog
+- [x] Changelog
 
 ### Existing Docs
 - [x] README.md
