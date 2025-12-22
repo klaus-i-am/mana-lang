@@ -1,0 +1,112 @@
+module textured
+
+import "graphics"
+
+// Core FFI
+extern fn mana_glEnable(cap: i32) -> void
+extern fn mana_GL_DEPTH_TEST() -> i32
+extern fn mana_GL_DEPTH_BUFFER_BIT() -> i32
+extern fn mana_setPerspective(fovDegrees: f32, aspect: f32, nearZ: f32, farZ: f32) -> void
+extern fn mana_setCamera(eyeX: f32, eyeY: f32, eyeZ: f32) -> void
+extern fn mana_setRotation(rx: f32, ry: f32, rz: f32) -> void
+extern fn mana_getMVP() -> i64
+extern fn mana_glUniformMatrix4fv(location: i32, matrixPtr: i64) -> void
+extern fn mana_glfwGetKey(window: i64, key: i32) -> i32
+extern fn mana_GLFW_KEY_ESCAPE() -> i32
+extern fn mana_GLFW_KEY_SPACE() -> i32
+extern fn mana_GLFW_PRESS() -> i32
+
+// Texture FFI
+extern fn mana_createCheckerTexture(size: i32, checkSize: i32) -> i32
+extern fn mana_createGradientTexture(size: i32, r1: f32, g1: f32, b1: f32, r2: f32, g2: f32, b2: f32, horizontal: bool) -> i32
+extern fn mana_bindTexture(handle: i32, unit: i32) -> void
+extern fn mana_glUniform1i(location: i32, value: i32) -> void
+extern fn mana_createTexturedCubeVBO() -> i32
+extern fn mana_setupTexturedCubeAttributes() -> void
+extern fn mana_drawTexturedCube() -> void
+
+fn key_pressed(window: i64, key: i32) -> bool {
+    return mana_glfwGetKey(window, key) == mana_GLFW_PRESS()
+}
+
+fn main() -> i32 {
+    let window = create_window("Mana Textured Cube - Press ESC to exit", 800, 600)
+    if window == 0 { return 1 }
+
+    // Texture shader with MVP and sampler
+    let vs = "#version 330 core\nlayout (location = 0) in vec3 aPos;\nlayout (location = 1) in vec2 aTexCoord;\nuniform mat4 uMVP;\nout vec2 TexCoord;\nvoid main() { gl_Position = uMVP * vec4(aPos, 1.0); TexCoord = aTexCoord; }"
+    let fs = "#version 330 core\nin vec2 TexCoord;\nout vec4 FragColor;\nuniform sampler2D uTexture;\nvoid main() { FragColor = texture(uTexture, TexCoord); }"
+
+    let shader = create_shader(vs, fs)
+    let mvpLoc = mana_glGetUniformLocation(shader, "uMVP")
+    let texLoc = mana_glGetUniformLocation(shader, "uTexture")
+
+    // Create textured cube VAO
+    let vao: i32 = mana_glGenVertexArray()
+    mana_glBindVertexArray(vao)
+    mana_createTexturedCubeVBO()
+    mana_setupTexturedCubeAttributes()
+
+    // Create procedural textures
+    let checkerTex = mana_createCheckerTexture(64, 8)
+    let gradientTex = mana_createGradientTexture(64, 0.2, 0.4, 0.9, 0.9, 0.2, 0.5, true)
+
+    // Enable depth testing
+    mana_glEnable(mana_GL_DEPTH_TEST())
+
+    // Setup perspective
+    mana_setPerspective(45.0, 1.333, 0.1, 100.0)
+    mana_setCamera(0.0, 0.0, 4.0)
+
+    let rotation: f32 = 0.0
+    let useChecker: bool = true
+
+    println("Mana Textured Cube Demo")
+    println("Press SPACE to toggle texture")
+    println("Press ESC to exit")
+
+    while window_open(window) {
+        // ESC to quit
+        if key_pressed(window, mana_GLFW_KEY_ESCAPE()) {
+            break
+        }
+
+        // SPACE to toggle texture
+        if key_pressed(window, mana_GLFW_KEY_SPACE()) {
+            useChecker = !useChecker
+        }
+
+        // Animate rotation
+        rotation = rotation + 0.02
+
+        // Set model rotation
+        mana_setRotation(rotation * 0.5, rotation, 0.0)
+
+        // Clear
+        mana_glClearColor(0.1, 0.1, 0.15, 1.0)
+        mana_glClear(mana_GL_COLOR_BUFFER_BIT() + mana_GL_DEPTH_BUFFER_BIT())
+
+        // Use shader
+        use_shader(shader)
+
+        // Bind texture
+        if useChecker {
+            mana_bindTexture(checkerTex, 0)
+        } else {
+            mana_bindTexture(gradientTex, 0)
+        }
+        mana_glUniform1i(texLoc, 0)
+
+        // Set MVP
+        mana_glUniformMatrix4fv(mvpLoc, mana_getMVP())
+
+        // Draw
+        mana_glBindVertexArray(vao)
+        mana_drawTexturedCube()
+
+        present(window)
+    }
+
+    close_window(window)
+    return 0
+}

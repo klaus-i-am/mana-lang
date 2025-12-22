@@ -733,3 +733,322 @@ inline int32_t mana_shouldPlaceTree(int32_t x, int32_t z) {
 inline int32_t mana_getTreeHeight() {
     return 3 + (rand() % 2); // 3-4 blocks tall
 }
+
+// ============================================================================
+// Texture Support (using stb_image - embed minimal implementation)
+// ============================================================================
+
+// Simple built-in texture loading without external dependencies
+// Supports basic image formats through stb_image
+
+#ifndef STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
+#define STBI_ONLY_JPEG
+#define STBI_NO_STDIO
+#include <cstdlib>
+#include <cstring>
+
+// Minimal stb_image subset for PNG/JPEG loading
+// For full functionality, include stb_image.h from https://github.com/nothings/stb
+namespace stbi_minimal {
+    inline unsigned char* load_from_memory(const unsigned char* buffer, int len, int* x, int* y, int* channels, int desired_channels) {
+        // Placeholder - in production, include full stb_image.h
+        // For now, return nullptr to indicate no built-in image loading
+        *x = *y = *channels = 0;
+        return nullptr;
+    }
+    inline void free(void* data) { ::free(data); }
+}
+#endif
+
+// Texture object storage
+struct ManaTexture {
+    GLuint id;
+    int width;
+    int height;
+    int channels;
+};
+
+static std::vector<ManaTexture> g_textures;
+
+// Generate a simple checkerboard texture (for testing without external images)
+inline int32_t mana_createCheckerTexture(int32_t size, int32_t checkSize) {
+    std::vector<unsigned char> pixels(size * size * 4);
+
+    for (int y = 0; y < size; y++) {
+        for (int x = 0; x < size; x++) {
+            int idx = (y * size + x) * 4;
+            bool isWhite = ((x / checkSize) + (y / checkSize)) % 2 == 0;
+            unsigned char c = isWhite ? 255 : 100;
+            pixels[idx] = c;     // R
+            pixels[idx+1] = c;   // G
+            pixels[idx+2] = c;   // B
+            pixels[idx+3] = 255; // A
+        }
+    }
+
+    GLuint texId;
+    glGenTextures(1, &texId);
+    glBindTexture(GL_TEXTURE_2D, texId);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    ManaTexture tex = { texId, size, size, 4 };
+    g_textures.push_back(tex);
+    return static_cast<int32_t>(g_textures.size() - 1);
+}
+
+// Generate a solid color texture
+inline int32_t mana_createColorTexture(float r, float g, float b, float a) {
+    unsigned char pixels[4] = {
+        static_cast<unsigned char>(r * 255),
+        static_cast<unsigned char>(g * 255),
+        static_cast<unsigned char>(b * 255),
+        static_cast<unsigned char>(a * 255)
+    };
+
+    GLuint texId;
+    glGenTextures(1, &texId);
+    glBindTexture(GL_TEXTURE_2D, texId);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    ManaTexture tex = { texId, 1, 1, 4 };
+    g_textures.push_back(tex);
+    return static_cast<int32_t>(g_textures.size() - 1);
+}
+
+// Generate a gradient texture
+inline int32_t mana_createGradientTexture(int32_t size, float r1, float g1, float b1, float r2, float g2, float b2, bool horizontal) {
+    std::vector<unsigned char> pixels(size * size * 4);
+
+    for (int y = 0; y < size; y++) {
+        for (int x = 0; x < size; x++) {
+            float t = horizontal ? (float)x / (size - 1) : (float)y / (size - 1);
+            int idx = (y * size + x) * 4;
+            pixels[idx]     = static_cast<unsigned char>((r1 + (r2 - r1) * t) * 255);
+            pixels[idx + 1] = static_cast<unsigned char>((g1 + (g2 - g1) * t) * 255);
+            pixels[idx + 2] = static_cast<unsigned char>((b1 + (b2 - b1) * t) * 255);
+            pixels[idx + 3] = 255;
+        }
+    }
+
+    GLuint texId;
+    glGenTextures(1, &texId);
+    glBindTexture(GL_TEXTURE_2D, texId);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    ManaTexture tex = { texId, size, size, 4 };
+    g_textures.push_back(tex);
+    return static_cast<int32_t>(g_textures.size() - 1);
+}
+
+// Bind a texture to a texture unit
+inline void mana_bindTexture(int32_t textureHandle, int32_t unit) {
+    if (textureHandle >= 0 && textureHandle < static_cast<int32_t>(g_textures.size())) {
+        glActiveTexture(GL_TEXTURE0 + unit);
+        glBindTexture(GL_TEXTURE_2D, g_textures[textureHandle].id);
+    }
+}
+
+// Unbind texture from unit
+inline void mana_unbindTexture(int32_t unit) {
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+// Delete a texture
+inline void mana_deleteTexture(int32_t textureHandle) {
+    if (textureHandle >= 0 && textureHandle < static_cast<int32_t>(g_textures.size())) {
+        glDeleteTextures(1, &g_textures[textureHandle].id);
+        g_textures[textureHandle].id = 0;
+    }
+}
+
+// Get texture dimensions
+inline int32_t mana_getTextureWidth(int32_t textureHandle) {
+    if (textureHandle >= 0 && textureHandle < static_cast<int32_t>(g_textures.size())) {
+        return g_textures[textureHandle].width;
+    }
+    return 0;
+}
+
+inline int32_t mana_getTextureHeight(int32_t textureHandle) {
+    if (textureHandle >= 0 && textureHandle < static_cast<int32_t>(g_textures.size())) {
+        return g_textures[textureHandle].height;
+    }
+    return 0;
+}
+
+// Set texture uniform
+inline void mana_glUniform1i(int32_t location, int32_t value) {
+    glUniform1i(location, value);
+}
+
+// ============================================================================
+// Textured Quad Helper
+// ============================================================================
+
+// Create a textured quad VBO (position + texcoord)
+inline int32_t mana_createTexturedQuadVBO() {
+    float vertices[] = {
+        // Position (x,y,z)    TexCoord (u,v)
+        -0.5f, -0.5f, 0.0f,    0.0f, 0.0f,
+         0.5f, -0.5f, 0.0f,    1.0f, 0.0f,
+         0.5f,  0.5f, 0.0f,    1.0f, 1.0f,
+        -0.5f, -0.5f, 0.0f,    0.0f, 0.0f,
+         0.5f,  0.5f, 0.0f,    1.0f, 1.0f,
+        -0.5f,  0.5f, 0.0f,    0.0f, 1.0f
+    };
+
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    return static_cast<int32_t>(vbo);
+}
+
+// Setup vertex attributes for textured quad (position + texcoord)
+inline void mana_setupTexturedQuadAttributes() {
+    // Position attribute (location 0): 3 floats, stride 20 bytes, offset 0
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // TexCoord attribute (location 1): 2 floats, stride 20 bytes, offset 12 bytes
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+}
+
+// Draw a textured quad (6 vertices = 2 triangles)
+inline void mana_drawTexturedQuad() {
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+}
+
+// Create a textured cube VBO (position + texcoord)
+inline int32_t mana_createTexturedCubeVBO() {
+    float vertices[] = {
+        // Front face
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+
+        // Back face
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        // Top face
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+
+        // Bottom face
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 1.0f,
+
+        // Right face
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        // Left face
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    };
+
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    return static_cast<int32_t>(vbo);
+}
+
+// Setup vertex attributes for textured cube
+inline void mana_setupTexturedCubeAttributes() {
+    // Position (location 0): 3 floats
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    // TexCoord (location 1): 2 floats
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+}
+
+// Draw textured cube
+inline void mana_drawTexturedCube() {
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+}
+
+// ============================================================================
+// Sprite/2D Drawing Helpers
+// ============================================================================
+
+// Set up orthographic projection for 2D rendering
+inline void mana_setOrthographic(float left, float right, float bottom, float top, float nearZ, float farZ) {
+    for (int i = 0; i < 16; i++) g_projection_matrix[i] = 0.0f;
+    g_projection_matrix[0] = 2.0f / (right - left);
+    g_projection_matrix[5] = 2.0f / (top - bottom);
+    g_projection_matrix[10] = -2.0f / (farZ - nearZ);
+    g_projection_matrix[12] = -(right + left) / (right - left);
+    g_projection_matrix[13] = -(top + bottom) / (top - bottom);
+    g_projection_matrix[14] = -(farZ + nearZ) / (farZ - nearZ);
+    g_projection_matrix[15] = 1.0f;
+}
+
+// Set model matrix for 2D (position, rotation, scale)
+inline void mana_setModel2D(float x, float y, float rotation, float scaleX, float scaleY) {
+    float c = cosf(rotation);
+    float s = sinf(rotation);
+
+    mana_mat4_identity(g_model_matrix);
+    // Scale
+    g_model_matrix[0] = scaleX * c;
+    g_model_matrix[1] = scaleX * s;
+    g_model_matrix[4] = -scaleY * s;
+    g_model_matrix[5] = scaleY * c;
+    // Translate
+    g_model_matrix[12] = x;
+    g_model_matrix[13] = y;
+}
+
+// Get 2D MVP (no view transform needed for simple 2D)
+inline int64_t mana_getMVP2D() {
+    mana_mat4_multiply(g_mvp_matrix, g_projection_matrix, g_model_matrix);
+    return reinterpret_cast<int64_t>(g_mvp_matrix);
+}
+
+// Enable alpha blending for transparent textures
+inline void mana_enableBlending() {
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+inline void mana_disableBlending() {
+    glDisable(GL_BLEND);
+}
