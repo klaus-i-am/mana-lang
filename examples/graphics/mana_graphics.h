@@ -469,3 +469,52 @@ inline void mana_setupCubeAttributes() {
 inline void mana_drawCube() {
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
+
+// ============================================================================
+// Input handling
+// ============================================================================
+
+// Check if a key is currently pressed
+inline int32_t mana_glfwGetKey(int64_t window, int32_t key) {
+    return glfwGetKey(reinterpret_cast<GLFWwindow*>(window), key);
+}
+
+// Check if a mouse button is pressed
+inline int32_t mana_glfwGetMouseButton(int64_t window, int32_t button) {
+    return glfwGetMouseButton(reinterpret_cast<GLFWwindow*>(window), button);
+}
+
+// Get cursor position (returns via static variables for simplicity)
+static double g_cursor_x = 0.0, g_cursor_y = 0.0;
+inline void mana_glfwGetCursorPos(int64_t window) {
+    glfwGetCursorPos(reinterpret_cast<GLFWwindow*>(window), &g_cursor_x, &g_cursor_y);
+}
+inline double mana_getCursorX() { return g_cursor_x; }
+inline double mana_getCursorY() { return g_cursor_y; }
+
+// Set input mode (for cursor lock/hide)
+inline void mana_glfwSetInputMode(int64_t window, int32_t mode, int32_t value) {
+    glfwSetInputMode(reinterpret_cast<GLFWwindow*>(window), mode, value);
+}
+
+// Key constants
+inline int32_t mana_GLFW_KEY_W() { return GLFW_KEY_W; }
+inline int32_t mana_GLFW_KEY_A() { return GLFW_KEY_A; }
+inline int32_t mana_GLFW_KEY_S() { return GLFW_KEY_S; }
+inline int32_t mana_GLFW_KEY_D() { return GLFW_KEY_D; }
+inline int32_t mana_GLFW_KEY_Q() { return GLFW_KEY_Q; }
+inline int32_t mana_GLFW_KEY_E() { return GLFW_KEY_E; }
+inline int32_t mana_GLFW_KEY_SPACE() { return GLFW_KEY_SPACE; }
+inline int32_t mana_GLFW_KEY_ESCAPE() { return GLFW_KEY_ESCAPE; }
+inline int32_t mana_GLFW_KEY_UP() { return GLFW_KEY_UP; }
+inline int32_t mana_GLFW_KEY_DOWN() { return GLFW_KEY_DOWN; }
+inline int32_t mana_GLFW_KEY_LEFT() { return GLFW_KEY_LEFT; }
+inline int32_t mana_GLFW_KEY_RIGHT() { return GLFW_KEY_RIGHT; }
+inline int32_t mana_GLFW_PRESS() { return GLFW_PRESS; }
+inline int32_t mana_GLFW_RELEASE() { return GLFW_RELEASE; }
+
+// Input mode constants
+inline int32_t mana_GLFW_CURSOR() { return GLFW_CURSOR; }
+inline int32_t mana_GLFW_CURSOR_NORMAL() { return GLFW_CURSOR_NORMAL; }
+inline int32_t mana_GLFW_CURSOR_HIDDEN() { return GLFW_CURSOR_HIDDEN; }
+inline int32_t mana_GLFW_CURSOR_DISABLED() { return GLFW_CURSOR_DISABLED; }

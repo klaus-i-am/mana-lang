@@ -24,6 +24,7 @@ int32_t create_shader(std::string vertex_src, std::string fragment_src);
 void use_shader(int32_t program);
 int32_t create_triangle();
 void draw_triangle(int32_t vao);
+bool key_pressed(int64_t window, int32_t key);
 void clear_3d(float r, float g, float b);
 int32_t create_cube();
 void draw_cube(int32_t vao);
@@ -115,6 +116,10 @@ void draw_triangle(int32_t vao) {
     mana_glDrawArrays(mana_GL_TRIANGLES(), 0, 3);
 }
 
+bool key_pressed(int64_t window, int32_t key) {
+    return (mana_glfwGetKey(window, key) == mana_GLFW_PRESS());
+}
+
 void clear_3d(float r, float g, float b) {
     mana_glClearColor(r, g, b, 1.0);
     mana_glClear((mana_GL_COLOR_BUFFER_BIT() + mana_GL_DEPTH_BUFFER_BIT()));
@@ -134,7 +139,7 @@ void draw_cube(int32_t vao) {
 }
 
 int32_t main() {
-    int64_t window = create_window("Mana Rotating Cube", 800, 600);
+    int64_t window = create_window("Mana Cube - Arrow keys rotate, WASD move, ESC quit", 800, 600);
     if ((window == 0)) {
         return 1;
     }
@@ -145,12 +150,58 @@ int32_t main() {
     int32_t cube = create_cube();
     mana_glEnable(mana_GL_DEPTH_TEST());
     mana_setPerspective(45.0, 1.333, 0.1, 100.0);
-    mana_setCamera(0.0, 0.0, 3.0);
-    float angle = 0.0;
+    float rx = 0.0;
+    float ry = 0.0;
+    float rz = 0.0;
+    float camX = 0.0;
+    float camY = 0.0;
+    float camZ = 3.0;
+    float speed = 0.050000000000000003;
     while (window_open(window)) {
+        if (key_pressed(window, mana_GLFW_KEY_ESCAPE())) {
+            break;
+        }
+        if (key_pressed(window, mana_GLFW_KEY_UP())) {
+            rx = (rx - speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_DOWN())) {
+            rx = (rx + speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_LEFT())) {
+            ry = (ry - speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_RIGHT())) {
+            ry = (ry + speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_Q())) {
+            rz = (rz - speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_E())) {
+            rz = (rz + speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_W())) {
+            camZ = (camZ - speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_S())) {
+            camZ = (camZ + speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_A())) {
+            camX = (camX - speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_D())) {
+            camX = (camX + speed);
+        }
+        if (key_pressed(window, mana_GLFW_KEY_SPACE())) {
+            rx = 0.0;
+            ry = 0.0;
+            rz = 0.0;
+            camX = 0.0;
+            camY = 0.0;
+            camZ = 3.0;
+        }
+        mana_setCamera(camX, camY, camZ);
+        mana_setRotation(rx, ry, rz);
         clear_3d(0.1, 0.1, 0.15);
-        angle = (angle + 0.02);
-        mana_setRotation((angle * 0.5), (angle * 0.7), (angle * 0.3));
         use_shader(shader);
         mana_glUniformMatrix4fv(mvpLoc, mana_getMVP());
         draw_cube(cube);

@@ -15,6 +15,26 @@ extern fn mana_createCubeVBO() -> i32
 extern fn mana_setupCubeAttributes() -> void
 extern fn mana_drawCube() -> void
 
+// Input FFI
+extern fn mana_glfwGetKey(window: i64, key: i32) -> i32
+extern fn mana_GLFW_KEY_W() -> i32
+extern fn mana_GLFW_KEY_A() -> i32
+extern fn mana_GLFW_KEY_S() -> i32
+extern fn mana_GLFW_KEY_D() -> i32
+extern fn mana_GLFW_KEY_Q() -> i32
+extern fn mana_GLFW_KEY_E() -> i32
+extern fn mana_GLFW_KEY_ESCAPE() -> i32
+extern fn mana_GLFW_KEY_UP() -> i32
+extern fn mana_GLFW_KEY_DOWN() -> i32
+extern fn mana_GLFW_KEY_LEFT() -> i32
+extern fn mana_GLFW_KEY_RIGHT() -> i32
+extern fn mana_GLFW_KEY_SPACE() -> i32
+extern fn mana_GLFW_PRESS() -> i32
+
+fn key_pressed(window: i64, key: i32) -> bool {
+    return mana_glfwGetKey(window, key) == mana_GLFW_PRESS()
+}
+
 fn clear_3d(r: f32, g: f32, b: f32) -> void {
     mana_glClearColor(r, g, b, 1.0)
     mana_glClear(mana_GL_COLOR_BUFFER_BIT() + mana_GL_DEPTH_BUFFER_BIT())
@@ -34,7 +54,7 @@ fn draw_cube(vao: i32) -> void {
 }
 
 fn main() -> i32 {
-    let window = create_window("Mana Rotating Cube", 800, 600)
+    let window = create_window("Mana Cube - Arrow keys rotate, WASD move, ESC quit", 800, 600)
     if window == 0 { return 1 }
 
     // 3D shader with MVP matrix
@@ -48,19 +68,79 @@ fn main() -> i32 {
     // Enable depth testing for 3D
     mana_glEnable(mana_GL_DEPTH_TEST())
 
-    // Setup 3D projection (45 degree FOV, 4:3 aspect, near=0.1, far=100)
+    // Setup 3D projection
     mana_setPerspective(45.0, 1.333, 0.1, 100.0)
-    mana_setCamera(0.0, 0.0, 3.0)
 
-    let angle: f32 = 0.0
+    // Rotation angles (controlled by arrow keys)
+    let rx: f32 = 0.0
+    let ry: f32 = 0.0
+    let rz: f32 = 0.0
+
+    // Camera position (controlled by WASD)
+    let camX: f32 = 0.0
+    let camY: f32 = 0.0
+    let camZ: f32 = 3.0
+
+    let speed: f32 = 0.05
+
     while window_open(window) {
+        // ESC to quit
+        if key_pressed(window, mana_GLFW_KEY_ESCAPE()) {
+            break
+        }
+
+        // Arrow keys rotate
+        if key_pressed(window, mana_GLFW_KEY_UP()) {
+            rx = rx - speed
+        }
+        if key_pressed(window, mana_GLFW_KEY_DOWN()) {
+            rx = rx + speed
+        }
+        if key_pressed(window, mana_GLFW_KEY_LEFT()) {
+            ry = ry - speed
+        }
+        if key_pressed(window, mana_GLFW_KEY_RIGHT()) {
+            ry = ry + speed
+        }
+
+        // Q/E roll
+        if key_pressed(window, mana_GLFW_KEY_Q()) {
+            rz = rz - speed
+        }
+        if key_pressed(window, mana_GLFW_KEY_E()) {
+            rz = rz + speed
+        }
+
+        // WASD move camera
+        if key_pressed(window, mana_GLFW_KEY_W()) {
+            camZ = camZ - speed
+        }
+        if key_pressed(window, mana_GLFW_KEY_S()) {
+            camZ = camZ + speed
+        }
+        if key_pressed(window, mana_GLFW_KEY_A()) {
+            camX = camX - speed
+        }
+        if key_pressed(window, mana_GLFW_KEY_D()) {
+            camX = camX + speed
+        }
+
+        // Space to reset
+        if key_pressed(window, mana_GLFW_KEY_SPACE()) {
+            rx = 0.0
+            ry = 0.0
+            rz = 0.0
+            camX = 0.0
+            camY = 0.0
+            camZ = 3.0
+        }
+
+        // Update camera and rotation
+        mana_setCamera(camX, camY, camZ)
+        mana_setRotation(rx, ry, rz)
+
+        // Render
         clear_3d(0.1, 0.1, 0.15)
-
-        // Rotate cube
-        angle = angle + 0.02
-        mana_setRotation(angle * 0.5, angle * 0.7, angle * 0.3)
-
-        // Get MVP matrix and render
         use_shader(shader)
         mana_glUniformMatrix4fv(mvpLoc, mana_getMVP())
         draw_cube(cube)
