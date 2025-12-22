@@ -86,6 +86,30 @@ Mana compiles to C++17. You need a C++ compiler:
 - **macOS**: `xcode-select --install`
 - **Linux**: `sudo apt install g++` or equivalent
 
+## Quick Start
+
+Create your first program:
+
+```mana
+// hello.mana
+module hello
+
+fn main() -> i32 {
+    println("Hello, Mana!")
+    return 0
+}
+```
+
+Compile and run:
+
+```bash
+mana_lang hello.mana -c          # Generates hello.cpp
+g++ -std=c++17 hello.cpp -o hello
+./hello
+```
+
+See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructions including VS Code integration.
+
 ## Usage
 
 ```bash
@@ -214,6 +238,8 @@ Install the Mana extension from the `editors/vscode-mana` folder for:
 
 ## Documentation
 
+- [Getting Started](docs/GETTING_STARTED.md) - Create your first project
+- [VS Code Setup](docs/VSCODE_SETUP.md) - IDE configuration
 - [Language Tutorial](docs/TUTORIAL.md) - Learn Mana step by step
 - [Language Reference](docs/LANGUAGE_REFERENCE.md) - Complete syntax reference
 - [Standard Library](docs/STDLIB.md) - Built-in functions and types
