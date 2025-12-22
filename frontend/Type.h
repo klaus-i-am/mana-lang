@@ -25,9 +25,12 @@ namespace mana::frontend {
         std::string struct_name;  // Also used for enum name
         std::string element_type; // For arrays, pointers, references
         int array_size = 0;       // For fixed-size arrays (0 = dynamic)
+        std::string original_name; // Preserves the original type name (e.g., "i64" even when kind is I32)
 
-        static Type i32() { return { TypeKind::I32 }; }
-        static Type f32() { return { TypeKind::F32 }; }
+        static Type i32() { Type t; t.kind = TypeKind::I32; t.original_name = "i32"; return t; }
+        static Type i64() { Type t; t.kind = TypeKind::I32; t.original_name = "i64"; return t; }
+        static Type f32() { Type t; t.kind = TypeKind::F32; t.original_name = "f32"; return t; }
+        static Type f64() { Type t; t.kind = TypeKind::F32; t.original_name = "f64"; return t; }
         static Type boolean() { return { TypeKind::Bool }; }
         static Type string() { return { TypeKind::String }; }
         static Type void_() { return { TypeKind::Void }; }
@@ -93,8 +96,8 @@ namespace mana::frontend {
         std::string name() const {
             switch (kind) {
             case TypeKind::Void: return "void";
-            case TypeKind::I32: return "i32";
-            case TypeKind::F32: return "f32";
+            case TypeKind::I32: return original_name.empty() ? "i32" : original_name;
+            case TypeKind::F32: return original_name.empty() ? "f32" : original_name;
             case TypeKind::Bool: return "bool";
             case TypeKind::String: return "string";
             case TypeKind::Struct: return struct_name;

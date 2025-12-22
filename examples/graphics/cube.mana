@@ -1,0 +1,73 @@
+module cube
+
+import "graphics"
+
+// Additional 3D FFI (not yet in graphics.mana)
+extern fn mana_glEnable(cap: i32) -> void
+extern fn mana_GL_DEPTH_TEST() -> i32
+extern fn mana_GL_DEPTH_BUFFER_BIT() -> i32
+extern fn mana_glUniformMatrix4fv(location: i32, matrixPtr: i64) -> void
+extern fn mana_setPerspective(fovDegrees: f32, aspect: f32, nearZ: f32, farZ: f32) -> void
+extern fn mana_setCamera(eyeX: f32, eyeY: f32, eyeZ: f32) -> void
+extern fn mana_setRotation(rx: f32, ry: f32, rz: f32) -> void
+extern fn mana_getMVP() -> i64
+extern fn mana_createCubeVBO() -> i32
+extern fn mana_setupCubeAttributes() -> void
+extern fn mana_drawCube() -> void
+
+fn clear_3d(r: f32, g: f32, b: f32) -> void {
+    mana_glClearColor(r, g, b, 1.0)
+    mana_glClear(mana_GL_COLOR_BUFFER_BIT() + mana_GL_DEPTH_BUFFER_BIT())
+}
+
+fn create_cube() -> i32 {
+    let vao: i32 = mana_glGenVertexArray()
+    mana_glBindVertexArray(vao)
+    mana_createCubeVBO()
+    mana_setupCubeAttributes()
+    return vao
+}
+
+fn draw_cube(vao: i32) -> void {
+    mana_glBindVertexArray(vao)
+    mana_drawCube()
+}
+
+fn main() -> i32 {
+    let window = create_window("Mana Rotating Cube", 800, 600)
+    if window == 0 { return 1 }
+
+    // 3D shader with MVP matrix
+    let vs = "#version 330 core\nlayout (location = 0) in vec3 aPos;\nlayout (location = 1) in vec3 aColor;\nuniform mat4 uMVP;\nout vec3 vertexColor;\nvoid main() { gl_Position = uMVP * vec4(aPos, 1.0); vertexColor = aColor; }"
+    let fs = "#version 330 core\nin vec3 vertexColor;\nout vec4 FragColor;\nvoid main() { FragColor = vec4(vertexColor, 1.0); }"
+
+    let shader = create_shader(vs, fs)
+    let mvpLoc = mana_glGetUniformLocation(shader, "uMVP")
+    let cube = create_cube()
+
+    // Enable depth testing for 3D
+    mana_glEnable(mana_GL_DEPTH_TEST())
+
+    // Setup 3D projection (45 degree FOV, 4:3 aspect, near=0.1, far=100)
+    mana_setPerspective(45.0, 1.333, 0.1, 100.0)
+    mana_setCamera(0.0, 0.0, 3.0)
+
+    let angle: f32 = 0.0
+    while window_open(window) {
+        clear_3d(0.1, 0.1, 0.15)
+
+        // Rotate cube
+        angle = angle + 0.02
+        mana_setRotation(angle * 0.5, angle * 0.7, angle * 0.3)
+
+        // Get MVP matrix and render
+        use_shader(shader)
+        mana_glUniformMatrix4fv(mvpLoc, mana_getMVP())
+        draw_cube(cube)
+
+        present(window)
+    }
+
+    close_window(window)
+    return 0
+}

@@ -436,13 +436,17 @@ namespace mana::frontend {
         if (resolved == "int") resolved = "i32";
         if (resolved == "float") resolved = "f32";
 
-        // All integer types map to I32 for type checking
-        if (resolved == "i8" || resolved == "i16" || resolved == "i32" || resolved == "i64" ||
-            resolved == "u8" || resolved == "u16" || resolved == "u32" || resolved == "u64")
+        // All integer types map to I32 for type checking, but preserve original type name
+        if (resolved == "i8" || resolved == "i16" || resolved == "i32" ||
+            resolved == "u8" || resolved == "u16" || resolved == "u32")
             return Type::i32();
-        // All float types map to F32 for type checking
-        if (resolved == "f32" || resolved == "f64")
+        if (resolved == "i64" || resolved == "u64")
+            return Type::i64();
+        // All float types map to F32 for type checking, but preserve original type name
+        if (resolved == "f32")
             return Type::f32();
+        if (resolved == "f64")
+            return Type::f64();
         if (resolved == "bool") return Type::boolean();
         // str and string are both valid string types (string is alias for str)
         if (resolved == "string" || resolved == "str") return Type::string();
@@ -550,8 +554,8 @@ namespace mana::frontend {
 
     std::string SemanticAnalyzer::infer_type_name(const Type& t) {
         switch (t.kind) {
-            case TypeKind::I32: return "i32";
-            case TypeKind::F32: return "f32";
+            case TypeKind::I32: return t.original_name.empty() ? "i32" : t.original_name;
+            case TypeKind::F32: return t.original_name.empty() ? "f32" : t.original_name;
             case TypeKind::Bool: return "bool";
             case TypeKind::String: return "string";
             case TypeKind::Void: return "void";
@@ -595,6 +599,12 @@ namespace mana::frontend {
         if (auto fn = dynamic_cast<AstFuncDecl*>(d)) {
             // Declaration was already registered in register_declaration()
             // Here we only analyze the function body
+
+            // Extern functions have no body - just validate declaration
+            if (fn->is_extern) {
+                // Nothing more to analyze for extern declarations
+                return;
+            }
 
             // Validate where clause constraints
             for (const auto& constraint : fn->constraints) {
@@ -2155,6 +2165,10 @@ namespace mana::frontend {
                 result.kind = ConstValue::String;
                 result.string_val = lit->value;
                 return true;
+            }
+            // Don't fold char literals - let them be emitted as chars
+            if (lit->is_char) {
+                return false;
             }
             if (lit->value == "true") {
                 result.kind = ConstValue::Bool;

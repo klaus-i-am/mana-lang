@@ -1,0 +1,24 @@
+module demo
+
+import "graphics"
+
+fn main() -> i32 {
+    let window = create_window("Mana Demo", 800, 600)
+    if window == 0 { return 1 }
+
+    let vs = "#version 330 core\nlayout (location = 0) in vec3 aPos;\nlayout (location = 1) in vec3 aColor;\nout vec3 vertexColor;\nvoid main() { gl_Position = vec4(aPos, 1.0); vertexColor = aColor; }"
+    let fs = "#version 330 core\nin vec3 vertexColor;\nout vec4 FragColor;\nvoid main() { FragColor = vec4(vertexColor, 1.0); }"
+
+    let shader = create_shader(vs, fs)
+    let triangle = create_triangle()
+
+    while window_open(window) {
+        clear(0.1, 0.1, 0.15)
+        use_shader(shader)
+        draw_triangle(triangle)
+        present(window)
+    }
+
+    close_window(window)
+    return 0
+}

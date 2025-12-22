@@ -1,0 +1,199 @@
+module triangle
+
+// ============================================================================
+// Mana Graphics Demo: Colored Triangle with Shaders
+// This demonstrates the full OpenGL pipeline in Mana
+// ============================================================================
+
+// GLFW bindings
+extern fn mana_glfwInit() -> i32
+extern fn mana_glfwTerminate() -> void
+extern fn mana_glfwCreateWindow(width: i32, height: i32, title: string, monitor: i64, share: i64) -> i64
+extern fn mana_glfwDestroyWindow(window: i64) -> void
+extern fn mana_glfwMakeContextCurrent(window: i64) -> void
+extern fn mana_glfwWindowShouldClose(window: i64) -> i32
+extern fn mana_glfwSwapBuffers(window: i64) -> void
+extern fn mana_glfwPollEvents() -> void
+extern fn mana_glfwSwapInterval(interval: i32) -> void
+
+// GLAD
+extern fn mana_gladLoadGL() -> i32
+
+// OpenGL basics
+extern fn mana_glClearColor(r: f32, g: f32, b: f32, a: f32) -> void
+extern fn mana_glClear(mask: i32) -> void
+extern fn mana_glViewport(x: i32, y: i32, width: i32, height: i32) -> void
+
+// Shaders
+extern fn mana_glCreateShader(shader_type: i32) -> i32
+extern fn mana_glShaderSource(shader: i32, source: string) -> void
+extern fn mana_glCompileShader(shader: i32) -> void
+extern fn mana_glGetShaderiv(shader: i32, pname: i32) -> i32
+extern fn mana_glGetShaderInfoLog(shader: i32) -> void
+extern fn mana_glDeleteShader(shader: i32) -> void
+extern fn mana_glCreateProgram() -> i32
+extern fn mana_glAttachShader(program: i32, shader: i32) -> void
+extern fn mana_glLinkProgram(program: i32) -> void
+extern fn mana_glGetProgramiv(program: i32, pname: i32) -> i32
+extern fn mana_glGetProgramInfoLog(program: i32) -> void
+extern fn mana_glUseProgram(program: i32) -> void
+extern fn mana_glDeleteProgram(program: i32) -> void
+
+// Buffers
+extern fn mana_glGenVertexArray() -> i32
+extern fn mana_glBindVertexArray(vao: i32) -> void
+extern fn mana_glDeleteVertexArray(vao: i32) -> void
+extern fn mana_glDeleteBuffer(buffer: i32) -> void
+extern fn mana_glDrawArrays(mode: i32, first: i32, count: i32) -> void
+
+// Helper functions
+extern fn mana_createTriangleVBO() -> i32
+extern fn mana_setupTriangleAttributes() -> void
+
+// OpenGL constants
+extern fn mana_GL_VERTEX_SHADER() -> i32
+extern fn mana_GL_FRAGMENT_SHADER() -> i32
+extern fn mana_GL_COMPILE_STATUS() -> i32
+extern fn mana_GL_LINK_STATUS() -> i32
+extern fn mana_GL_TRIANGLES() -> i32
+extern fn mana_GL_COLOR_BUFFER_BIT() -> i32
+
+// Shader sources (GLSL 330 core)
+fn get_vertex_shader() -> string {
+    return "#version 330 core\nlayout (location = 0) in vec3 aPos;\nlayout (location = 1) in vec3 aColor;\nout vec3 vertexColor;\nvoid main() {\n    gl_Position = vec4(aPos, 1.0);\n    vertexColor = aColor;\n}"
+}
+
+fn get_fragment_shader() -> string {
+    return "#version 330 core\nin vec3 vertexColor;\nout vec4 FragColor;\nvoid main() {\n    FragColor = vec4(vertexColor, 1.0);\n}"
+}
+
+fn compile_shader(source: string, shader_type: i32) -> i32 {
+    let shader: i32 = mana_glCreateShader(shader_type)
+    mana_glShaderSource(shader, source)
+    mana_glCompileShader(shader)
+
+    let success: i32 = mana_glGetShaderiv(shader, mana_GL_COMPILE_STATUS())
+    if success == 0 {
+        println("Shader compilation failed!")
+        mana_glGetShaderInfoLog(shader)
+        return 0
+    }
+    return shader
+}
+
+fn create_shader_program(vertex_src: string, fragment_src: string) -> i32 {
+    // Compile vertex shader
+    let vertex_shader: i32 = compile_shader(vertex_src, mana_GL_VERTEX_SHADER())
+    if vertex_shader == 0 {
+        return 0
+    }
+
+    // Compile fragment shader
+    let fragment_shader: i32 = compile_shader(fragment_src, mana_GL_FRAGMENT_SHADER())
+    if fragment_shader == 0 {
+        mana_glDeleteShader(vertex_shader)
+        return 0
+    }
+
+    // Link program
+    let program: i32 = mana_glCreateProgram()
+    mana_glAttachShader(program, vertex_shader)
+    mana_glAttachShader(program, fragment_shader)
+    mana_glLinkProgram(program)
+
+    let success: i32 = mana_glGetProgramiv(program, mana_GL_LINK_STATUS())
+    if success == 0 {
+        println("Shader program linking failed!")
+        mana_glGetProgramInfoLog(program)
+        mana_glDeleteShader(vertex_shader)
+        mana_glDeleteShader(fragment_shader)
+        return 0
+    }
+
+    // Clean up shaders (they're linked into the program now)
+    mana_glDeleteShader(vertex_shader)
+    mana_glDeleteShader(fragment_shader)
+
+    return program
+}
+
+fn main() -> i32 {
+    println("Mana Triangle Demo - OpenGL Shader Pipeline")
+    println("============================================")
+
+    // Initialize GLFW
+    if mana_glfwInit() == 0 {
+        println("Failed to initialize GLFW")
+        return 1
+    }
+
+    // Create window
+    let window: i64 = mana_glfwCreateWindow(800, 600, "Mana Triangle Demo", 0, 0)
+    if window == 0 {
+        println("Failed to create window")
+        mana_glfwTerminate()
+        return 1
+    }
+
+    mana_glfwMakeContextCurrent(window)
+
+    // Load OpenGL
+    if mana_gladLoadGL() == 0 {
+        println("Failed to load OpenGL")
+        mana_glfwDestroyWindow(window)
+        mana_glfwTerminate()
+        return 1
+    }
+
+    mana_glfwSwapInterval(1)
+    mana_glViewport(0, 0, 800, 600)
+
+    println("OpenGL loaded successfully!")
+
+    // Create shader program
+    let shader_program: i32 = create_shader_program(get_vertex_shader(), get_fragment_shader())
+    if shader_program == 0 {
+        println("Failed to create shader program")
+        mana_glfwDestroyWindow(window)
+        mana_glfwTerminate()
+        return 1
+    }
+
+    println("Shader program created!")
+
+    // Create VAO and VBO
+    let vao: i32 = mana_glGenVertexArray()
+    mana_glBindVertexArray(vao)
+
+    let vbo: i32 = mana_createTriangleVBO()
+    mana_setupTriangleAttributes()
+
+    println("Triangle geometry created!")
+    println("Starting render loop...")
+
+    // Render loop
+    while mana_glfwWindowShouldClose(window) == 0 {
+        // Clear screen with dark gray
+        mana_glClearColor(0.1, 0.1, 0.1, 1.0)
+        mana_glClear(mana_GL_COLOR_BUFFER_BIT())
+
+        // Use shader and draw triangle
+        mana_glUseProgram(shader_program)
+        mana_glBindVertexArray(vao)
+        mana_glDrawArrays(mana_GL_TRIANGLES(), 0, 3)
+
+        mana_glfwSwapBuffers(window)
+        mana_glfwPollEvents()
+    }
+
+    // Cleanup
+    println("Cleaning up...")
+    mana_glDeleteVertexArray(vao)
+    mana_glDeleteBuffer(vbo)
+    mana_glDeleteProgram(shader_program)
+    mana_glfwDestroyWindow(window)
+    mana_glfwTerminate()
+
+    println("Done!")
+    return 0
+}

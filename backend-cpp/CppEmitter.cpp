@@ -1318,12 +1318,31 @@ void CppEmitter::emit(const AstModule* m, std::ostream& out, bool test_mode) {
         }
     }
 
+    // Check if we have mana_ prefixed extern functions (provided by mana_graphics.h)
+    bool has_mana_graphics = false;
+    for (const auto& decl : m->decls) {
+        if (decl->kind == NodeKind::FunctionDecl) {
+            auto fd = static_cast<const AstFuncDecl*>(decl.get());
+            if (fd->is_extern && fd->name.rfind("mana_", 0) == 0) {
+                has_mana_graphics = true;
+                break;
+            }
+        }
+    }
+
+    // Include mana_graphics.h if needed (provides C++ wrapper implementations)
+    if (has_mana_graphics) {
+        out << "#include \"mana_graphics.h\"\n\n";
+    }
+
     // Emit forward declarations for all functions (enables forward references)
     for (const auto& decl : m->decls) {
         if (decl->kind == NodeKind::FunctionDecl) {
             auto fd = static_cast<const AstFuncDecl*>(decl.get());
             // Skip main - it doesn't need forward declaration
             if (fd->name == "main") continue;
+            // Skip extern functions - they're declared in headers or handled separately
+            if (fd->is_extern) continue;
             if (fd->is_generic()) {
                 out << "template<";
                 for (size_t i = 0; i < fd->type_params.size(); ++i) {
@@ -1359,6 +1378,8 @@ void CppEmitter::emit(const AstModule* m, std::ostream& out, bool test_mode) {
     for (const auto& decl : m->decls) {
         if (decl->kind == NodeKind::FunctionDecl) {
             auto fd = static_cast<const AstFuncDecl*>(decl.get());
+            // Skip extern functions - they have no body (provided by headers/libraries)
+            if (fd->is_extern) continue;
             if (fd->is_generic()) {
                 out << "template<";
                 for (size_t i = 0; i < fd->type_params.size(); ++i) {
