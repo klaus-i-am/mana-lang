@@ -54,3 +54,9 @@ nul
 # Backup files
 *.bak
 *.backup
+
+# Generated C++ output files from mana compiler
+examples/*.cpp
+examples/graphics/*.cpp
+tests/*.cpp
+tests/playground/*.cpp
