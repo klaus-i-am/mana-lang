@@ -49,6 +49,8 @@ namespace mana::pkg {
         std::string read_file(const std::string& path);
         bool file_exists(const std::string& path);
         int run_command(const std::string& cmd);
+        std::string get_runtime_header();
+        std::string get_executable_path();
     };
 
 } // namespace mana::pkg

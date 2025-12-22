@@ -1,6 +1,6 @@
 # Getting Started with Mana
 
-Create your first Mana program from scratch.
+Create your first Mana program in minutes.
 
 ## Prerequisites
 
@@ -12,26 +12,54 @@ Create your first Mana program from scratch.
 
 ## Your First Program
 
-### Step 1: Create a Project Folder
+### Step 1: Create a New Project
 
+```bash
+mana new hello-world
+cd hello-world
 ```
-my-project/
-├── hello.mana
-└── mana_runtime.h    (copy from mana-lang/examples/)
+
+This creates:
+```
+hello-world/
+├── src/
+│   └── main.mana      # Your code goes here
+├── build/             # Compiled output
+├── mana_runtime.h     # Runtime library
+├── package.toml       # Project config
+└── .gitignore
 ```
 
-### Step 2: Write Your Code
+### Step 2: Build and Run
 
-Create `hello.mana`:
+```bash
+mana build    # Compiles to executable
+mana run      # Builds and runs
+```
+
+Output:
+```
+Hello, world!
+Welcome to Mana!
+Count: 1
+Count: 2
+Count: 3
+Count: 4
+Count: 5
+```
+
+### Step 3: Edit Your Code
+
+Open `src/main.mana` and modify it:
 
 ```mana
-module hello
+module main
 
 fn main() -> i32 {
     println("Hello, Mana!")
 
     let name = "World"
-    println("Hello, ", name, "!")
+    println("Greeting: Hello, ", name, "!")
 
     for i in 1..=5 {
         println("Count: ", i)
@@ -41,51 +69,9 @@ fn main() -> i32 {
 }
 ```
 
-### Step 3: Copy the Runtime Header
+Then rebuild: `mana build`
 
-Copy `mana_runtime.h` from the Mana repository's `examples/` folder into your project folder.
-
-### Step 4: Compile Mana → C++
-
-```bash
-mana_lang hello.mana -c
-```
-
-This creates `hello.cpp`.
-
-### Step 5: Compile C++ → Executable
-
-**Windows (Visual Studio):**
-```powershell
-cl /EHsc /std:c++17 hello.cpp /Fe:hello.exe
-```
-
-**Windows (MinGW):**
-```bash
-g++ -std=c++17 hello.cpp -o hello.exe
-```
-
-**Mac/Linux:**
-```bash
-g++ -std=c++17 hello.cpp -o hello
-```
-
-### Step 6: Run
-
-```bash
-./hello
-```
-
-Output:
-```
-Hello, Mana!
-Hello, World!
-Count: 1
-Count: 2
-Count: 3
-Count: 4
-Count: 5
-```
+That's it! You're now writing Mana.
 
 ---
 

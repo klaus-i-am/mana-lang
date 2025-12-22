@@ -3,11 +3,15 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
+#include <cstdio>
 #include <sys/stat.h>
 
 #ifdef _WIN32
+#include <windows.h>
 #include <direct.h>
 #define mkdir(path, mode) _mkdir(path)
+#else
+#include <unistd.h>
 #endif
 
 namespace mana::pkg {
@@ -46,6 +50,90 @@ int PackageManager::run_command(const std::string& cmd) {
     return std::system(cmd.c_str());
 }
 
+std::string PackageManager::get_runtime_header() {
+    // Minimal runtime header for basic programs
+    return R"(#pragma once
+#include <cstdio>
+#include <cstdint>
+#include <string>
+#include <stdexcept>
+#include <vector>
+#include <iostream>
+
+namespace mana {
+    // Defer for RAII cleanup
+    template <typename F>
+    struct Defer {
+        F fn;
+        explicit Defer(F f) : fn(std::move(f)) {}
+        ~Defer() { fn(); }
+        Defer(const Defer&) = delete;
+        Defer& operator=(const Defer&) = delete;
+    };
+
+    template <typename F>
+    Defer<F> defer(F f) { return Defer<F>(std::move(f)); }
+
+    // Print functions
+    inline void print(int32_t v) { std::printf("%d", v); }
+    inline void print(int64_t v) { std::printf("%lld", (long long)v); }
+    inline void print(float v) { std::printf("%g", v); }
+    inline void print(double v) { std::printf("%g", v); }
+    inline void print(bool v) { std::printf("%s", v ? "true" : "false"); }
+    inline void print(const char* v) { std::printf("%s", v); }
+    inline void print(const std::string& v) { std::printf("%s", v.c_str()); }
+
+    inline void println() { std::printf("\n"); }
+    inline void println(int32_t v) { std::printf("%d\n", v); }
+    inline void println(int64_t v) { std::printf("%lld\n", (long long)v); }
+    inline void println(float v) { std::printf("%g\n", v); }
+    inline void println(double v) { std::printf("%g\n", v); }
+    inline void println(bool v) { std::printf("%s\n", v ? "true" : "false"); }
+    inline void println(const char* v) { std::printf("%s\n", v); }
+    inline void println(const std::string& v) { std::printf("%s\n", v.c_str()); }
+
+    // Variadic print - handles multiple arguments
+    template<typename T>
+    void println(T first) { print(first); std::printf("\n"); }
+
+    template<typename T, typename... Args>
+    void println(T first, Args... rest) { print(first); println(rest...); }
+
+    // Range for iteration
+    template <typename T>
+    struct Range {
+        T start;
+        T end_;
+        bool inclusive;
+
+        struct Iterator {
+            T current;
+            T end_;
+            bool inclusive;
+
+            Iterator(T c, T e, bool inc) : current(c), end_(e), inclusive(inc) {}
+            T operator*() const { return current; }
+            Iterator& operator++() { ++current; return *this; }
+            bool operator!=(const Iterator& other) const {
+                if (inclusive) return current <= other.end_;
+                return current < other.end_;
+            }
+        };
+
+        Iterator begin() const { return Iterator(start, end_, inclusive); }
+        Iterator end() const { return Iterator(inclusive ? end_ + 1 : end_, end_, inclusive); }
+    };
+
+    // String helper
+    inline std::string read_line() {
+        std::string line;
+        std::getline(std::cin, line);
+        return line;
+    }
+}
+)";
+}
+
 int PackageManager::init(const std::string& name) {
     std::cout << "Creating new Mana project: " << name << "\n";
 
@@ -56,6 +144,10 @@ int PackageManager::init(const std::string& name) {
     }
     if (!create_directory(name + "/src")) {
         std::cerr << "Error: Could not create src directory\n";
+        return 1;
+    }
+    if (!create_directory(name + "/build")) {
+        std::cerr << "Error: Could not create build directory\n";
         return 1;
     }
 
@@ -75,10 +167,19 @@ license = "MIT"
     }
 
     // Create main.mana
-    std::string main_content = R"(module main;
+    std::string main_content = R"(module main
 
-fn main() -> void {
-    println("Hello, world!");
+fn main() -> i32 {
+    println("Hello, world!")
+
+    let name = "Mana"
+    println("Welcome to ", name, "!")
+
+    for i in 1..=5 {
+        println("Count: ", i)
+    }
+
+    return 0
 }
 )";
     if (!write_file(name + "/src/main.mana", main_content)) {
@@ -86,17 +187,24 @@ fn main() -> void {
         return 1;
     }
 
+    // Create mana_runtime.h
+    if (!write_file(name + "/mana_runtime.h", get_runtime_header())) {
+        std::cerr << "Error: Could not create mana_runtime.h\n";
+        return 1;
+    }
+
     // Create .gitignore
     std::string gitignore = R"(# Build artifacts
 /build/
-/target/
 *.o
+*.obj
 *.exe
+*.cpp
 
 # IDE
-.vscode/
 .idea/
 *.swp
+*.swo
 
 # Cache
 .mana_cache/
@@ -191,6 +299,22 @@ bool PackageManager::save_package(const std::string& path) {
     return write_file(path, oss.str());
 }
 
+std::string PackageManager::get_executable_path() {
+    #ifdef _WIN32
+    char path[MAX_PATH];
+    GetModuleFileNameA(NULL, path, MAX_PATH);
+    return std::string(path);
+    #else
+    char path[1024];
+    ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
+    if (len != -1) {
+        path[len] = '\0';
+        return std::string(path);
+    }
+    return "mana_lang";
+    #endif
+}
+
 int PackageManager::build() {
     if (!load_package()) {
         return 1;
@@ -208,19 +332,63 @@ int PackageManager::build() {
         return 1;
     }
 
-    // Compile
-    std::string cmd = "mana_lang " + entry + " -c -o build/" + package_.name;
-    #ifdef _WIN32
-    cmd += ".exe";
-    #endif
+    // Get our own executable path to call ourselves for compilation
+    std::string mana_exe = get_executable_path();
 
-    int result = run_command(cmd);
+    // Step 1: Compile .mana to .cpp
+    std::string cpp_file = "build/main.cpp";
+    std::string compile_cmd = "\"" + mana_exe + "\" " + entry + " -c";
+
+    std::cout << "  Compiling " << entry << "...\n";
+    int result = run_command(compile_cmd);
     if (result != 0) {
-        std::cerr << "Build failed\n";
+        std::cerr << "Mana compilation failed\n";
         return result;
     }
 
-    std::cout << "Build successful: build/" << package_.name << "\n";
+    // The -c flag generates .cpp next to the .mana file, move it
+    std::string gen_cpp = "src/main.cpp";
+    if (file_exists(gen_cpp)) {
+        // Copy to build folder
+        std::string content = read_file(gen_cpp);
+        write_file(cpp_file, content);
+        std::remove(gen_cpp.c_str());
+    } else if (file_exists("build/main.cpp")) {
+        // Already in right place
+    } else {
+        std::cerr << "Error: Generated C++ file not found\n";
+        return 1;
+    }
+
+    // Step 2: Compile C++ to executable
+    std::string exe_name = "build/" + package_.name;
+    #ifdef _WIN32
+    exe_name += ".exe";
+    #endif
+
+    std::cout << "  Compiling C++...\n";
+
+    #ifdef _WIN32
+    // Try cl.exe first (Visual Studio), fall back to g++
+    std::string cpp_cmd = "cl /nologo /EHsc /std:c++17 /I. " + cpp_file + " /Fe:" + exe_name + " 2>nul";
+    result = run_command(cpp_cmd);
+    if (result != 0) {
+        // Try g++ (MinGW)
+        cpp_cmd = "g++ -std=c++17 -I. " + cpp_file + " -o " + exe_name;
+        result = run_command(cpp_cmd);
+    }
+    #else
+    std::string cpp_cmd = "g++ -std=c++17 -I. " + cpp_file + " -o " + exe_name;
+    result = run_command(cpp_cmd);
+    #endif
+
+    if (result != 0) {
+        std::cerr << "C++ compilation failed\n";
+        std::cerr << "Make sure you have a C++ compiler installed (Visual Studio or g++)\n";
+        return result;
+    }
+
+    std::cout << "Build successful: " << exe_name << "\n";
     return 0;
 }
 
@@ -231,6 +399,10 @@ int PackageManager::run() {
     std::string exe = "build/" + package_.name;
     #ifdef _WIN32
     exe += ".exe";
+    // Use backslashes on Windows
+    for (char& c : exe) {
+        if (c == '/') c = '\\';
+    }
     #endif
 
     std::cout << "Running " << exe << "\n\n";

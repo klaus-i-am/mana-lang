@@ -88,7 +88,14 @@ Mana compiles to C++17. You need a C++ compiler:
 
 ## Quick Start
 
-Create your first program:
+```bash
+mana new my-project      # Create a new project
+cd my-project
+mana build               # Compile to executable
+mana run                 # Build and run
+```
+
+Or manually:
 
 ```mana
 // hello.mana
@@ -100,15 +107,13 @@ fn main() -> i32 {
 }
 ```
 
-Compile and run:
-
 ```bash
 mana_lang hello.mana -c          # Generates hello.cpp
 g++ -std=c++17 hello.cpp -o hello
 ./hello
 ```
 
-See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructions including VS Code integration.
+See [docs/GETTING_STARTED.md](docs/GETTING_STARTED.md) for full setup instructions.
 
 ## Usage
 
