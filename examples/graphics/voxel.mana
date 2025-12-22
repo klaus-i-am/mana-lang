@@ -23,31 +23,48 @@ extern fn mana_getForwardZ() -> f32
 extern fn mana_getRightX() -> f32
 extern fn mana_getRightZ() -> f32
 
+// Mouse FFI
+extern fn mana_captureMouse(window: i64) -> void
+extern fn mana_releaseMouse(window: i64) -> void
+extern fn mana_isMouseCaptured() -> i32
+extern fn mana_updateMouseDelta(window: i64) -> void
+extern fn mana_getMouseDeltaX() -> f32
+extern fn mana_getMouseDeltaY() -> f32
+
+// Tree helpers
+extern fn mana_shouldPlaceTree(x: i32, z: i32) -> i32
+extern fn mana_getTreeHeight() -> i32
+
 // Input FFI
 extern fn mana_glfwGetKey(window: i64, key: i32) -> i32
+extern fn mana_glfwGetMouseButton(window: i64, button: i32) -> i32
 extern fn mana_GLFW_KEY_W() -> i32
 extern fn mana_GLFW_KEY_A() -> i32
 extern fn mana_GLFW_KEY_S() -> i32
 extern fn mana_GLFW_KEY_D() -> i32
 extern fn mana_GLFW_KEY_SPACE() -> i32
 extern fn mana_GLFW_KEY_ESCAPE() -> i32
-extern fn mana_GLFW_KEY_UP() -> i32
-extern fn mana_GLFW_KEY_DOWN() -> i32
-extern fn mana_GLFW_KEY_LEFT() -> i32
-extern fn mana_GLFW_KEY_RIGHT() -> i32
 extern fn mana_GLFW_KEY_Q() -> i32
 extern fn mana_GLFW_KEY_E() -> i32
+extern fn mana_GLFW_KEY_TAB() -> i32
 extern fn mana_GLFW_PRESS() -> i32
+extern fn mana_GLFW_MOUSE_BUTTON_LEFT() -> i32
 
-// Block types
+// Block types:
 // 0 = grass (green top, brown sides)
 // 1 = dirt (all brown)
 // 2 = stone (gray)
 // 3 = water (blue)
 // 4 = sand (yellow)
+// 5 = wood (tree trunk - we'll use stone color for now)
+// 6 = leaves (green)
 
 fn key_pressed(window: i64, key: i32) -> bool {
     return mana_glfwGetKey(window, key) == mana_GLFW_PRESS()
+}
+
+fn mouse_pressed(window: i64, button: i32) -> bool {
+    return mana_glfwGetMouseButton(window, button) == mana_GLFW_PRESS()
 }
 
 fn clear_3d(r: f32, g: f32, b: f32) -> void {
@@ -56,7 +73,7 @@ fn clear_3d(r: f32, g: f32, b: f32) -> void {
 }
 
 fn main() -> i32 {
-    let window = create_window("Mana Voxel World - WASD move, Arrows look, Q/E up/down, ESC quit", 1024, 768)
+    let window = create_window("Mana Voxel - Click to capture mouse, TAB to release, WASD move, ESC quit", 1024, 768)
     if window == 0 { return 1 }
 
     // 3D shader with MVP matrix
@@ -82,6 +99,16 @@ fn main() -> i32 {
     mana_createBlockVBO(2)
     mana_setupCubeAttributes()
 
+    let waterVao: i32 = mana_glGenVertexArray()
+    mana_glBindVertexArray(waterVao)
+    mana_createBlockVBO(3)
+    mana_setupCubeAttributes()
+
+    let sandVao: i32 = mana_glGenVertexArray()
+    mana_glBindVertexArray(sandVao)
+    mana_createBlockVBO(4)
+    mana_setupCubeAttributes()
+
     // Enable depth testing and backface culling
     mana_glEnable(mana_GL_DEPTH_TEST())
     mana_glEnable(mana_GL_CULL_FACE())
@@ -97,16 +124,19 @@ fn main() -> i32 {
     let camPitch: f32 = -0.3
 
     let moveSpeed: f32 = 0.08
-    let lookSpeed: f32 = 0.03
+    let mouseSens: f32 = 0.003
 
     // World size
     let worldSize: i32 = 9
+    let waterLevel: i32 = 1
 
     println("Mana Voxel World")
     println("Controls:")
+    println("  Click - Capture mouse for free look")
+    println("  TAB - Release mouse")
     println("  WASD - Move")
-    println("  Arrow keys - Look around")
     println("  Q/E - Move up/down")
+    println("  Space - Reset position")
     println("  ESC - Quit")
 
     while window_open(window) {
@@ -115,18 +145,25 @@ fn main() -> i32 {
             break
         }
 
-        // Look controls (arrow keys)
-        if key_pressed(window, mana_GLFW_KEY_LEFT()) {
-            camYaw = camYaw - lookSpeed
+        // TAB to release mouse
+        if key_pressed(window, mana_GLFW_KEY_TAB()) {
+            mana_releaseMouse(window)
         }
-        if key_pressed(window, mana_GLFW_KEY_RIGHT()) {
-            camYaw = camYaw + lookSpeed
+
+        // Click to capture mouse
+        if mouse_pressed(window, mana_GLFW_MOUSE_BUTTON_LEFT()) {
+            if mana_isMouseCaptured() == 0 {
+                mana_captureMouse(window)
+            }
         }
-        if key_pressed(window, mana_GLFW_KEY_UP()) {
-            camPitch = camPitch + lookSpeed
-        }
-        if key_pressed(window, mana_GLFW_KEY_DOWN()) {
-            camPitch = camPitch - lookSpeed
+
+        // Mouse look (only when captured)
+        if mana_isMouseCaptured() == 1 {
+            mana_updateMouseDelta(window)
+            let deltaX: f32 = mana_getMouseDeltaX()
+            let deltaY: f32 = mana_getMouseDeltaY()
+            camYaw = camYaw + deltaX * mouseSens
+            camPitch = camPitch + deltaY * mouseSens
         }
 
         // Clamp pitch
@@ -181,35 +218,72 @@ fn main() -> i32 {
 
         use_shader(shader)
 
-        // Render 9x9 voxel terrain
+        // Render voxel terrain
         for x: i32 = 0; x < worldSize; x++ {
             for z: i32 = 0; z < worldSize; z++ {
-                // Get terrain height at this position
                 let terrainHeight: i32 = mana_getTerrainHeight(x, z)
 
-                // Draw blocks from bottom to terrain height
+                // Draw terrain blocks
                 for y: i32 = 0; y <= terrainHeight; y++ {
-                    // Set block position
                     let px: f32 = x * 1.0
                     let py: f32 = y * 1.0
                     let pz: f32 = z * 1.0
                     mana_setModelPosition(px, py, pz)
                     mana_glUniformMatrix4fv(mvpLoc, mana_getMVP())
 
-                    // Choose block type based on height
+                    // Choose block type
                     if y == terrainHeight {
-                        // Top layer = grass
-                        mana_glBindVertexArray(grassVao)
+                        if terrainHeight <= waterLevel {
+                            // Beach at water level
+                            mana_glBindVertexArray(sandVao)
+                        } else {
+                            // Grass on top
+                            mana_glBindVertexArray(grassVao)
+                        }
                     } else {
                         if y > terrainHeight - 3 {
-                            // Next 2 layers = dirt
                             mana_glBindVertexArray(dirtVao)
                         } else {
-                            // Deep = stone
                             mana_glBindVertexArray(stoneVao)
                         }
                     }
                     mana_drawCube()
+                }
+
+                // Draw water if terrain is below water level
+                if terrainHeight < waterLevel {
+                    for y: i32 = terrainHeight + 1; y <= waterLevel; y++ {
+                        let px: f32 = x * 1.0
+                        let py: f32 = y * 1.0
+                        let pz: f32 = z * 1.0
+                        mana_setModelPosition(px, py, pz)
+                        mana_glUniformMatrix4fv(mvpLoc, mana_getMVP())
+                        mana_glBindVertexArray(waterVao)
+                        mana_drawCube()
+                    }
+                }
+
+                // Draw trees on high ground
+                if terrainHeight > waterLevel + 1 {
+                    if mana_shouldPlaceTree(x, z) == 1 {
+                        // Tree trunk (using stone VAO as brown-ish)
+                        let trunkHeight: i32 = 3
+                        for ty: i32 = 1; ty <= trunkHeight; ty++ {
+                            let px: f32 = x * 1.0
+                            let py: f32 = (terrainHeight + ty) * 1.0
+                            let pz: f32 = z * 1.0
+                            mana_setModelPosition(px, py, pz)
+                            mana_glUniformMatrix4fv(mvpLoc, mana_getMVP())
+                            mana_glBindVertexArray(dirtVao)
+                            mana_drawCube()
+                        }
+                        // Tree top (leaves - using grass VAO as green)
+                        let leafY: f32 = (terrainHeight + trunkHeight + 1) * 1.0
+                        mana_setModelPosition(x * 1.0, leafY, z * 1.0)
+                        mana_glUniformMatrix4fv(mvpLoc, mana_getMVP())
+                        mana_glBindVertexArray(grassVao)
+                        mana_drawCube()
+                    }
                 }
             }
         }

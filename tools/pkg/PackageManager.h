@@ -27,7 +27,7 @@ namespace mana::pkg {
         PackageManager();
 
         // Commands
-        int init(const std::string& name);
+        int init(const std::string& name, bool graphics = false);
         int build();
         int run();
         int test();
@@ -50,6 +50,8 @@ namespace mana::pkg {
         bool file_exists(const std::string& path);
         int run_command(const std::string& cmd);
         std::string get_runtime_header();
+        std::string get_graphics_header();
+        std::string get_graphics_mana();
         std::string get_executable_path();
     };
 

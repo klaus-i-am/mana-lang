@@ -387,12 +387,227 @@ std::vector<CompletionItem> LspServer::get_completions(const std::string& uri, P
 }
 
 std::string LspServer::get_hover_info(const std::string& uri, Position pos) {
-    // TODO: Implement proper hover info based on AST
+    auto doc_it = documents_.find(uri);
+    if (doc_it == documents_.end()) return "";
+
+    // Get the word at the cursor position
+    const std::string& content = doc_it->second;
+    std::vector<std::string> lines;
+    std::istringstream iss(content);
+    std::string line;
+    while (std::getline(iss, line)) {
+        lines.push_back(line);
+    }
+
+    if (pos.line < 0 || pos.line >= static_cast<int>(lines.size())) return "";
+    const std::string& current_line = lines[pos.line];
+    if (pos.character < 0 || pos.character >= static_cast<int>(current_line.size())) return "";
+
+    // Find word boundaries
+    int start = pos.character;
+    int end = pos.character;
+    while (start > 0 && (std::isalnum(current_line[start - 1]) || current_line[start - 1] == '_')) start--;
+    while (end < static_cast<int>(current_line.size()) && (std::isalnum(current_line[end]) || current_line[end] == '_')) end++;
+
+    if (start == end) return "";
+    std::string word = current_line.substr(start, end - start);
+
+    // Check if we have a parsed module
+    auto mod_it = parsed_modules_.find(uri);
+    if (mod_it != parsed_modules_.end() && mod_it->second) {
+        auto* module = mod_it->second.get();
+
+        // Search for functions
+        for (const auto& decl : module->decls) {
+            if (auto* fn = dynamic_cast<frontend::AstFuncDecl*>(decl.get())) {
+                if (fn->name == word) {
+                    std::string info = "```mana\\nfn " + fn->name + "(";
+                    for (size_t i = 0; i < fn->params.size(); ++i) {
+                        if (i > 0) info += ", ";
+                        info += fn->params[i].name + ": " + fn->params[i].type_name;
+                    }
+                    info += ") -> " + (fn->return_type.empty() ? "void" : fn->return_type);
+                    info += "\\n```";
+                    return info;
+                }
+            }
+            // Search for structs
+            if (auto* st = dynamic_cast<frontend::AstStructDecl*>(decl.get())) {
+                if (st->name == word) {
+                    std::string info = "```mana\\nstruct " + st->name;
+                    if (!st->type_params.empty()) {
+                        info += "<";
+                        for (size_t i = 0; i < st->type_params.size(); ++i) {
+                            if (i > 0) info += ", ";
+                            info += st->type_params[i];
+                        }
+                        info += ">";
+                    }
+                    info += " {\\n";
+                    for (const auto& field : st->fields) {
+                        info += "    " + field.name + ": " + field.type_name + ",\\n";
+                    }
+                    info += "}\\n```";
+                    return info;
+                }
+            }
+            // Search for enums
+            if (auto* en = dynamic_cast<frontend::AstEnumDecl*>(decl.get())) {
+                if (en->name == word) {
+                    std::string info = "```mana\\nenum " + en->name + " {\\n";
+                    for (const auto& variant : en->variants) {
+                        info += "    " + variant.name + ",\\n";
+                    }
+                    info += "}\\n```";
+                    return info;
+                }
+            }
+        }
+    }
+
+    // Check built-in types
+    static const std::unordered_map<std::string, std::string> builtin_types = {
+        {"i32", "32-bit signed integer"},
+        {"i64", "64-bit signed integer"},
+        {"f32", "32-bit floating point"},
+        {"f64", "64-bit floating point"},
+        {"bool", "Boolean type (true/false)"},
+        {"string", "UTF-8 string type"},
+        {"void", "No return value"},
+        {"Vec", "Dynamic array collection"},
+        {"Option", "Optional value: Some(T) or None"},
+        {"Result", "Result type: Ok(T) or Err(E)"},
+        {"HashMap", "Key-value hash map"},
+    };
+
+    auto type_it = builtin_types.find(word);
+    if (type_it != builtin_types.end()) {
+        return "**" + word + "**\\n\\n" + type_it->second;
+    }
+
+    // Check built-in functions
+    static const std::unordered_map<std::string, std::string> builtin_fns = {
+        {"println", "```mana\\nfn println(value: any) -> void\\n```\\n\\nPrints value with newline"},
+        {"print", "```mana\\nfn print(value: any) -> void\\n```\\n\\nPrints value without newline"},
+        {"len", "```mana\\nfn len(s: string) -> i32\\n```\\n\\nReturns length of string or collection"},
+        {"push", "```mana\\nfn push(vec: Vec<T>, value: T) -> void\\n```\\n\\nAppends value to vector"},
+        {"pop", "```mana\\nfn pop(vec: Vec<T>) -> Option<T>\\n```\\n\\nRemoves and returns last element"},
+        {"Some", "```mana\\nfn Some<T>(value: T) -> Option<T>\\n```\\n\\nWraps value in Some variant"},
+        {"None", "```mana\\nNone: Option<T>\\n```\\n\\nRepresents absence of value"},
+        {"Ok", "```mana\\nfn Ok<T>(value: T) -> Result<T, E>\\n```\\n\\nSuccess result variant"},
+        {"Err", "```mana\\nfn Err<E>(error: E) -> Result<T, E>\\n```\\n\\nError result variant"},
+        {"sqrt", "```mana\\nfn sqrt(x: f32) -> f32\\n```\\n\\nSquare root"},
+        {"sin", "```mana\\nfn sin(x: f32) -> f32\\n```\\n\\nSine (radians)"},
+        {"cos", "```mana\\nfn cos(x: f32) -> f32\\n```\\n\\nCosine (radians)"},
+        {"random_int", "```mana\\nfn random_int(min: i32, max: i32) -> i32\\n```\\n\\nRandom integer in range"},
+        {"random_float", "```mana\\nfn random_float() -> f32\\n```\\n\\nRandom float 0.0 to 1.0"},
+    };
+
+    auto fn_it = builtin_fns.find(word);
+    if (fn_it != builtin_fns.end()) {
+        return fn_it->second;
+    }
+
+    // Check keywords
+    static const std::unordered_map<std::string, std::string> keywords = {
+        {"fn", "**fn**\\n\\nFunction declaration keyword"},
+        {"let", "**let**\\n\\nVariable declaration (immutable by default)"},
+        {"mut", "**mut**\\n\\nMutable variable modifier"},
+        {"if", "**if**\\n\\nConditional statement"},
+        {"else", "**else**\\n\\nAlternative branch"},
+        {"match", "**match**\\n\\nPattern matching expression"},
+        {"for", "**for**\\n\\nFor loop (for x in collection)"},
+        {"while", "**while**\\n\\nWhile loop"},
+        {"return", "**return**\\n\\nReturn from function"},
+        {"struct", "**struct**\\n\\nDefine a structure type"},
+        {"enum", "**enum**\\n\\nDefine an enumeration type"},
+        {"impl", "**impl**\\n\\nImplementation block for methods"},
+        {"trait", "**trait**\\n\\nDefine a trait (interface)"},
+        {"pub", "**pub**\\n\\nPublic visibility modifier"},
+        {"use", "**use**\\n\\nImport declaration"},
+        {"async", "**async**\\n\\nAsynchronous function modifier"},
+        {"await", "**await**\\n\\nAwait async operation"},
+    };
+
+    auto kw_it = keywords.find(word);
+    if (kw_it != keywords.end()) {
+        return kw_it->second;
+    }
+
     return "";
 }
 
 Location LspServer::get_definition(const std::string& uri, Position pos) {
-    // TODO: Implement proper go-to-definition based on AST
+    auto doc_it = documents_.find(uri);
+    if (doc_it == documents_.end()) return {};
+
+    // Get the word at the cursor position
+    const std::string& content = doc_it->second;
+    std::vector<std::string> lines;
+    std::istringstream iss(content);
+    std::string line;
+    while (std::getline(iss, line)) {
+        lines.push_back(line);
+    }
+
+    if (pos.line < 0 || pos.line >= static_cast<int>(lines.size())) return {};
+    const std::string& current_line = lines[pos.line];
+    if (pos.character < 0 || pos.character >= static_cast<int>(current_line.size())) return {};
+
+    // Find word boundaries
+    int start = pos.character;
+    int end = pos.character;
+    while (start > 0 && (std::isalnum(current_line[start - 1]) || current_line[start - 1] == '_')) start--;
+    while (end < static_cast<int>(current_line.size()) && (std::isalnum(current_line[end]) || current_line[end] == '_')) end++;
+
+    if (start == end) return {};
+    std::string word = current_line.substr(start, end - start);
+
+    // Check if we have a parsed module
+    auto mod_it = parsed_modules_.find(uri);
+    if (mod_it == parsed_modules_.end() || !mod_it->second) return {};
+
+    auto* module = mod_it->second.get();
+
+    // Search for functions
+    for (const auto& decl : module->decls) {
+        if (auto* fn = dynamic_cast<frontend::AstFuncDecl*>(decl.get())) {
+            if (fn->name == word) {
+                Location loc;
+                loc.uri = uri;
+                loc.range.start.line = fn->line - 1;  // LSP is 0-indexed
+                loc.range.start.character = fn->column - 1;
+                loc.range.end.line = fn->line - 1;
+                loc.range.end.character = fn->column - 1 + static_cast<int>(fn->name.length());
+                return loc;
+            }
+        }
+        // Search for structs
+        if (auto* st = dynamic_cast<frontend::AstStructDecl*>(decl.get())) {
+            if (st->name == word) {
+                Location loc;
+                loc.uri = uri;
+                loc.range.start.line = st->line - 1;
+                loc.range.start.character = st->column - 1;
+                loc.range.end.line = st->line - 1;
+                loc.range.end.character = st->column - 1 + static_cast<int>(st->name.length());
+                return loc;
+            }
+        }
+        // Search for enums
+        if (auto* en = dynamic_cast<frontend::AstEnumDecl*>(decl.get())) {
+            if (en->name == word) {
+                Location loc;
+                loc.uri = uri;
+                loc.range.start.line = en->line - 1;
+                loc.range.start.character = en->column - 1;
+                loc.range.end.line = en->line - 1;
+                loc.range.end.character = en->column - 1 + static_cast<int>(en->name.length());
+                return loc;
+            }
+        }
+    }
+
     return {};
 }
 

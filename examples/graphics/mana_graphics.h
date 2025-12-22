@@ -510,8 +510,11 @@ inline int32_t mana_GLFW_KEY_UP() { return GLFW_KEY_UP; }
 inline int32_t mana_GLFW_KEY_DOWN() { return GLFW_KEY_DOWN; }
 inline int32_t mana_GLFW_KEY_LEFT() { return GLFW_KEY_LEFT; }
 inline int32_t mana_GLFW_KEY_RIGHT() { return GLFW_KEY_RIGHT; }
+inline int32_t mana_GLFW_KEY_TAB() { return GLFW_KEY_TAB; }
 inline int32_t mana_GLFW_PRESS() { return GLFW_PRESS; }
 inline int32_t mana_GLFW_RELEASE() { return GLFW_RELEASE; }
+inline int32_t mana_GLFW_MOUSE_BUTTON_LEFT() { return GLFW_MOUSE_BUTTON_LEFT; }
+inline int32_t mana_GLFW_MOUSE_BUTTON_RIGHT() { return GLFW_MOUSE_BUTTON_RIGHT; }
 
 // Input mode constants
 inline int32_t mana_GLFW_CURSOR() { return GLFW_CURSOR; }
@@ -676,3 +679,57 @@ inline float mana_getForwardX() { return -sinf(g_cam_yaw); }
 inline float mana_getForwardZ() { return -cosf(g_cam_yaw); }
 inline float mana_getRightX() { return cosf(g_cam_yaw); }
 inline float mana_getRightZ() { return -sinf(g_cam_yaw); }
+
+// Mouse look helpers
+static double g_last_mouse_x = 0.0, g_last_mouse_y = 0.0;
+static bool g_mouse_captured = false;
+static bool g_first_mouse = true;
+
+inline void mana_captureMouse(int64_t window) {
+    glfwSetInputMode(reinterpret_cast<GLFWwindow*>(window), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    g_mouse_captured = true;
+    g_first_mouse = true;
+}
+
+inline void mana_releaseMouse(int64_t window) {
+    glfwSetInputMode(reinterpret_cast<GLFWwindow*>(window), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    g_mouse_captured = false;
+}
+
+inline int32_t mana_isMouseCaptured() {
+    return g_mouse_captured ? 1 : 0;
+}
+
+// Returns mouse delta and updates last position
+static float g_mouse_delta_x = 0.0f, g_mouse_delta_y = 0.0f;
+
+inline void mana_updateMouseDelta(int64_t window) {
+    double x, y;
+    glfwGetCursorPos(reinterpret_cast<GLFWwindow*>(window), &x, &y);
+
+    if (g_first_mouse) {
+        g_last_mouse_x = x;
+        g_last_mouse_y = y;
+        g_first_mouse = false;
+    }
+
+    g_mouse_delta_x = static_cast<float>(x - g_last_mouse_x);
+    g_mouse_delta_y = static_cast<float>(g_last_mouse_y - y); // Inverted
+    g_last_mouse_x = x;
+    g_last_mouse_y = y;
+}
+
+inline float mana_getMouseDeltaX() { return g_mouse_delta_x; }
+inline float mana_getMouseDeltaY() { return g_mouse_delta_y; }
+
+// Tree generation helper
+inline int32_t mana_shouldPlaceTree(int32_t x, int32_t z) {
+    // Simple pseudo-random based on position
+    int hash = (x * 374761393 + z * 668265263) ^ (x * z);
+    hash = (hash >> 13) ^ hash;
+    return (hash % 7 == 0) ? 1 : 0; // ~14% chance of tree
+}
+
+inline int32_t mana_getTreeHeight() {
+    return 3 + (rand() % 2); // 3-4 blocks tall
+}

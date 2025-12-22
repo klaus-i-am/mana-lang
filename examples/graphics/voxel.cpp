@@ -25,6 +25,7 @@ void use_shader(int32_t program);
 int32_t create_triangle();
 void draw_triangle(int32_t vao);
 bool key_pressed(int64_t window, int32_t key);
+bool mouse_pressed(int64_t window, int32_t button);
 void clear_3d(float r, float g, float b);
 
 int64_t create_window(std::string title, int32_t width, int32_t height) {
@@ -118,13 +119,17 @@ bool key_pressed(int64_t window, int32_t key) {
     return (mana_glfwGetKey(window, key) == mana_GLFW_PRESS());
 }
 
+bool mouse_pressed(int64_t window, int32_t button) {
+    return (mana_glfwGetMouseButton(window, button) == mana_GLFW_PRESS());
+}
+
 void clear_3d(float r, float g, float b) {
     mana_glClearColor(r, g, b, 1.0);
     mana_glClear((mana_GL_COLOR_BUFFER_BIT() + mana_GL_DEPTH_BUFFER_BIT()));
 }
 
 int32_t main() {
-    int64_t window = create_window("Mana Voxel World - WASD move, Arrows look, Q/E up/down, ESC quit", 1024, 768);
+    int64_t window = create_window("Mana Voxel - Click to capture mouse, TAB to release, WASD move, ESC quit", 1024, 768);
     if ((window == 0)) {
         return 1;
     }
@@ -144,6 +149,14 @@ int32_t main() {
     mana_glBindVertexArray(stoneVao);
     mana_createBlockVBO(2);
     mana_setupCubeAttributes();
+    int32_t waterVao = mana_glGenVertexArray();
+    mana_glBindVertexArray(waterVao);
+    mana_createBlockVBO(3);
+    mana_setupCubeAttributes();
+    int32_t sandVao = mana_glGenVertexArray();
+    mana_glBindVertexArray(sandVao);
+    mana_createBlockVBO(4);
+    mana_setupCubeAttributes();
     mana_glEnable(mana_GL_DEPTH_TEST());
     mana_glEnable(mana_GL_CULL_FACE());
     mana_setPerspective(70.0, 1.333, 0.1, 100.0);
@@ -153,29 +166,35 @@ int32_t main() {
     float camYaw = 0.0;
     float camPitch = -0.29999999999999999;
     float moveSpeed = 0.080000000000000002;
-    float lookSpeed = 0.029999999999999999;
+    float mouseSens = 0.0030000000000000001;
     int32_t worldSize = 9;
+    int32_t waterLevel = 1;
     mana::println("Mana Voxel World");
     mana::println("Controls:");
+    mana::println("  Click - Capture mouse for free look");
+    mana::println("  TAB - Release mouse");
     mana::println("  WASD - Move");
-    mana::println("  Arrow keys - Look around");
     mana::println("  Q/E - Move up/down");
+    mana::println("  Space - Reset position");
     mana::println("  ESC - Quit");
     while (window_open(window)) {
         if (key_pressed(window, mana_GLFW_KEY_ESCAPE())) {
             break;
         }
-        if (key_pressed(window, mana_GLFW_KEY_LEFT())) {
-            camYaw = (camYaw - lookSpeed);
+        if (key_pressed(window, mana_GLFW_KEY_TAB())) {
+            mana_releaseMouse(window);
         }
-        if (key_pressed(window, mana_GLFW_KEY_RIGHT())) {
-            camYaw = (camYaw + lookSpeed);
+        if (mouse_pressed(window, mana_GLFW_MOUSE_BUTTON_LEFT())) {
+            if ((mana_isMouseCaptured() == 0)) {
+                mana_captureMouse(window);
+            }
         }
-        if (key_pressed(window, mana_GLFW_KEY_UP())) {
-            camPitch = (camPitch + lookSpeed);
-        }
-        if (key_pressed(window, mana_GLFW_KEY_DOWN())) {
-            camPitch = (camPitch - lookSpeed);
+        if ((mana_isMouseCaptured() == 1)) {
+            mana_updateMouseDelta(window);
+            float deltaX = mana_getMouseDeltaX();
+            float deltaY = mana_getMouseDeltaY();
+            camYaw = (camYaw + (deltaX * mouseSens));
+            camPitch = (camPitch + (deltaY * mouseSens));
         }
         if ((camPitch > 1.5)) {
             camPitch = 1.5;
@@ -235,7 +254,11 @@ int32_t main() {
                                 mana_setModelPosition(px, py, pz);
                                 mana_glUniformMatrix4fv(mvpLoc, mana_getMVP());
                                 if ((y == terrainHeight)) {
-                                    mana_glBindVertexArray(grassVao);
+                                    if ((terrainHeight <= waterLevel)) {
+                                        mana_glBindVertexArray(sandVao);
+                                    } else {
+                                        mana_glBindVertexArray(grassVao);
+                                    }
                                 } else {
                                     if ((y > (terrainHeight - 3))) {
                                         mana_glBindVertexArray(dirtVao);
@@ -246,7 +269,43 @@ int32_t main() {
                                 mana_drawCube();
                                 y = (y + 1);
                             }
-                        }                        z = (z + 1);
+                        }                        if ((terrainHeight < waterLevel)) {
+{
+                                int32_t y = (terrainHeight + 1);
+                                while ((y <= waterLevel)) {
+                                    float px = (x * 1.0);
+                                    float py = (y * 1.0);
+                                    float pz = (z * 1.0);
+                                    mana_setModelPosition(px, py, pz);
+                                    mana_glUniformMatrix4fv(mvpLoc, mana_getMVP());
+                                    mana_glBindVertexArray(waterVao);
+                                    mana_drawCube();
+                                    y = (y + 1);
+                                }
+                            }                        }
+                        if ((terrainHeight > (waterLevel + 1))) {
+                            if ((mana_shouldPlaceTree(x, z) == 1)) {
+                                int32_t trunkHeight = 3;
+{
+                                    int32_t ty = 1;
+                                    while ((ty <= trunkHeight)) {
+                                        float px = (x * 1.0);
+                                        float py = ((terrainHeight + ty) * 1.0);
+                                        float pz = (z * 1.0);
+                                        mana_setModelPosition(px, py, pz);
+                                        mana_glUniformMatrix4fv(mvpLoc, mana_getMVP());
+                                        mana_glBindVertexArray(dirtVao);
+                                        mana_drawCube();
+                                        ty = (ty + 1);
+                                    }
+                                }                                float leafY = (((terrainHeight + trunkHeight) + 1) * 1.0);
+                                mana_setModelPosition((x * 1.0), leafY, (z * 1.0));
+                                mana_glUniformMatrix4fv(mvpLoc, mana_getMVP());
+                                mana_glBindVertexArray(grassVao);
+                                mana_drawCube();
+                            }
+                        }
+                        z = (z + 1);
                     }
                 }                x = (x + 1);
             }

@@ -589,7 +589,15 @@ int main(int argc, char** argv) {
 
     if (first_arg == "new" && argc >= 3) {
         mana::pkg::PackageManager pkg;
-        return pkg.init(argv[2]);
+        std::string name = argv[2];
+        bool graphics = false;
+        // Check for --graphics flag
+        for (int i = 3; i < argc; i++) {
+            if (std::string(argv[i]) == "--graphics") {
+                graphics = true;
+            }
+        }
+        return pkg.init(name, graphics);
     }
 
     if (first_arg == "build") {

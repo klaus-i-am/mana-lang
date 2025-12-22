@@ -2,6 +2,9 @@
 #include <utility>
 #include <cstdio>
 #include <cstdint>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
 #include <string>
 #include <stdexcept>
 #include <vector>
@@ -469,6 +472,97 @@ namespace mana {
 
     template <typename T>
     inline T clamp(T x, T lo, T hi) { return x < lo ? lo : (x > hi ? hi : x); }
+
+    // Advanced math functions
+    inline float sqrt(float x) { return std::sqrt(x); }
+    inline double sqrt(double x) { return std::sqrt(x); }
+
+    inline float sin(float x) { return std::sin(x); }
+    inline double sin(double x) { return std::sin(x); }
+
+    inline float cos(float x) { return std::cos(x); }
+    inline double cos(double x) { return std::cos(x); }
+
+    inline float tan(float x) { return std::tan(x); }
+    inline double tan(double x) { return std::tan(x); }
+
+    inline float asin(float x) { return std::asin(x); }
+    inline double asin(double x) { return std::asin(x); }
+
+    inline float acos(float x) { return std::acos(x); }
+    inline double acos(double x) { return std::acos(x); }
+
+    inline float atan(float x) { return std::atan(x); }
+    inline double atan(double x) { return std::atan(x); }
+
+    inline float atan2(float y, float x) { return std::atan2(y, x); }
+    inline double atan2(double y, double x) { return std::atan2(y, x); }
+
+    inline float pow(float base, float exp) { return std::pow(base, exp); }
+    inline double pow(double base, double exp) { return std::pow(base, exp); }
+
+    inline float exp(float x) { return std::exp(x); }
+    inline double exp(double x) { return std::exp(x); }
+
+    inline float log(float x) { return std::log(x); }
+    inline double log(double x) { return std::log(x); }
+
+    inline float log10(float x) { return std::log10(x); }
+    inline double log10(double x) { return std::log10(x); }
+
+    inline float log2(float x) { return std::log2(x); }
+    inline double log2(double x) { return std::log2(x); }
+
+    inline float floor(float x) { return std::floor(x); }
+    inline double floor(double x) { return std::floor(x); }
+
+    inline float ceil(float x) { return std::ceil(x); }
+    inline double ceil(double x) { return std::ceil(x); }
+
+    inline float round(float x) { return std::round(x); }
+    inline double round(double x) { return std::round(x); }
+
+    inline float trunc(float x) { return std::trunc(x); }
+    inline double trunc(double x) { return std::trunc(x); }
+
+    inline float fmod(float x, float y) { return std::fmod(x, y); }
+    inline double fmod(double x, double y) { return std::fmod(x, y); }
+
+    inline float hypot(float x, float y) { return std::hypot(x, y); }
+    inline double hypot(double x, double y) { return std::hypot(x, y); }
+
+    // Math constants
+    constexpr float PI_F = 3.14159265358979323846f;
+    constexpr double PI = 3.14159265358979323846;
+    constexpr float E_F = 2.71828182845904523536f;
+    constexpr double E = 2.71828182845904523536;
+
+    // Angle conversion
+    inline float to_radians(float degrees) { return degrees * PI_F / 180.0f; }
+    inline double to_radians(double degrees) { return degrees * PI / 180.0; }
+    inline float to_degrees(float radians) { return radians * 180.0f / PI_F; }
+    inline double to_degrees(double radians) { return radians * 180.0 / PI; }
+
+    // Random number generation
+    inline void seed_random(int32_t seed) {
+        std::srand(static_cast<unsigned int>(seed));
+    }
+
+    inline int32_t random_int(int32_t min_val, int32_t max_val) {
+        static bool seeded = false;
+        if (!seeded) { std::srand(static_cast<unsigned int>(std::time(nullptr))); seeded = true; }
+        return min_val + std::rand() % (max_val - min_val + 1);
+    }
+
+    inline float random_float() {
+        static bool seeded = false;
+        if (!seeded) { std::srand(static_cast<unsigned int>(std::time(nullptr))); seeded = true; }
+        return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+    }
+
+    inline float random_range(float min_val, float max_val) {
+        return min_val + random_float() * (max_val - min_val);
+    }
 
     // I/O functions
     inline std::string read_line() {
