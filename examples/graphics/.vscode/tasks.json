@@ -1,0 +1,106 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Mana: Compile Current File",
+            "type": "shell",
+            "command": "${workspaceFolder}/../../build/Release/mana_lang.exe",
+            "args": ["${file}", "-c"],
+            "options": {
+                "cwd": "${workspaceFolder}/../.."
+            },
+            "group": "build",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "CMake: Build All",
+            "type": "shell",
+            "command": "cmake",
+            "args": ["--build", "build", "--config", "Release"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Mana: Compile and Build",
+            "dependsOn": ["Mana: Compile Current File", "CMake: Build All"],
+            "dependsOrder": "sequence",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Run: Current Demo",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/Release/${fileBasenameNoExtension}.exe",
+            "group": "test",
+            "problemMatcher": [],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "panel": "shared"
+            },
+            "dependsOn": "Mana: Compile and Build"
+        },
+        {
+            "label": "Run: cube",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/Release/cube.exe",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Run: voxel",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/Release/voxel.exe",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "Run: triangle",
+            "type": "shell",
+            "command": "${workspaceFolder}/build/Release/triangle.exe",
+            "group": "test",
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake: Configure",
+            "type": "shell",
+            "command": "cmake",
+            "args": [
+                "-B", "build",
+                "-S", ".",
+                "-DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "Full Setup: Configure + Build",
+            "dependsOn": ["CMake: Configure", "CMake: Build All"],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        }
+    ]
+}
