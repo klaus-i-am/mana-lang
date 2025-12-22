@@ -54,6 +54,7 @@ namespace mana::frontend {
         case TokenKind::KwVariant: return "KwVariant";
         case TokenKind::KwWhen: return "KwWhen";
         case TokenKind::KwOr: return "KwOr";
+        case TokenKind::KwExtern: return "KwExtern";
 
         case TokenKind::LParen: return "LParen";
         case TokenKind::RParen: return "RParen";

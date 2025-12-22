@@ -56,6 +56,7 @@ namespace mana::frontend {
         KwVariant,      // variant as synonym for enum (vNext)
         KwWhen,         // when as preferred pattern matching (vNext)
         KwOr,           // or for Result unwrapping (vNext)
+        KwExtern,       // extern for FFI declarations
 
         // Punctuation
         LParen, RParen,

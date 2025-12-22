@@ -1,0 +1,11 @@
+module test_for_in
+
+fn main() -> i32 {
+    // For-in with range
+    println("For-in with range 0..5:")
+    for i in 0..5 {
+        println(i)
+    }
+
+    return 0
+}

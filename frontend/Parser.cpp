@@ -150,6 +150,14 @@ namespace mana::frontend {
             return decl;
         }
         
+        // Handle extern fn (FFI declaration)
+        if (match(TokenKind::KwExtern)) {
+            expect(TokenKind::KwFn, "expected 'fn' after 'extern'");
+            auto decl = parse_function_decl(is_pub, false, is_test, true);
+            if (decl) decl->doc_comment = doc_comment;
+            return decl;
+        }
+        
         // Handle async fn
         bool is_async = match(TokenKind::KwAsync);
         if (is_async) {
@@ -344,7 +352,7 @@ namespace mana::frontend {
         // Check for string literal (file import): import "path/to/file.mana";
         if (match(TokenKind::StringLiteral)) {
             Token path = previous();
-            expect(TokenKind::Semicolon, "expected ';' after import");
+            optional_semicolon();  // vNext: semicolons optional
             auto imp = std::make_unique<AstImportDecl>(path.lexeme, l, c);
             imp->path = path.lexeme;
             imp->is_file_import = true;
@@ -361,7 +369,7 @@ namespace mana::frontend {
             name += "::" + previous().lexeme;
         }
 
-        expect(TokenKind::Semicolon, "expected ';' after import");
+        optional_semicolon();  // vNext: semicolons optional
         auto imp = std::make_unique<AstImportDecl>(name, l, c);
         imp->is_file_import = false;
         return imp;
@@ -378,7 +386,7 @@ namespace mana::frontend {
         while (match(TokenKind::ColonColon)) {
             // Check for glob import: use std::io::*
             if (match(TokenKind::Star)) {
-                expect(TokenKind::Semicolon, "expected ';' after use");
+                optional_semicolon();  // vNext: semicolons optional
                 auto use_decl = std::make_unique<AstUseDecl>(path, l, c);
                 use_decl->is_glob = true;
                 use_decl->is_pub = is_pub;
@@ -393,7 +401,7 @@ namespace mana::frontend {
                     names.push_back(previous().lexeme);
                 } while (match(TokenKind::Comma));
                 expect(TokenKind::RBrace, "expected '}' in use");
-                expect(TokenKind::Semicolon, "expected ';' after use");
+                optional_semicolon();  // vNext: semicolons optional
                 auto use_decl = std::make_unique<AstUseDecl>(path, l, c);
                 use_decl->imported_names = std::move(names);
                 use_decl->is_pub = is_pub;
@@ -411,7 +419,7 @@ namespace mana::frontend {
             alias = previous().lexeme;
         }
 
-        expect(TokenKind::Semicolon, "expected ';' after use");
+        optional_semicolon();  // vNext: semicolons optional
         auto use_decl = std::make_unique<AstUseDecl>(path, l, c);
         use_decl->alias = alias;
         use_decl->is_pub = is_pub;
@@ -437,8 +445,8 @@ namespace mana::frontend {
                 assoc_type.name = type_name.lexeme;
                 assoc_type.line = type_name.line;
                 assoc_type.column = type_name.column;
-                
-                expect(TokenKind::Semicolon, "expected ';' after associated type declaration");
+
+                optional_semicolon();  // vNext: semicolons optional
                 trait->associated_types.push_back(std::move(assoc_type));
                 continue;
             }
@@ -491,7 +499,7 @@ namespace mana::frontend {
             if (check(TokenKind::LBrace)) {
                 method.body = parse_block();
             } else {
-                expect(TokenKind::Semicolon, "expected ';' or '{' after trait method signature");
+                optional_semicolon();  // vNext: semicolons optional
             }
 
             trait->methods.push_back(std::move(method));
@@ -540,7 +548,7 @@ namespace mana::frontend {
                 
                 expect(TokenKind::Assign, "expected '=' after associated type name");
                 std::string target_type = parse_type_name();
-                expect(TokenKind::Semicolon, "expected ';' after type assignment");
+                optional_semicolon();  // vNext: semicolons optional
                 
                 AstTypeAssignment assignment;
                 assignment.name = type_name.lexeme;
@@ -560,7 +568,7 @@ namespace mana::frontend {
                 std::string const_type = parse_type_name();
                 expect(TokenKind::Assign, "expected '=' after constant type");
                 auto init_expr = parse_expression();
-                expect(TokenKind::Semicolon, "expected ';' after constant value");
+                optional_semicolon();  // vNext: semicolons optional
                 
                 AstImplConst impl_const;
                 impl_const.name = const_name.lexeme;
@@ -680,7 +688,7 @@ namespace mana::frontend {
         return type_name;
     }
 
-    std::unique_ptr<AstDecl> Parser::parse_function_decl(bool is_pub, bool is_async, bool is_test) {
+    std::unique_ptr<AstDecl> Parser::parse_function_decl(bool is_pub, bool is_async, bool is_test, bool is_extern) {
         expect(TokenKind::Identifier, "expected function name");
         Token first_name = previous();
 
@@ -777,8 +785,15 @@ namespace mana::frontend {
             } while (match(TokenKind::Comma));
         }
 
-        auto body = parse_block();
-        if (!body) return nullptr;
+        // Parse body (optional for extern functions)
+        std::unique_ptr<AstBlockStmt> body;
+        if (is_extern) {
+            // Extern functions have no body, just consume optional semicolon
+            optional_semicolon();
+        } else {
+            body = parse_block();
+            if (!body) return nullptr;
+        }
 
         auto fn = std::make_unique<AstFuncDecl>(fn_name_str, first_name.line, first_name.column);
         fn->receiver_type = receiver_type;
@@ -790,6 +805,7 @@ namespace mana::frontend {
         fn->is_pub = is_pub;
         fn->is_async = is_async;
         fn->is_test = is_test;
+        fn->is_extern = is_extern;
         fn->has_self = has_self;
         return fn;
     }
@@ -834,9 +850,9 @@ namespace mana::frontend {
         expect(TokenKind::Assign, "expected '=' after type alias name");
         
         std::string target_type = parse_type_name();
-        
-        expect(TokenKind::Semicolon, "expected ';' after type alias");
-        
+
+        optional_semicolon();  // vNext: semicolons optional
+
         auto decl = std::make_unique<AstTypeAliasDecl>(alias_name, target_type, name_tok.line, name_tok.column);
         decl->is_pub = is_pub;
         return decl;
@@ -2327,8 +2343,9 @@ std::unique_ptr<AstStmt> Parser::parse_statement() {
                     // Wildcard pattern - represents default case
                     match_expr->has_default = true;
                     arm.patterns.push_back(std::make_unique<AstIdentifierExpr>("_", pat.line, pat.column));
-                } else if ((pat.lexeme == "Some" || pat.lexeme == "Ok" || pat.lexeme == "Err") && check(TokenKind::LParen)) {
-                    // Option/Result pattern: Some(x), Ok(x), Err(e)
+                } else if ((pat.lexeme == "Some" || pat.lexeme == "Ok" || pat.lexeme == "Err" ||
+                           pat.lexeme == "some" || pat.lexeme == "ok" || pat.lexeme == "err") && check(TokenKind::LParen)) {
+                    // Option/Result pattern: Some(x), Ok(x), Err(e) or lowercase variants ok(x), err(e)
                     advance();  // consume '('
                     expect(TokenKind::Identifier, "expected binding variable name in pattern");
                     std::string binding = previous().lexeme;

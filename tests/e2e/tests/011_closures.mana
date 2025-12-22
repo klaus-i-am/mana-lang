@@ -3,8 +3,8 @@ module test_closures;
 
 fn main() -> i32 {
     // Simple closure
-    let double = |x: i32| x * 2;
-    println(double(5));
+    let twice = |x: i32| x * 2;
+    println(twice(5));
     // expect: 10
 
     // Closure with multiple params

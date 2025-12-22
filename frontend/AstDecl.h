@@ -87,6 +87,7 @@ namespace mana::frontend {
         bool is_async = false;  // async fn
         bool is_static = false;  // static fn (no self parameter)
         bool is_test = false;  // #[test] fn
+        bool is_extern = false;  // extern fn (FFI declaration)
         bool has_self = false;  // method has 'self' parameter
 
         bool is_method() const { return !receiver_type.empty(); }

@@ -326,6 +326,7 @@ namespace mana {
     inline void println(int64_t v) { std::printf("%lld\n", (long long)v); }
     inline void println(size_t v) { std::printf("%zu\n", v); }
     inline void println(float v) { std::printf("%g\n", v); }
+    inline void println(double v) { std::printf("%g\n", v); }
     inline void println(bool v) { std::printf("%s\n", v ? "true" : "false"); }
     inline void println(const char* v) { std::printf("%s\n", v); }
     inline void println(const std::string& v) { std::printf("%s\n", v.c_str()); }
