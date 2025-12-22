@@ -518,3 +518,161 @@ inline int32_t mana_GLFW_CURSOR() { return GLFW_CURSOR; }
 inline int32_t mana_GLFW_CURSOR_NORMAL() { return GLFW_CURSOR_NORMAL; }
 inline int32_t mana_GLFW_CURSOR_HIDDEN() { return GLFW_CURSOR_HIDDEN; }
 inline int32_t mana_GLFW_CURSOR_DISABLED() { return GLFW_CURSOR_DISABLED; }
+
+// ============================================================================
+// Voxel rendering helpers
+// ============================================================================
+
+// Set model matrix with position and rotation
+inline void mana_setModelTransform(float px, float py, float pz, float rx, float ry, float rz) {
+    float rotX[16], rotY[16], rotZ[16], trans[16], temp1[16], temp2[16];
+    mana_mat4_rotateX(rotX, rx);
+    mana_mat4_rotateY(rotY, ry);
+    mana_mat4_rotateZ(rotZ, rz);
+    mana_mat4_translate(trans, px, py, pz);
+
+    // Rotation: Z * Y * X
+    mana_mat4_multiply(temp1, rotY, rotX);
+    mana_mat4_multiply(temp2, rotZ, temp1);
+    // Then translate
+    mana_mat4_multiply(g_model_matrix, trans, temp2);
+}
+
+// Set model position only (no rotation) - faster for voxels
+inline void mana_setModelPosition(float px, float py, float pz) {
+    mana_mat4_translate(g_model_matrix, px, py, pz);
+}
+
+// Create a solid-color cube VBO (for voxel blocks)
+// color: 0=grass(green top), 1=dirt(brown), 2=stone(gray), 3=water(blue), 4=sand(yellow)
+inline int32_t mana_createBlockVBO(int32_t blockType) {
+    // Colors for different block types
+    float topR, topG, topB;
+    float sideR, sideG, sideB;
+    float bottomR, bottomG, bottomB;
+
+    switch (blockType) {
+        case 0: // Grass
+            topR = 0.2f; topG = 0.8f; topB = 0.2f;       // Green top
+            sideR = 0.55f; sideG = 0.35f; sideB = 0.15f; // Brown sides
+            bottomR = 0.55f; bottomG = 0.35f; bottomB = 0.15f;
+            break;
+        case 1: // Dirt
+            topR = 0.55f; topG = 0.35f; topB = 0.15f;
+            sideR = 0.55f; sideG = 0.35f; sideB = 0.15f;
+            bottomR = 0.45f; bottomG = 0.28f; bottomB = 0.1f;
+            break;
+        case 2: // Stone
+            topR = 0.5f; topG = 0.5f; topB = 0.5f;
+            sideR = 0.45f; sideG = 0.45f; sideB = 0.45f;
+            bottomR = 0.4f; bottomG = 0.4f; bottomB = 0.4f;
+            break;
+        case 3: // Water
+            topR = 0.2f; topG = 0.4f; topB = 0.9f;
+            sideR = 0.15f; sideG = 0.35f; sideB = 0.85f;
+            bottomR = 0.1f; bottomG = 0.3f; bottomB = 0.8f;
+            break;
+        case 4: // Sand
+            topR = 0.95f; topG = 0.9f; topB = 0.55f;
+            sideR = 0.9f; sideG = 0.85f; sideB = 0.5f;
+            bottomR = 0.85f; bottomG = 0.8f; bottomB = 0.45f;
+            break;
+        default: // White
+            topR = topG = topB = 1.0f;
+            sideR = sideG = sideB = 0.9f;
+            bottomR = bottomG = bottomB = 0.8f;
+    }
+
+    float vertices[] = {
+        // Front face (side color)
+        -0.5f, -0.5f,  0.5f,  sideR, sideG, sideB,
+         0.5f, -0.5f,  0.5f,  sideR, sideG, sideB,
+         0.5f,  0.5f,  0.5f,  sideR, sideG, sideB,
+        -0.5f, -0.5f,  0.5f,  sideR, sideG, sideB,
+         0.5f,  0.5f,  0.5f,  sideR, sideG, sideB,
+        -0.5f,  0.5f,  0.5f,  sideR, sideG, sideB,
+
+        // Back face (side color)
+        -0.5f, -0.5f, -0.5f,  sideR, sideG, sideB,
+        -0.5f,  0.5f, -0.5f,  sideR, sideG, sideB,
+         0.5f,  0.5f, -0.5f,  sideR, sideG, sideB,
+        -0.5f, -0.5f, -0.5f,  sideR, sideG, sideB,
+         0.5f,  0.5f, -0.5f,  sideR, sideG, sideB,
+         0.5f, -0.5f, -0.5f,  sideR, sideG, sideB,
+
+        // Top face (top color)
+        -0.5f,  0.5f, -0.5f,  topR, topG, topB,
+        -0.5f,  0.5f,  0.5f,  topR, topG, topB,
+         0.5f,  0.5f,  0.5f,  topR, topG, topB,
+        -0.5f,  0.5f, -0.5f,  topR, topG, topB,
+         0.5f,  0.5f,  0.5f,  topR, topG, topB,
+         0.5f,  0.5f, -0.5f,  topR, topG, topB,
+
+        // Bottom face (bottom color)
+        -0.5f, -0.5f, -0.5f,  bottomR, bottomG, bottomB,
+         0.5f, -0.5f, -0.5f,  bottomR, bottomG, bottomB,
+         0.5f, -0.5f,  0.5f,  bottomR, bottomG, bottomB,
+        -0.5f, -0.5f, -0.5f,  bottomR, bottomG, bottomB,
+         0.5f, -0.5f,  0.5f,  bottomR, bottomG, bottomB,
+        -0.5f, -0.5f,  0.5f,  bottomR, bottomG, bottomB,
+
+        // Right face (side color)
+         0.5f, -0.5f, -0.5f,  sideR * 0.9f, sideG * 0.9f, sideB * 0.9f,
+         0.5f,  0.5f, -0.5f,  sideR * 0.9f, sideG * 0.9f, sideB * 0.9f,
+         0.5f,  0.5f,  0.5f,  sideR * 0.9f, sideG * 0.9f, sideB * 0.9f,
+         0.5f, -0.5f, -0.5f,  sideR * 0.9f, sideG * 0.9f, sideB * 0.9f,
+         0.5f,  0.5f,  0.5f,  sideR * 0.9f, sideG * 0.9f, sideB * 0.9f,
+         0.5f, -0.5f,  0.5f,  sideR * 0.9f, sideG * 0.9f, sideB * 0.9f,
+
+        // Left face (side color, darker)
+        -0.5f, -0.5f, -0.5f,  sideR * 0.8f, sideG * 0.8f, sideB * 0.8f,
+        -0.5f, -0.5f,  0.5f,  sideR * 0.8f, sideG * 0.8f, sideB * 0.8f,
+        -0.5f,  0.5f,  0.5f,  sideR * 0.8f, sideG * 0.8f, sideB * 0.8f,
+        -0.5f, -0.5f, -0.5f,  sideR * 0.8f, sideG * 0.8f, sideB * 0.8f,
+        -0.5f,  0.5f,  0.5f,  sideR * 0.8f, sideG * 0.8f, sideB * 0.8f,
+        -0.5f,  0.5f, -0.5f,  sideR * 0.8f, sideG * 0.8f, sideB * 0.8f,
+    };
+
+    GLuint vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    return static_cast<int32_t>(vbo);
+}
+
+// Simple terrain height function (returns 0-4 based on x,z)
+inline int32_t mana_getTerrainHeight(int32_t x, int32_t z) {
+    // Simple sine-based terrain
+    float fx = static_cast<float>(x) * 0.5f;
+    float fz = static_cast<float>(z) * 0.5f;
+    float height = 2.0f + sinf(fx) * 1.5f + cosf(fz) * 1.5f + sinf(fx + fz) * 0.5f;
+    return static_cast<int32_t>(height);
+}
+
+// First-person camera helpers
+static float g_cam_x = 0.0f, g_cam_y = 5.0f, g_cam_z = 10.0f;
+static float g_cam_yaw = 0.0f, g_cam_pitch = 0.0f;
+
+inline void mana_setCameraFPS(float x, float y, float z, float yaw, float pitch) {
+    g_cam_x = x; g_cam_y = y; g_cam_z = z;
+    g_cam_yaw = yaw; g_cam_pitch = pitch;
+
+    // Build view matrix: rotate then translate
+    float rotY[16], rotX[16], trans[16], temp[16];
+    mana_mat4_rotateY(rotY, -yaw);
+    mana_mat4_rotateX(rotX, -pitch);
+    mana_mat4_translate(trans, -x, -y, -z);
+
+    mana_mat4_multiply(temp, rotX, rotY);
+    mana_mat4_multiply(g_view_matrix, temp, trans);
+}
+
+inline float mana_getCamX() { return g_cam_x; }
+inline float mana_getCamY() { return g_cam_y; }
+inline float mana_getCamZ() { return g_cam_z; }
+
+// Get forward/right vectors for movement
+inline float mana_getForwardX() { return -sinf(g_cam_yaw); }
+inline float mana_getForwardZ() { return -cosf(g_cam_yaw); }
+inline float mana_getRightX() { return cosf(g_cam_yaw); }
+inline float mana_getRightZ() { return -sinf(g_cam_yaw); }

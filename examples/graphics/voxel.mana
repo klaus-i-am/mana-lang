@@ -1,0 +1,222 @@
+module voxel
+
+import "graphics"
+
+// Voxel/3D FFI
+extern fn mana_glEnable(cap: i32) -> void
+extern fn mana_GL_DEPTH_TEST() -> i32
+extern fn mana_GL_DEPTH_BUFFER_BIT() -> i32
+extern fn mana_GL_CULL_FACE() -> i32
+extern fn mana_glUniformMatrix4fv(location: i32, matrixPtr: i64) -> void
+extern fn mana_setPerspective(fovDegrees: f32, aspect: f32, nearZ: f32, farZ: f32) -> void
+extern fn mana_setModelPosition(px: f32, py: f32, pz: f32) -> void
+extern fn mana_getMVP() -> i64
+extern fn mana_createBlockVBO(blockType: i32) -> i32
+extern fn mana_setupCubeAttributes() -> void
+extern fn mana_drawCube() -> void
+extern fn mana_getTerrainHeight(x: i32, z: i32) -> i32
+
+// FPS Camera FFI
+extern fn mana_setCameraFPS(x: f32, y: f32, z: f32, yaw: f32, pitch: f32) -> void
+extern fn mana_getForwardX() -> f32
+extern fn mana_getForwardZ() -> f32
+extern fn mana_getRightX() -> f32
+extern fn mana_getRightZ() -> f32
+
+// Input FFI
+extern fn mana_glfwGetKey(window: i64, key: i32) -> i32
+extern fn mana_GLFW_KEY_W() -> i32
+extern fn mana_GLFW_KEY_A() -> i32
+extern fn mana_GLFW_KEY_S() -> i32
+extern fn mana_GLFW_KEY_D() -> i32
+extern fn mana_GLFW_KEY_SPACE() -> i32
+extern fn mana_GLFW_KEY_ESCAPE() -> i32
+extern fn mana_GLFW_KEY_UP() -> i32
+extern fn mana_GLFW_KEY_DOWN() -> i32
+extern fn mana_GLFW_KEY_LEFT() -> i32
+extern fn mana_GLFW_KEY_RIGHT() -> i32
+extern fn mana_GLFW_KEY_Q() -> i32
+extern fn mana_GLFW_KEY_E() -> i32
+extern fn mana_GLFW_PRESS() -> i32
+
+// Block types
+// 0 = grass (green top, brown sides)
+// 1 = dirt (all brown)
+// 2 = stone (gray)
+// 3 = water (blue)
+// 4 = sand (yellow)
+
+fn key_pressed(window: i64, key: i32) -> bool {
+    return mana_glfwGetKey(window, key) == mana_GLFW_PRESS()
+}
+
+fn clear_3d(r: f32, g: f32, b: f32) -> void {
+    mana_glClearColor(r, g, b, 1.0)
+    mana_glClear(mana_GL_COLOR_BUFFER_BIT() + mana_GL_DEPTH_BUFFER_BIT())
+}
+
+fn main() -> i32 {
+    let window = create_window("Mana Voxel World - WASD move, Arrows look, Q/E up/down, ESC quit", 1024, 768)
+    if window == 0 { return 1 }
+
+    // 3D shader with MVP matrix
+    let vs = "#version 330 core\nlayout (location = 0) in vec3 aPos;\nlayout (location = 1) in vec3 aColor;\nuniform mat4 uMVP;\nout vec3 vertexColor;\nvoid main() { gl_Position = uMVP * vec4(aPos, 1.0); vertexColor = aColor; }"
+    let fs = "#version 330 core\nin vec3 vertexColor;\nout vec4 FragColor;\nvoid main() { FragColor = vec4(vertexColor, 1.0); }"
+
+    let shader = create_shader(vs, fs)
+    let mvpLoc = mana_glGetUniformLocation(shader, "uMVP")
+
+    // Create block VAOs for each type
+    let grassVao: i32 = mana_glGenVertexArray()
+    mana_glBindVertexArray(grassVao)
+    mana_createBlockVBO(0)
+    mana_setupCubeAttributes()
+
+    let dirtVao: i32 = mana_glGenVertexArray()
+    mana_glBindVertexArray(dirtVao)
+    mana_createBlockVBO(1)
+    mana_setupCubeAttributes()
+
+    let stoneVao: i32 = mana_glGenVertexArray()
+    mana_glBindVertexArray(stoneVao)
+    mana_createBlockVBO(2)
+    mana_setupCubeAttributes()
+
+    // Enable depth testing and backface culling
+    mana_glEnable(mana_GL_DEPTH_TEST())
+    mana_glEnable(mana_GL_CULL_FACE())
+
+    // Setup perspective (wider FOV for voxel game feel)
+    mana_setPerspective(70.0, 1.333, 0.1, 100.0)
+
+    // Camera state
+    let camX: f32 = 4.5
+    let camY: f32 = 8.0
+    let camZ: f32 = 12.0
+    let camYaw: f32 = 0.0
+    let camPitch: f32 = -0.3
+
+    let moveSpeed: f32 = 0.08
+    let lookSpeed: f32 = 0.03
+
+    // World size
+    let worldSize: i32 = 9
+
+    println("Mana Voxel World")
+    println("Controls:")
+    println("  WASD - Move")
+    println("  Arrow keys - Look around")
+    println("  Q/E - Move up/down")
+    println("  ESC - Quit")
+
+    while window_open(window) {
+        // ESC to quit
+        if key_pressed(window, mana_GLFW_KEY_ESCAPE()) {
+            break
+        }
+
+        // Look controls (arrow keys)
+        if key_pressed(window, mana_GLFW_KEY_LEFT()) {
+            camYaw = camYaw - lookSpeed
+        }
+        if key_pressed(window, mana_GLFW_KEY_RIGHT()) {
+            camYaw = camYaw + lookSpeed
+        }
+        if key_pressed(window, mana_GLFW_KEY_UP()) {
+            camPitch = camPitch + lookSpeed
+        }
+        if key_pressed(window, mana_GLFW_KEY_DOWN()) {
+            camPitch = camPitch - lookSpeed
+        }
+
+        // Clamp pitch
+        if camPitch > 1.5 { camPitch = 1.5 }
+        if camPitch < -1.5 { camPitch = -1.5 }
+
+        // Movement (WASD relative to camera direction)
+        let fwdX: f32 = mana_getForwardX()
+        let fwdZ: f32 = mana_getForwardZ()
+        let rightX: f32 = mana_getRightX()
+        let rightZ: f32 = mana_getRightZ()
+
+        if key_pressed(window, mana_GLFW_KEY_W()) {
+            camX = camX + fwdX * moveSpeed
+            camZ = camZ + fwdZ * moveSpeed
+        }
+        if key_pressed(window, mana_GLFW_KEY_S()) {
+            camX = camX - fwdX * moveSpeed
+            camZ = camZ - fwdZ * moveSpeed
+        }
+        if key_pressed(window, mana_GLFW_KEY_A()) {
+            camX = camX - rightX * moveSpeed
+            camZ = camZ - rightZ * moveSpeed
+        }
+        if key_pressed(window, mana_GLFW_KEY_D()) {
+            camX = camX + rightX * moveSpeed
+            camZ = camZ + rightZ * moveSpeed
+        }
+
+        // Up/down (Q/E)
+        if key_pressed(window, mana_GLFW_KEY_Q()) {
+            camY = camY - moveSpeed
+        }
+        if key_pressed(window, mana_GLFW_KEY_E()) {
+            camY = camY + moveSpeed
+        }
+
+        // Reset with Space
+        if key_pressed(window, mana_GLFW_KEY_SPACE()) {
+            camX = 4.5
+            camY = 8.0
+            camZ = 12.0
+            camYaw = 0.0
+            camPitch = -0.3
+        }
+
+        // Update camera
+        mana_setCameraFPS(camX, camY, camZ, camYaw, camPitch)
+
+        // Clear with sky blue
+        clear_3d(0.5, 0.7, 1.0)
+
+        use_shader(shader)
+
+        // Render 9x9 voxel terrain
+        for x: i32 = 0; x < worldSize; x++ {
+            for z: i32 = 0; z < worldSize; z++ {
+                // Get terrain height at this position
+                let terrainHeight: i32 = mana_getTerrainHeight(x, z)
+
+                // Draw blocks from bottom to terrain height
+                for y: i32 = 0; y <= terrainHeight; y++ {
+                    // Set block position
+                    let px: f32 = x * 1.0
+                    let py: f32 = y * 1.0
+                    let pz: f32 = z * 1.0
+                    mana_setModelPosition(px, py, pz)
+                    mana_glUniformMatrix4fv(mvpLoc, mana_getMVP())
+
+                    // Choose block type based on height
+                    if y == terrainHeight {
+                        // Top layer = grass
+                        mana_glBindVertexArray(grassVao)
+                    } else {
+                        if y > terrainHeight - 3 {
+                            // Next 2 layers = dirt
+                            mana_glBindVertexArray(dirtVao)
+                        } else {
+                            // Deep = stone
+                            mana_glBindVertexArray(stoneVao)
+                        }
+                    }
+                    mana_drawCube()
+                }
+            }
+        }
+
+        present(window)
+    }
+
+    close_window(window)
+    return 0
+}
