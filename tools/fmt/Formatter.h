@@ -27,6 +27,7 @@ namespace mana::fmt {
     private:
         void emit_decl(const frontend::AstDecl* d, std::ostream& out);
         void emit_stmt(const frontend::AstStmt* s, std::ostream& out, int indent);
+        void emit_stmt_inline(const frontend::AstStmt* s, std::ostream& out);  // For for-loop parts
         void emit_expr(const frontend::AstExpr* e, std::ostream& out);
         void emit_indent(std::ostream& out, int level);
         void emit_type(const std::string& type, std::ostream& out);

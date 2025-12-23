@@ -298,12 +298,115 @@ void Formatter::emit_stmt(const AstStmt* s, std::ostream& out, int indent) {
         out << " " << as->op << " ";
         emit_expr(static_cast<const AstExpr*>(as->value.get()), out);
         out << ";\n";
-    } else if (dynamic_cast<const AstBreakStmt*>(s)) {
+    } else if (auto brk = dynamic_cast<const AstBreakStmt*>(s)) {
         emit_indent(out, indent);
-        out << "break;\n";
+        out << "break";
+        if (brk->value) {
+            out << " ";
+            emit_expr(static_cast<const AstExpr*>(brk->value.get()), out);
+        }
+        out << ";\n";
     } else if (dynamic_cast<const AstContinueStmt*>(s)) {
         emit_indent(out, indent);
         out << "continue;\n";
+    } else if (auto fs = dynamic_cast<const AstForStmt*>(s)) {
+        emit_indent(out, indent);
+        out << "for ";
+        if (fs->init) emit_stmt_inline(fs->init.get(), out);
+        out << "; ";
+        if (fs->condition) emit_expr(static_cast<const AstExpr*>(fs->condition.get()), out);
+        out << "; ";
+        if (fs->increment) emit_stmt_inline(fs->increment.get(), out);
+        out << " {\n";
+        emit_stmt(fs->body.get(), out, indent + 1);
+        emit_indent(out, indent);
+        out << "}\n";
+    } else if (auto fi = dynamic_cast<const AstForInStmt*>(s)) {
+        emit_indent(out, indent);
+        out << "for " << fi->var_name << " in ";
+        emit_expr(static_cast<const AstExpr*>(fi->iterable.get()), out);
+        out << " {\n";
+        emit_stmt(fi->body.get(), out, indent + 1);
+        emit_indent(out, indent);
+        out << "}\n";
+    } else if (auto ls = dynamic_cast<const AstLoopStmt*>(s)) {
+        emit_indent(out, indent);
+        out << "loop {\n";
+        emit_stmt(ls->body.get(), out, indent + 1);
+        emit_indent(out, indent);
+        out << "}\n";
+    } else if (auto ds = dynamic_cast<const AstDeferStmt*>(s)) {
+        emit_indent(out, indent);
+        out << "defer ";
+        emit_stmt(ds->body.get(), out, 0);
+    } else if (auto sc = dynamic_cast<const AstScopeStmt*>(s)) {
+        emit_indent(out, indent);
+        if (!sc->name.empty()) {
+            out << sc->name << ": ";
+        }
+        out << "{\n";
+        if (auto blk = dynamic_cast<const AstBlockStmt*>(sc->body.get())) {
+            for (const auto& stmt : blk->statements) {
+                emit_stmt(stmt.get(), out, indent + 1);
+            }
+        } else if (sc->body) {
+            emit_stmt(sc->body.get(), out, indent + 1);
+        }
+        emit_indent(out, indent);
+        out << "}\n";
+    } else if (auto dest = dynamic_cast<const AstDestructureStmt*>(s)) {
+        emit_indent(out, indent);
+        out << "let ";
+        if (dest->is_tuple) {
+            out << "(";
+            for (size_t i = 0; i < dest->bindings.size(); i++) {
+                if (i > 0) out << ", ";
+                out << dest->bindings[i].name;
+            }
+            out << ")";
+        } else {
+            out << dest->type_name << " { ";
+            for (size_t i = 0; i < dest->bindings.size(); i++) {
+                if (i > 0) out << ", ";
+                if (!dest->bindings[i].field_name.empty() &&
+                    dest->bindings[i].field_name != dest->bindings[i].name) {
+                    out << dest->bindings[i].field_name << ": ";
+                }
+                out << dest->bindings[i].name;
+            }
+            out << " }";
+        }
+        out << " = ";
+        emit_expr(static_cast<const AstExpr*>(dest->init_expr.get()), out);
+        out << ";\n";
+    }
+}
+
+// Emit statement content inline (no trailing semicolon/newline) - for for-loop parts
+void Formatter::emit_stmt_inline(const AstStmt* s, std::ostream& out) {
+    if (!s) return;
+
+    if (auto vd = dynamic_cast<const AstVarDeclStmt*>(s)) {
+        out << "let ";
+        if (vd->is_mutable) out << "mut ";
+        out << vd->name;
+        if (!vd->type_name.empty()) {
+            out << ": " << vd->type_name;
+        }
+        if (vd->init_expr) {
+            out << " = ";
+            emit_expr(static_cast<const AstExpr*>(vd->init_expr.get()), out);
+        }
+    } else if (auto as = dynamic_cast<const AstAssignStmt*>(s)) {
+        if (as->target_expr) {
+            emit_expr(static_cast<const AstExpr*>(as->target_expr.get()), out);
+        } else {
+            out << as->target_name;
+        }
+        out << " " << as->op << " ";
+        emit_expr(static_cast<const AstExpr*>(as->value.get()), out);
+    } else if (auto es = dynamic_cast<const AstExprStmt*>(s)) {
+        emit_expr(static_cast<const AstExpr*>(es->expr.get()), out);
     }
 }
 
@@ -349,6 +452,160 @@ void Formatter::emit_expr(const AstExpr* e, std::ostream& out) {
         out << "[";
         emit_expr(idx->index.get(), out);
         out << "]";
+    } else if (auto slice = dynamic_cast<const AstSliceExpr*>(e)) {
+        emit_expr(slice->base.get(), out);
+        out << "[";
+        if (slice->start) emit_expr(slice->start.get(), out);
+        out << "..";
+        if (slice->end) emit_expr(slice->end.get(), out);
+        out << "]";
+    } else if (auto arr = dynamic_cast<const AstArrayLiteralExpr*>(e)) {
+        out << "[";
+        for (size_t i = 0; i < arr->elements.size(); i++) {
+            if (i > 0) out << ", ";
+            emit_expr(static_cast<const AstExpr*>(arr->elements[i].get()), out);
+        }
+        out << "]";
+    } else if (auto sl = dynamic_cast<const AstStructLiteralExpr*>(e)) {
+        out << sl->type_name << " {\n";
+        for (size_t i = 0; i < sl->fields.size(); i++) {
+            out << "    ";
+            if (!sl->fields[i].field_name.empty()) {
+                out << sl->fields[i].field_name << ": ";
+            }
+            emit_expr(sl->fields[i].value.get(), out);
+            if (i + 1 < sl->fields.size() || config_.trailing_commas) out << ",";
+            out << "\n";
+        }
+        out << "}";
+    } else if (auto sa = dynamic_cast<const AstScopeAccessExpr*>(e)) {
+        out << sa->scope_name << "::" << sa->member_name;
+    } else if (dynamic_cast<const AstSelfExpr*>(e)) {
+        out << "self";
+    } else if (auto me = dynamic_cast<const AstMatchExpr*>(e)) {
+        out << (me->declared_as_when ? "when " : "match ");
+        emit_expr(me->value.get(), out);
+        out << " {\n";
+        for (const auto& arm : me->arms) {
+            out << "    ";
+            // Emit patterns (or-patterns)
+            for (size_t i = 0; i < arm.patterns.size(); i++) {
+                if (i > 0) out << " | ";
+                emit_expr(arm.patterns[i].get(), out);
+            }
+            // Emit guard
+            if (arm.guard) {
+                out << " if ";
+                emit_expr(arm.guard.get(), out);
+            }
+            out << " => ";
+            // Emit result
+            if (arm.result) {
+                emit_expr(arm.result.get(), out);
+            } else if (arm.result_block) {
+                out << "{\n";
+                for (const auto& stmt : arm.result_block->statements) {
+                    emit_stmt(stmt.get(), out, 2);
+                }
+                out << "    }";
+            }
+            out << ",\n";
+        }
+        out << "}";
+    } else if (auto cl = dynamic_cast<const AstClosureExpr*>(e)) {
+        out << "|";
+        for (size_t i = 0; i < cl->params.size(); i++) {
+            if (i > 0) out << ", ";
+            out << cl->params[i].name;
+            if (!cl->params[i].type_name.empty()) {
+                out << ": " << cl->params[i].type_name;
+            }
+        }
+        out << "| ";
+        if (!cl->return_type.empty()) {
+            out << "-> " << cl->return_type << " ";
+        }
+        if (cl->body_expr) {
+            emit_expr(cl->body_expr.get(), out);
+        } else if (cl->body_block) {
+            out << "{\n";
+            for (const auto& stmt : cl->body_block->statements) {
+                emit_stmt(stmt.get(), out, 1);
+            }
+            out << "}";
+        }
+    } else if (auto te = dynamic_cast<const AstTryExpr*>(e)) {
+        emit_expr(te->operand.get(), out);
+        out << "?";
+    } else if (auto oc = dynamic_cast<const AstOptionalChainExpr*>(e)) {
+        emit_expr(oc->object.get(), out);
+        out << "?." << oc->member_name;
+        if (oc->is_method_call) {
+            out << "(";
+            for (size_t i = 0; i < oc->args.size(); i++) {
+                if (i > 0) out << ", ";
+                emit_expr(static_cast<const AstExpr*>(oc->args[i].get()), out);
+            }
+            out << ")";
+        }
+    } else if (auto nc = dynamic_cast<const AstNullCoalesceExpr*>(e)) {
+        emit_expr(nc->option_expr.get(), out);
+        out << " ?? ";
+        emit_expr(nc->default_expr.get(), out);
+    } else if (auto aw = dynamic_cast<const AstAwaitExpr*>(e)) {
+        emit_expr(aw->operand.get(), out);
+        out << ".await";
+    } else if (auto rng = dynamic_cast<const AstRangeExpr*>(e)) {
+        if (rng->start) emit_expr(rng->start.get(), out);
+        out << (rng->inclusive ? "..=" : "..");
+        if (rng->end) emit_expr(rng->end.get(), out);
+    } else if (auto tp = dynamic_cast<const AstTupleExpr*>(e)) {
+        out << "(";
+        for (size_t i = 0; i < tp->elements.size(); i++) {
+            if (i > 0) out << ", ";
+            emit_expr(static_cast<const AstExpr*>(tp->elements[i].get()), out);
+        }
+        if (tp->elements.size() == 1) out << ",";  // Single-element tuple
+        out << ")";
+    } else if (auto ti = dynamic_cast<const AstTupleIndexExpr*>(e)) {
+        emit_expr(ti->tuple.get(), out);
+        out << "." << ti->index;
+    } else if (dynamic_cast<const AstNoneExpr*>(e)) {
+        out << "None";
+    } else if (auto ce = dynamic_cast<const AstCastExpr*>(e)) {
+        emit_expr(ce->operand.get(), out);
+        out << " as " << ce->target_type;
+    } else if (auto ie = dynamic_cast<const AstIfExpr*>(e)) {
+        out << "if ";
+        emit_expr(ie->condition.get(), out);
+        out << " { ";
+        emit_expr(ie->then_expr.get(), out);
+        out << " } else { ";
+        emit_expr(ie->else_expr.get(), out);
+        out << " }";
+    } else if (auto oe = dynamic_cast<const AstOrExpr*>(e)) {
+        emit_expr(oe->lhs.get(), out);
+        out << " or ";
+        if (oe->has_default()) {
+            emit_expr(oe->default_expr.get(), out);
+        } else if (oe->fallback_stmt) {
+            emit_stmt(oe->fallback_stmt.get(), out, 0);
+        }
+    } else if (auto ep = dynamic_cast<const AstEnumPattern*>(e)) {
+        out << ep->enum_name << "::" << ep->variant_name;
+        if (!ep->bindings.empty()) {
+            out << "(";
+            for (size_t i = 0; i < ep->bindings.size(); i++) {
+                if (i > 0) out << ", ";
+                out << ep->bindings[i];
+            }
+            out << ")";
+        }
+    } else if (auto op = dynamic_cast<const AstOptionPattern*>(e)) {
+        out << op->pattern_kind;
+        if (!op->binding.empty()) {
+            out << "(" << op->binding << ")";
+        }
     }
 }
 

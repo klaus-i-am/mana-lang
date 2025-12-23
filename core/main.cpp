@@ -550,26 +550,33 @@ namespace mana {
 )";
 
 static void print_usage() {
-    std::cerr << "Mana Compiler v1.0.0\n\n";
+    std::cerr << "Mana Compiler v1.2.5\n\n";
     std::cerr << "Usage: mana <command> [options] [file]\n\n";
     std::cerr << "Commands:\n";
-    std::cerr << "  build        Build the current project\n";
-    std::cerr << "  run          Build and run the project\n";
-    std::cerr << "  test         Run tests\n";
-    std::cerr << "  new <name>   Create a new project\n";
-    std::cerr << "  fmt          Format source files\n";
-    std::cerr << "  repl         Start interactive REPL\n";
-    std::cerr << "  <file>       Compile a single file\n\n";
-    std::cerr << "Options:\n";
-    std::cerr << "  -o <file>    Output executable name\n";
-    std::cerr << "  -c           Compile only (generate .cpp, don't link)\n";
-    std::cerr << "  --emit-cpp   Print generated C++ to stdout\n";
-    std::cerr << "  --ast        Print AST to stdout\n";
-    std::cerr << "  --doc        Generate Markdown documentation\n";
-    std::cerr << "  --no-cache   Disable incremental compilation\n";
+    std::cerr << "  build          Build the current project\n";
+    std::cerr << "  run            Build and run the project\n";
+    std::cerr << "  test           Run tests\n";
+    std::cerr << "  new <name>     Create a new project\n";
+    std::cerr << "  fmt <files>    Format source files\n";
+    std::cerr << "  repl           Start interactive REPL\n";
+    std::cerr << "  add <pkg>      Add a dependency\n";
+    std::cerr << "  remove <pkg>   Remove a dependency\n";
+    std::cerr << "  <file>         Compile a single file\n\n";
+    std::cerr << "Formatter options (mana fmt):\n";
+    std::cerr << "  --check        Check if files are formatted\n";
+    std::cerr << "  -w, --write    Write formatted output back to files\n";
+    std::cerr << "  --tabs         Use tabs instead of spaces\n";
+    std::cerr << "  --indent <n>   Set indent width (default: 4)\n\n";
+    std::cerr << "Compiler options:\n";
+    std::cerr << "  -o <file>      Output executable name\n";
+    std::cerr << "  -c             Compile only (generate .cpp, don't link)\n";
+    std::cerr << "  --emit-cpp     Print generated C++ to stdout\n";
+    std::cerr << "  --ast          Print AST to stdout\n";
+    std::cerr << "  --doc          Generate Markdown documentation\n";
+    std::cerr << "  --no-cache     Disable incremental compilation\n";
     std::cerr << "  --clear-cache  Clear compilation cache\n";
     std::cerr << "  -v, --version  Show version\n";
-    std::cerr << "  -h, --help   Show this help\n";
+    std::cerr << "  -h, --help     Show this help\n";
 }
 
 int main(int argc, char** argv) {
@@ -616,35 +623,135 @@ int main(int argc, char** argv) {
     }
 
     if (first_arg == "fmt") {
-        // Format files
-        if (argc < 3) {
-            std::cerr << "Usage: mana fmt <file.mana>\n";
-            return 1;
-        }
-        std::ifstream in(argv[2]);
-        if (!in) {
-            std::cerr << "Cannot open: " << argv[2] << "\n";
-            return 1;
-        }
-        std::stringstream buffer;
-        buffer << in.rdbuf();
+        // Parse fmt options
+        bool check_mode = false;
+        bool write_mode = false;
+        std::vector<std::string> files;
+        mana::fmt::FormatConfig config;
 
-        Lexer lex(buffer.str());
-        auto tokens = lex.tokenize();
-        DiagnosticEngine diag;
-        Parser parser(tokens, diag);
-        auto module = parser.parse_module();
-
-        if (diag.has_errors()) {
-            for (const auto& e : diag.errors()) {
-                std::cerr << e.message << "\n";
+        for (int i = 2; i < argc; i++) {
+            std::string arg = argv[i];
+            if (arg == "--check") {
+                check_mode = true;
+            } else if (arg == "-w" || arg == "--write") {
+                write_mode = true;
+            } else if (arg == "--tabs") {
+                config.use_tabs = true;
+            } else if (arg == "--indent" && i + 1 < argc) {
+                config.indent_width = std::stoi(argv[++i]);
+            } else if (arg == "--no-trailing-commas") {
+                config.trailing_commas = false;
+            } else if (arg[0] != '-') {
+                files.push_back(arg);
             }
+        }
+
+        if (files.empty()) {
+            std::cerr << "Usage: mana fmt [options] <files...>\n";
+            std::cerr << "\nOptions:\n";
+            std::cerr << "  --check           Check if files are formatted (exit 1 if not)\n";
+            std::cerr << "  -w, --write       Write formatted output back to files\n";
+            std::cerr << "  --tabs            Use tabs instead of spaces\n";
+            std::cerr << "  --indent <n>      Set indent width (default: 4)\n";
+            std::cerr << "  --no-trailing-commas  Don't add trailing commas\n";
             return 1;
         }
 
-        mana::fmt::Formatter formatter;
-        std::cout << formatter.format(module.get());
-        return 0;
+        // Expand directories to .mana files
+        std::vector<std::string> all_files;
+        for (const auto& path : files) {
+            if (fs::is_directory(path)) {
+                for (const auto& entry : fs::recursive_directory_iterator(path)) {
+                    if (entry.path().extension() == ".mana") {
+                        all_files.push_back(entry.path().string());
+                    }
+                }
+            } else if (path == ".") {
+                for (const auto& entry : fs::recursive_directory_iterator(".")) {
+                    if (entry.path().extension() == ".mana") {
+                        all_files.push_back(entry.path().string());
+                    }
+                }
+            } else {
+                all_files.push_back(path);
+            }
+        }
+
+        int exit_code = 0;
+        int formatted_count = 0;
+        int unchanged_count = 0;
+
+        for (const auto& file : all_files) {
+            std::ifstream in(file);
+            if (!in) {
+                std::cerr << "Cannot open: " << file << "\n";
+                exit_code = 1;
+                continue;
+            }
+            std::stringstream buffer;
+            buffer << in.rdbuf();
+            std::string original = buffer.str();
+            in.close();
+
+            Lexer lex(original);
+            auto tokens = lex.tokenize();
+            DiagnosticEngine diag;
+            Parser parser(tokens, diag);
+            auto module = parser.parse_module();
+
+            if (diag.has_errors()) {
+                std::cerr << file << ": parse error\n";
+                for (const auto& e : diag.errors()) {
+                    std::cerr << "  " << e.message << "\n";
+                }
+                exit_code = 1;
+                continue;
+            }
+
+            mana::fmt::Formatter formatter(config);
+            std::string formatted = formatter.format(module.get());
+
+            if (formatted == original) {
+                unchanged_count++;
+                continue;
+            }
+
+            formatted_count++;
+
+            if (check_mode) {
+                std::cerr << file << " would be reformatted\n";
+                exit_code = 1;
+            } else if (write_mode) {
+                std::ofstream out(file);
+                if (!out) {
+                    std::cerr << "Cannot write: " << file << "\n";
+                    exit_code = 1;
+                    continue;
+                }
+                out << formatted;
+                std::cout << "Formatted: " << file << "\n";
+            } else {
+                // Default: print to stdout (for single file)
+                if (all_files.size() == 1) {
+                    std::cout << formatted;
+                } else {
+                    std::cout << "=== " << file << " ===\n" << formatted << "\n";
+                }
+            }
+        }
+
+        if (check_mode) {
+            if (exit_code == 0) {
+                std::cout << "All " << all_files.size() << " files are formatted.\n";
+            } else {
+                std::cerr << formatted_count << " file(s) would be reformatted.\n";
+            }
+        } else if (write_mode) {
+            std::cout << formatted_count << " file(s) formatted, "
+                      << unchanged_count << " unchanged.\n";
+        }
+
+        return exit_code;
     }
 
     if (first_arg == "add" && argc >= 3) {
