@@ -14,6 +14,14 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <future>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <functional>
+#include <atomic>
+#include <chrono>
 
 namespace mana {
     template <typename F>
@@ -655,6 +663,386 @@ namespace mana {
     inline void assert_true(bool condition, const char* msg = "assertion failed") {
         if (!condition) throw std::runtime_error(msg);
     }
+
+    // ============================================================================
+    // Async Runtime Support
+    // ============================================================================
+
+    // Thread pool for efficient task scheduling
+    class ThreadPool {
+        std::vector<std::thread> workers_;
+        std::queue<std::function<void()>> tasks_;
+        std::mutex queue_mutex_;
+        std::condition_variable condition_;
+        std::atomic<bool> stop_{false};
+
+    public:
+        explicit ThreadPool(size_t num_threads = 0) {
+            if (num_threads == 0) {
+                num_threads = std::thread::hardware_concurrency();
+                if (num_threads == 0) num_threads = 4;
+            }
+
+            for (size_t i = 0; i < num_threads; ++i) {
+                workers_.emplace_back([this] {
+                    while (true) {
+                        std::function<void()> task;
+                        {
+                            std::unique_lock<std::mutex> lock(queue_mutex_);
+                            condition_.wait(lock, [this] {
+                                return stop_.load() || !tasks_.empty();
+                            });
+                            if (stop_.load() && tasks_.empty()) return;
+                            task = std::move(tasks_.front());
+                            tasks_.pop();
+                        }
+                        task();
+                    }
+                });
+            }
+        }
+
+        ~ThreadPool() {
+            stop_.store(true);
+            condition_.notify_all();
+            for (auto& worker : workers_) {
+                if (worker.joinable()) worker.join();
+            }
+        }
+
+        template<typename F, typename... Args>
+        auto submit(F&& f, Args&&... args) -> std::future<decltype(f(args...))> {
+            using return_type = decltype(f(args...));
+            auto task = std::make_shared<std::packaged_task<return_type()>>(
+                std::bind(std::forward<F>(f), std::forward<Args>(args)...)
+            );
+            std::future<return_type> result = task->get_future();
+            {
+                std::lock_guard<std::mutex> lock(queue_mutex_);
+                tasks_.emplace([task]() { (*task)(); });
+            }
+            condition_.notify_one();
+            return result;
+        }
+
+        size_t size() const { return workers_.size(); }
+    };
+
+    // Global thread pool singleton
+    inline ThreadPool& global_pool() {
+        static ThreadPool pool;
+        return pool;
+    }
+
+    // Task<T> - ergonomic async task wrapper
+    template<typename T>
+    class Task {
+        std::future<T> future_;
+        bool valid_ = false;
+
+    public:
+        Task() = default;
+        explicit Task(std::future<T>&& f) : future_(std::move(f)), valid_(true) {}
+
+        Task(Task&& other) noexcept : future_(std::move(other.future_)), valid_(other.valid_) {
+            other.valid_ = false;
+        }
+
+        Task& operator=(Task&& other) noexcept {
+            future_ = std::move(other.future_);
+            valid_ = other.valid_;
+            other.valid_ = false;
+            return *this;
+        }
+
+        // Get the result (blocks if not ready)
+        T get() {
+            if (!valid_) throw std::runtime_error("Task already consumed or invalid");
+            valid_ = false;
+            return future_.get();
+        }
+
+        // Check if result is ready
+        bool is_ready() const {
+            if (!valid_) return false;
+            return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+        }
+
+        // Wait for completion with timeout (returns true if ready)
+        bool wait_for(int64_t millis) {
+            if (!valid_) return true;
+            return future_.wait_for(std::chrono::milliseconds(millis)) == std::future_status::ready;
+        }
+
+        // Wait for completion
+        void wait() {
+            if (valid_) future_.wait();
+        }
+
+        bool is_valid() const { return valid_; }
+    };
+
+    // Specialization for void
+    template<>
+    class Task<void> {
+        std::future<void> future_;
+        bool valid_ = false;
+
+    public:
+        Task() = default;
+        explicit Task(std::future<void>&& f) : future_(std::move(f)), valid_(true) {}
+
+        Task(Task&& other) noexcept : future_(std::move(other.future_)), valid_(other.valid_) {
+            other.valid_ = false;
+        }
+
+        void get() {
+            if (!valid_) throw std::runtime_error("Task already consumed or invalid");
+            valid_ = false;
+            future_.get();
+        }
+
+        bool is_ready() const {
+            if (!valid_) return false;
+            return future_.wait_for(std::chrono::seconds(0)) == std::future_status::ready;
+        }
+
+        bool wait_for(int64_t millis) {
+            if (!valid_) return true;
+            return future_.wait_for(std::chrono::milliseconds(millis)) == std::future_status::ready;
+        }
+
+        void wait() {
+            if (valid_) future_.wait();
+        }
+
+        bool is_valid() const { return valid_; }
+    };
+
+    // spawn - launch a task on the thread pool
+    template<typename F, typename... Args>
+    auto spawn(F&& f, Args&&... args) -> Task<decltype(f(args...))> {
+        return Task<decltype(f(args...))>(
+            global_pool().submit(std::forward<F>(f), std::forward<Args>(args)...)
+        );
+    }
+
+    // spawn_async - launch task using std::async (for comparison/fallback)
+    template<typename F, typename... Args>
+    auto spawn_async(F&& f, Args&&... args) -> Task<decltype(f(args...))> {
+        return Task<decltype(f(args...))>(
+            std::async(std::launch::async, std::forward<F>(f), std::forward<Args>(args)...)
+        );
+    }
+
+    // sleep - pause current thread for given milliseconds
+    inline void sleep(int64_t millis) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(millis));
+    }
+
+    // sleep_seconds - pause for seconds
+    inline void sleep_seconds(double seconds) {
+        auto duration = std::chrono::duration<double>(seconds);
+        std::this_thread::sleep_for(duration);
+    }
+
+    // yield - give up current time slice
+    inline void yield() {
+        std::this_thread::yield();
+    }
+
+    // Channel<T> - async message passing between tasks
+    template<typename T>
+    class Channel {
+        std::queue<T> queue_;
+        std::mutex mutex_;
+        std::condition_variable cond_;
+        std::atomic<bool> closed_{false};
+        size_t capacity_;
+
+    public:
+        explicit Channel(size_t capacity = 0) : capacity_(capacity) {}
+
+        // Send a value (blocks if channel is full and bounded)
+        bool send(T value) {
+            std::unique_lock<std::mutex> lock(mutex_);
+            if (capacity_ > 0) {
+                cond_.wait(lock, [this] {
+                    return closed_.load() || queue_.size() < capacity_;
+                });
+            }
+            if (closed_.load()) return false;
+            queue_.push(std::move(value));
+            lock.unlock();
+            cond_.notify_one();
+            return true;
+        }
+
+        // Receive a value (blocks until available or channel is closed)
+        Option<T> recv() {
+            std::unique_lock<std::mutex> lock(mutex_);
+            cond_.wait(lock, [this] {
+                return closed_.load() || !queue_.empty();
+            });
+            if (queue_.empty()) return Option<T>();
+            T value = std::move(queue_.front());
+            queue_.pop();
+            lock.unlock();
+            cond_.notify_one();
+            return Option<T>(std::move(value));
+        }
+
+        // Try to receive without blocking
+        Option<T> try_recv() {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (queue_.empty()) return Option<T>();
+            T value = std::move(queue_.front());
+            queue_.pop();
+            cond_.notify_one();
+            return Option<T>(std::move(value));
+        }
+
+        // Try to send without blocking
+        bool try_send(T value) {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (closed_.load()) return false;
+            if (capacity_ > 0 && queue_.size() >= capacity_) return false;
+            queue_.push(std::move(value));
+            cond_.notify_one();
+            return true;
+        }
+
+        // Close the channel
+        void close() {
+            closed_.store(true);
+            cond_.notify_all();
+        }
+
+        bool is_closed() const { return closed_.load(); }
+        bool is_empty() const {
+            std::lock_guard<std::mutex> lock(const_cast<std::mutex&>(mutex_));
+            return queue_.empty();
+        }
+    };
+
+    // Timer - schedule delayed execution
+    class Timer {
+        std::atomic<bool> cancelled_{false};
+        std::thread thread_;
+
+    public:
+        Timer() = default;
+        ~Timer() { cancel(); }
+
+        template<typename F>
+        void set(int64_t delay_ms, F&& callback) {
+            cancel();
+            cancelled_.store(false);
+            thread_ = std::thread([this, delay_ms, cb = std::forward<F>(callback)]() {
+                auto end_time = std::chrono::steady_clock::now() +
+                               std::chrono::milliseconds(delay_ms);
+                while (!cancelled_.load()) {
+                    if (std::chrono::steady_clock::now() >= end_time) {
+                        if (!cancelled_.load()) cb();
+                        return;
+                    }
+                    std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                }
+            });
+        }
+
+        void cancel() {
+            cancelled_.store(true);
+            if (thread_.joinable()) thread_.join();
+        }
+    };
+
+    // delay - create a task that completes after given milliseconds
+    inline Task<void> delay(int64_t millis) {
+        return spawn([millis]() {
+            std::this_thread::sleep_for(std::chrono::milliseconds(millis));
+        });
+    }
+
+    // WaitGroup - wait for multiple tasks to complete
+    class WaitGroup {
+        std::atomic<int32_t> count_{0};
+        std::mutex mutex_;
+        std::condition_variable cond_;
+
+    public:
+        void add(int32_t delta = 1) {
+            count_.fetch_add(delta);
+        }
+
+        void done() {
+            if (count_.fetch_sub(1) == 1) {
+                cond_.notify_all();
+            }
+        }
+
+        void wait() {
+            std::unique_lock<std::mutex> lock(mutex_);
+            cond_.wait(lock, [this] { return count_.load() <= 0; });
+        }
+
+        bool wait_for(int64_t millis) {
+            std::unique_lock<std::mutex> lock(mutex_);
+            return cond_.wait_for(lock, std::chrono::milliseconds(millis),
+                                  [this] { return count_.load() <= 0; });
+        }
+    };
+
+    // Mutex - mutual exclusion lock
+    class Mutex {
+        std::mutex mutex_;
+    public:
+        void lock() { mutex_.lock(); }
+        void unlock() { mutex_.unlock(); }
+        bool try_lock() { return mutex_.try_lock(); }
+
+        // RAII guard
+        class Guard {
+            Mutex& mutex_;
+        public:
+            explicit Guard(Mutex& m) : mutex_(m) { mutex_.lock(); }
+            ~Guard() { mutex_.unlock(); }
+        };
+
+        Guard guard() { return Guard(*this); }
+    };
+
+    // Atomic wrapper for common types
+    template<typename T>
+    class Atomic {
+        std::atomic<T> value_;
+    public:
+        Atomic() : value_(T{}) {}
+        explicit Atomic(T value) : value_(value) {}
+
+        T load() const { return value_.load(); }
+        void store(T value) { value_.store(value); }
+        T exchange(T value) { return value_.exchange(value); }
+
+        // For numeric types
+        T fetch_add(T delta) { return value_.fetch_add(delta); }
+        T fetch_sub(T delta) { return value_.fetch_sub(delta); }
+
+        T operator++() { return ++value_; }
+        T operator++(int) { return value_++; }
+        T operator--() { return --value_; }
+        T operator--(int) { return value_--; }
+    };
+
+    // Once - ensure code runs exactly once
+    class Once {
+        std::once_flag flag_;
+    public:
+        template<typename F>
+        void call(F&& f) {
+            std::call_once(flag_, std::forward<F>(f));
+        }
+    };
 
     // ============================================================================
     // Networking Support
