@@ -358,23 +358,11 @@ fn main() -> i32 {
         return 1;
     }
 
-    // Create mana_runtime.h
-    if (!write_file(name + "/mana_runtime.h", get_runtime_header())) {
-        std::cerr << "Error: Could not create mana_runtime.h\n";
-        return 1;
-    }
-
     // Graphics-specific files
     if (graphics) {
         // Create graphics.mana
         if (!write_file(name + "/src/graphics.mana", get_graphics_mana())) {
             std::cerr << "Error: Could not create graphics.mana\n";
-            return 1;
-        }
-
-        // Create mana_graphics.h
-        if (!write_file(name + "/mana_graphics.h", get_graphics_header())) {
-            std::cerr << "Error: Could not create mana_graphics.h\n";
             return 1;
         }
 
@@ -390,7 +378,7 @@ find_package(glad CONFIG REQUIRED)
 file(GLOB SOURCES "build/*.cpp")
 
 add_executable()" + name + R"( ${SOURCES})
-target_include_directories()" + name + R"( PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories()" + name + R"( PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/build)
 target_link_libraries()" + name + R"( PRIVATE glfw glad::glad)
 
 if(WIN32)
@@ -401,18 +389,7 @@ endif()
     }
 
     // Create .gitignore
-    std::string gitignore = R"(# Build artifacts
-/build/
-*.o
-*.obj
-*.exe
-
-# IDE
-.idea/
-*.swp
-*.swo
-
-# Cache
+    std::string gitignore = R"(/build/
 .mana_cache/
 )";
     write_file(name + "/.gitignore", gitignore);
@@ -574,18 +551,24 @@ int PackageManager::build() {
         return result;
     }
 
-    // The -c flag generates .cpp next to the .mana file, move it
+    // The -c flag generates files next to the .mana file, move them to build/
     std::string gen_cpp = "src/main.cpp";
+    std::string gen_runtime = "src/mana_runtime.h";
+
     if (file_exists(gen_cpp)) {
-        // Copy to build folder
         std::string content = read_file(gen_cpp);
         write_file(cpp_file, content);
         std::remove(gen_cpp.c_str());
-    } else if (file_exists("build/main.cpp")) {
-        // Already in right place
-    } else {
+    } else if (!file_exists("build/main.cpp")) {
         std::cerr << "Error: Generated C++ file not found\n";
         return 1;
+    }
+
+    // Move runtime header to build/ and clean up from src/
+    if (file_exists(gen_runtime)) {
+        std::string content = read_file(gen_runtime);
+        write_file("build/mana_runtime.h", content);
+        std::remove(gen_runtime.c_str());
     }
 
     // Step 2: Compile C++ to executable
@@ -598,15 +581,15 @@ int PackageManager::build() {
 
     #ifdef _WIN32
     // Try cl.exe first (Visual Studio), fall back to g++
-    std::string cpp_cmd = "cl /nologo /EHsc /std:c++17 /I. " + cpp_file + " /Fe:" + exe_name + " 2>nul";
+    std::string cpp_cmd = "cl /nologo /EHsc /std:c++17 /Ibuild " + cpp_file + " /Fe:" + exe_name + " 2>nul";
     result = run_command(cpp_cmd);
     if (result != 0) {
         // Try g++ (MinGW)
-        cpp_cmd = "g++ -std=c++17 -I. " + cpp_file + " -o " + exe_name;
+        cpp_cmd = "g++ -std=c++17 -Ibuild " + cpp_file + " -o " + exe_name;
         result = run_command(cpp_cmd);
     }
     #else
-    std::string cpp_cmd = "g++ -std=c++17 -I. " + cpp_file + " -o " + exe_name;
+    std::string cpp_cmd = "g++ -std=c++17 -Ibuild " + cpp_file + " -o " + exe_name;
     result = run_command(cpp_cmd);
     #endif
 
