@@ -1,0 +1,13 @@
+{
+  "iconDefinitions": {
+    "mana": {
+      "iconPath": "./mana-file.svg"
+    }
+  },
+  "fileExtensions": {
+    "mana": "mana"
+  },
+  "languageIds": {
+    "mana": "mana"
+  }
+}

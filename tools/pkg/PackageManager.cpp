@@ -281,10 +281,6 @@ int PackageManager::init(const std::string& name, bool graphics) {
         std::cerr << "Error: Could not create src directory\n";
         return 1;
     }
-    if (!create_directory(name + "/build")) {
-        std::cerr << "Error: Could not create build directory\n";
-        return 1;
-    }
 
     // Create package.toml
     std::string toml = R"([package]

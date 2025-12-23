@@ -2,7 +2,7 @@
   "name": "mana-lang",
   "displayName": "Mana Language",
   "description": "Mana programming language support - syntax highlighting, LSP, and debugging",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "ManaLanguage",
   "license": "MIT",
   "repository": {
@@ -36,7 +36,18 @@
         "id": "mana",
         "aliases": ["Mana", "mana"],
         "extensions": [".mana"],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/mana-file.svg",
+          "dark": "./icons/mana-file.svg"
+        }
+      }
+    ],
+    "iconThemes": [
+      {
+        "id": "mana-icons",
+        "label": "Mana Icons",
+        "path": "./icons/mana-icon-theme.json"
       }
     ],
     "grammars": [
