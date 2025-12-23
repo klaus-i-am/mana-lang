@@ -32,6 +32,9 @@ add_executable(mana_lang
         tools/debug/Debugger.cpp
         tools/test/TestRunner.cpp)
 
+# Output as 'mana' instead of 'mana_lang' for cleaner CLI
+set_target_properties(mana_lang PROPERTIES OUTPUT_NAME "mana")
+
 target_link_libraries(mana_lang mana_frontend)
 
 # LSP Server (separate executable)

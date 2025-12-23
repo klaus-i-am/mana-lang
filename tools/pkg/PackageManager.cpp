@@ -518,8 +518,12 @@ bool PackageManager::save_package(const std::string& path) {
 std::string PackageManager::get_executable_path() {
     #ifdef _WIN32
     char path[MAX_PATH];
-    GetModuleFileNameA(NULL, path, MAX_PATH);
-    return std::string(path);
+    DWORD len = GetModuleFileNameA(NULL, path, MAX_PATH);
+    if (len > 0 && len < MAX_PATH) {
+        return std::string(path);
+    }
+    // Fallback: try to find mana in PATH or current directory
+    return "mana";
     #else
     char path[1024];
     ssize_t len = readlink("/proc/self/exe", path, sizeof(path) - 1);
@@ -527,7 +531,7 @@ std::string PackageManager::get_executable_path() {
         path[len] = '\0';
         return std::string(path);
     }
-    return "mana_lang";
+    return "mana";
     #endif
 }
 
@@ -556,9 +560,17 @@ int PackageManager::build() {
     std::string compile_cmd = "\"" + mana_exe + "\" " + entry + " -c";
 
     std::cout << "  Compiling " << entry << "...\n";
+
+    // Debug: show the command if MANA_DEBUG is set
+    if (getenv("MANA_DEBUG")) {
+        std::cout << "  [debug] Executable: " << mana_exe << "\n";
+        std::cout << "  [debug] Command: " << compile_cmd << "\n";
+    }
+
     int result = run_command(compile_cmd);
     if (result != 0) {
         std::cerr << "Mana compilation failed\n";
+        std::cerr << "  Command was: " << compile_cmd << "\n";
         return result;
     }
 
@@ -632,11 +644,16 @@ int PackageManager::test() {
 
     std::cout << "Testing " << package_.name << "\n";
 
+    // Get our executable path
+    std::string mana_exe = get_executable_path();
+
     // Find test files
-    std::string cmd = "mana_lang src/main.mana --test -o build/test";
+    std::string test_exe = "build/test";
     #ifdef _WIN32
-    cmd += ".exe";
+    test_exe += ".exe";
     #endif
+
+    std::string cmd = "\"" + mana_exe + "\" src/main.mana --test -o " + test_exe;
 
     int result = run_command(cmd);
     if (result != 0) {
@@ -644,11 +661,6 @@ int PackageManager::test() {
     }
 
     // Run tests
-    std::string test_exe = "build/test";
-    #ifdef _WIN32
-    test_exe += ".exe";
-    #endif
-
     return run_command(test_exe);
 }
 
