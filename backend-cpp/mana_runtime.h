@@ -655,4 +655,333 @@ namespace mana {
     inline void assert_true(bool condition, const char* msg = "assertion failed") {
         if (!condition) throw std::runtime_error(msg);
     }
+
+    // ============================================================================
+    // Networking Support
+    // ============================================================================
+
+#ifdef _WIN32
+    #ifndef WIN32_LEAN_AND_MEAN
+    #define WIN32_LEAN_AND_MEAN
+    #endif
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #pragma comment(lib, "ws2_32.lib")
+    using socket_t = SOCKET;
+    #define INVALID_SOCK INVALID_SOCKET
+    #define SOCK_ERROR SOCKET_ERROR
+    inline int close_socket(socket_t s) { return closesocket(s); }
+    inline int get_socket_error() { return WSAGetLastError(); }
+#else
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
+    #include <netdb.h>
+    #include <unistd.h>
+    #include <fcntl.h>
+    using socket_t = int;
+    #define INVALID_SOCK (-1)
+    #define SOCK_ERROR (-1)
+    inline int close_socket(socket_t s) { return close(s); }
+    inline int get_socket_error() { return errno; }
+#endif
+
+    // Socket initialization (required on Windows)
+    inline bool net_init() {
+#ifdef _WIN32
+        WSADATA wsa;
+        return WSAStartup(MAKEWORD(2, 2), &wsa) == 0;
+#else
+        return true;
+#endif
+    }
+
+    inline void net_cleanup() {
+#ifdef _WIN32
+        WSACleanup();
+#endif
+    }
+
+    // TCP Socket wrapper
+    class TcpSocket {
+        socket_t sock_ = INVALID_SOCK;
+        bool connected_ = false;
+
+    public:
+        TcpSocket() = default;
+        ~TcpSocket() { close(); }
+
+        // Non-copyable
+        TcpSocket(const TcpSocket&) = delete;
+        TcpSocket& operator=(const TcpSocket&) = delete;
+
+        // Movable
+        TcpSocket(TcpSocket&& other) noexcept : sock_(other.sock_), connected_(other.connected_) {
+            other.sock_ = INVALID_SOCK;
+            other.connected_ = false;
+        }
+
+        Result<bool, std::string> connect(const std::string& host, int port) {
+            sock_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+            if (sock_ == INVALID_SOCK) {
+                return Result<bool, std::string>::Err("Failed to create socket");
+            }
+
+            struct addrinfo hints = {}, *result = nullptr;
+            hints.ai_family = AF_INET;
+            hints.ai_socktype = SOCK_STREAM;
+
+            if (getaddrinfo(host.c_str(), std::to_string(port).c_str(), &hints, &result) != 0) {
+                close_socket(sock_);
+                sock_ = INVALID_SOCK;
+                return Result<bool, std::string>::Err("Failed to resolve host: " + host);
+            }
+
+            if (::connect(sock_, result->ai_addr, static_cast<int>(result->ai_addrlen)) == SOCK_ERROR) {
+                freeaddrinfo(result);
+                close_socket(sock_);
+                sock_ = INVALID_SOCK;
+                return Result<bool, std::string>::Err("Failed to connect to " + host + ":" + std::to_string(port));
+            }
+
+            freeaddrinfo(result);
+            connected_ = true;
+            return Result<bool, std::string>::Ok(true);
+        }
+
+        Result<int32_t, std::string> send(const std::string& data) {
+            if (!connected_) return Result<int32_t, std::string>::Err("Not connected");
+            int sent = ::send(sock_, data.c_str(), static_cast<int>(data.size()), 0);
+            if (sent == SOCK_ERROR) {
+                return Result<int32_t, std::string>::Err("Send failed");
+            }
+            return Result<int32_t, std::string>::Ok(sent);
+        }
+
+        Result<std::string, std::string> recv(int32_t max_bytes = 4096) {
+            if (!connected_) return Result<std::string, std::string>::Err("Not connected");
+            std::vector<char> buffer(max_bytes);
+            int received = ::recv(sock_, buffer.data(), max_bytes, 0);
+            if (received == SOCK_ERROR) {
+                return Result<std::string, std::string>::Err("Receive failed");
+            }
+            if (received == 0) {
+                connected_ = false;
+                return Result<std::string, std::string>::Err("Connection closed");
+            }
+            return Result<std::string, std::string>::Ok(std::string(buffer.data(), received));
+        }
+
+        void close() {
+            if (sock_ != INVALID_SOCK) {
+                close_socket(sock_);
+                sock_ = INVALID_SOCK;
+                connected_ = false;
+            }
+        }
+
+        bool is_connected() const { return connected_; }
+    };
+
+    // TCP Server wrapper
+    class TcpServer {
+        socket_t sock_ = INVALID_SOCK;
+        bool listening_ = false;
+
+    public:
+        TcpServer() = default;
+        ~TcpServer() { close(); }
+
+        Result<bool, std::string> bind(int port) {
+            sock_ = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+            if (sock_ == INVALID_SOCK) {
+                return Result<bool, std::string>::Err("Failed to create socket");
+            }
+
+            int opt = 1;
+            setsockopt(sock_, SOL_SOCKET, SO_REUSEADDR, reinterpret_cast<char*>(&opt), sizeof(opt));
+
+            struct sockaddr_in addr = {};
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = INADDR_ANY;
+            addr.sin_port = htons(static_cast<uint16_t>(port));
+
+            if (::bind(sock_, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) == SOCK_ERROR) {
+                close_socket(sock_);
+                sock_ = INVALID_SOCK;
+                return Result<bool, std::string>::Err("Failed to bind to port " + std::to_string(port));
+            }
+
+            return Result<bool, std::string>::Ok(true);
+        }
+
+        Result<bool, std::string> listen(int backlog = 10) {
+            if (::listen(sock_, backlog) == SOCK_ERROR) {
+                return Result<bool, std::string>::Err("Failed to listen");
+            }
+            listening_ = true;
+            return Result<bool, std::string>::Ok(true);
+        }
+
+        Result<TcpSocket, std::string> accept() {
+            if (!listening_) return Result<TcpSocket, std::string>::Err("Not listening");
+
+            struct sockaddr_in client_addr = {};
+            socklen_t addr_len = sizeof(client_addr);
+            socket_t client_sock = ::accept(sock_, reinterpret_cast<struct sockaddr*>(&client_addr), &addr_len);
+
+            if (client_sock == INVALID_SOCK) {
+                return Result<TcpSocket, std::string>::Err("Accept failed");
+            }
+
+            TcpSocket client;
+            client.sock_ = client_sock;
+            client.connected_ = true;
+            return Result<TcpSocket, std::string>::Ok(std::move(client));
+        }
+
+        void close() {
+            if (sock_ != INVALID_SOCK) {
+                close_socket(sock_);
+                sock_ = INVALID_SOCK;
+                listening_ = false;
+            }
+        }
+
+        bool is_listening() const { return listening_; }
+
+        friend class TcpSocket;
+    };
+
+    // Simple HTTP client
+    inline Result<std::string, std::string> http_get(const std::string& url) {
+        // Parse URL: http://host:port/path
+        std::string host, path = "/";
+        int port = 80;
+
+        size_t proto_end = url.find("://");
+        size_t host_start = (proto_end != std::string::npos) ? proto_end + 3 : 0;
+        size_t path_start = url.find('/', host_start);
+
+        std::string host_port;
+        if (path_start != std::string::npos) {
+            host_port = url.substr(host_start, path_start - host_start);
+            path = url.substr(path_start);
+        } else {
+            host_port = url.substr(host_start);
+        }
+
+        size_t port_pos = host_port.find(':');
+        if (port_pos != std::string::npos) {
+            host = host_port.substr(0, port_pos);
+            port = std::stoi(host_port.substr(port_pos + 1));
+        } else {
+            host = host_port;
+        }
+
+        TcpSocket sock;
+        auto conn_result = sock.connect(host, port);
+        if (conn_result.is_err()) {
+            return Result<std::string, std::string>::Err(conn_result.unwrap_err());
+        }
+
+        std::string request = "GET " + path + " HTTP/1.1\r\n";
+        request += "Host: " + host + "\r\n";
+        request += "Connection: close\r\n";
+        request += "\r\n";
+
+        auto send_result = sock.send(request);
+        if (send_result.is_err()) {
+            return Result<std::string, std::string>::Err(send_result.unwrap_err());
+        }
+
+        std::string response;
+        while (sock.is_connected()) {
+            auto recv_result = sock.recv(4096);
+            if (recv_result.is_err()) break;
+            response += recv_result.unwrap();
+        }
+
+        // Extract body (after \r\n\r\n)
+        size_t body_start = response.find("\r\n\r\n");
+        if (body_start != std::string::npos) {
+            return Result<std::string, std::string>::Ok(response.substr(body_start + 4));
+        }
+
+        return Result<std::string, std::string>::Ok(response);
+    }
+
+    // UDP Socket wrapper
+    class UdpSocket {
+        socket_t sock_ = INVALID_SOCK;
+
+    public:
+        UdpSocket() = default;
+        ~UdpSocket() { close(); }
+
+        Result<bool, std::string> bind(int port) {
+            sock_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+            if (sock_ == INVALID_SOCK) {
+                return Result<bool, std::string>::Err("Failed to create UDP socket");
+            }
+
+            struct sockaddr_in addr = {};
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = INADDR_ANY;
+            addr.sin_port = htons(static_cast<uint16_t>(port));
+
+            if (::bind(sock_, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) == SOCK_ERROR) {
+                close_socket(sock_);
+                sock_ = INVALID_SOCK;
+                return Result<bool, std::string>::Err("Failed to bind UDP socket");
+            }
+
+            return Result<bool, std::string>::Ok(true);
+        }
+
+        Result<bool, std::string> open() {
+            sock_ = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+            if (sock_ == INVALID_SOCK) {
+                return Result<bool, std::string>::Err("Failed to create UDP socket");
+            }
+            return Result<bool, std::string>::Ok(true);
+        }
+
+        Result<int32_t, std::string> send_to(const std::string& host, int port, const std::string& data) {
+            struct sockaddr_in addr = {};
+            addr.sin_family = AF_INET;
+            addr.sin_port = htons(static_cast<uint16_t>(port));
+            inet_pton(AF_INET, host.c_str(), &addr.sin_addr);
+
+            int sent = sendto(sock_, data.c_str(), static_cast<int>(data.size()), 0,
+                             reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr));
+            if (sent == SOCK_ERROR) {
+                return Result<int32_t, std::string>::Err("UDP send failed");
+            }
+            return Result<int32_t, std::string>::Ok(sent);
+        }
+
+        Result<std::string, std::string> recv_from(int32_t max_bytes = 4096) {
+            std::vector<char> buffer(max_bytes);
+            struct sockaddr_in sender = {};
+            socklen_t sender_len = sizeof(sender);
+
+            int received = recvfrom(sock_, buffer.data(), max_bytes, 0,
+                                   reinterpret_cast<struct sockaddr*>(&sender), &sender_len);
+            if (received == SOCK_ERROR) {
+                return Result<std::string, std::string>::Err("UDP receive failed");
+            }
+            return Result<std::string, std::string>::Ok(std::string(buffer.data(), received));
+        }
+
+        void close() {
+            if (sock_ != INVALID_SOCK) {
+                close_socket(sock_);
+                sock_ = INVALID_SOCK;
+            }
+        }
+
+        bool is_open() const { return sock_ != INVALID_SOCK; }
+    };
+
 }
